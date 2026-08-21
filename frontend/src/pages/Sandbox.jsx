@@ -83,7 +83,7 @@ const Sandbox = () => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="flex h-full p-3 gap-3 overflow-hidden"
+      className="flex h-full p-4 gap-3 overflow-hidden"
     >
       <div className="flex flex-col w-1/2 gap-3 h-[calc(100vh-64px)]">
         

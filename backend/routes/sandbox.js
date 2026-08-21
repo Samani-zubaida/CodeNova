@@ -43,17 +43,35 @@ router.post('/execute', async (req, res) => {
       }
     }
 
-    // For other languages (Python, C++, Java), we simulate execution for now
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    res.json({
-      language: language,
-      run: {
-        stdout: `[Mock Output] Successfully executed ${language} code!\nCode snippet:\n${code.substring(0, 50)}...`,
-        stderr: '',
-        code: 0
+    // For other languages, we use the free Wandbox API
+    const wandboxCompilers = {
+      python: 'cpython-head',
+      cpp: 'gcc-head',
+      java: 'openjdk-jdk-22+36'
+    };
+
+    const compiler = wandboxCompilers[language];
+    if (compiler) {
+      try {
+        const wbResponse = await axios.post('https://wandbox.org/api/compile.json', {
+          compiler: compiler,
+          code: code
+        });
+        
+        return res.json({
+          language: language,
+          run: {
+            stdout: wbResponse.data.program_message || '',
+            stderr: wbResponse.data.program_error || '',
+            code: wbResponse.data.status === '0' ? 0 : 1
+          }
+        });
+      } catch (err) {
+        return res.json({ language, run: { stdout: '', stderr: 'Wandbox API execution failed: ' + err.message, code: 1 } });
       }
-    });
+    }
+
+    res.status(400).json({ message: 'Unsupported language execution' });
   } catch (error) {
     console.error('Execution error:', error.response?.data || error.message);
     res.status(500).json({ message: 'Failed to execute code', error: error.response?.data || error.message });

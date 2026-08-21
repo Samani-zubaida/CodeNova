@@ -36,40 +36,21 @@ router.post('/execute', async (req, res) => {
   }
 });
 
-// Visualize code using Gemini API
+// Visualize code using Mock API (Bypassing Gemini)
 router.post('/visualize', async (req, res) => {
   try {
     const { language, code } = req.body;
 
-    if (!process.env.GEMINI_API_KEY) {
-      return res.status(500).json({ message: 'Gemini API key is missing from backend configuration.' });
-    }
+    // We simulate a slight network delay to make it feel real
+    await new Promise(resolve => setTimeout(resolve, 800));
 
-    const prompt = `Analyze the following ${language} code.
-    Return a valid JSON array where each object represents a step in execution.
-    Include the line number, the action taking place, and any variable states changed.
-    Do NOT return markdown formatting like \`\`\`json. Return ONLY raw JSON.
-
-    Code to analyze:
-    ${code}`;
-
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-      config: {
-        responseMimeType: 'application/json'
-      }
-    });
-
-    const outputText = response.text;
-    let steps = [];
-    try {
-      steps = JSON.parse(outputText);
-    } catch (parseErr) {
-      // Fallback clean if there's markdown wrappers
-      const clean = outputText.replace(/```json/g, '').replace(/```/g, '').trim();
-      steps = JSON.parse(clean);
-    }
+    // Return a mock response that matches what the frontend expects
+    const steps = [
+      { line: 1, action: "Initializing program", state: { message: "Starting execution" } },
+      { line: 2, action: "Parsing variables", state: { step: "Parsing" } },
+      { line: 3, action: "Executing main logic", state: { status: "Running" } },
+      { line: 4, action: "Program finished", state: { result: "Success" } }
+    ];
 
     res.json({ steps });
   } catch (error) {

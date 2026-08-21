@@ -23,8 +23,27 @@ router.post('/execute', async (req, res) => {
       return res.status(400).json({ message: 'Unsupported language' });
     }
 
-    // The public Piston API is no longer available as of Feb 2026.
-    // Simulating execution for demonstration purposes.
+    // The public Piston API is offline. For Javascript, we can run it natively!
+    if (language === 'javascript') {
+      const vm = require('vm');
+      let output = '';
+      const sandbox = {
+        console: {
+          log: (...args) => { output += args.map(String).join(' ') + '\\n'; },
+          error: (...args) => { output += args.map(String).join(' ') + '\\n'; }
+        }
+      };
+      vm.createContext(sandbox);
+      
+      try {
+        vm.runInContext(code, sandbox, { timeout: 1000 });
+        return res.json({ language, run: { stdout: output, stderr: '', code: 0 } });
+      } catch (err) {
+        return res.json({ language, run: { stdout: output, stderr: err.toString(), code: 1 } });
+      }
+    }
+
+    // For other languages (Python, C++, Java), we simulate execution for now
     await new Promise(resolve => setTimeout(resolve, 500));
     
     res.json({

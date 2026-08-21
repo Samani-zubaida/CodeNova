@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { Play, Eye, Settings, Loader2 } from 'lucide-react';
+import { Play, Eye, Settings, Loader2, Code2, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
 import CodeEditor from '../components/editor/CodeEditor';
 import OutputTerminal from '../components/editor/OutputTerminal';
 import VisualCanvas from '../components/editor/VisualCanvas';
@@ -19,7 +20,6 @@ const Sandbox = () => {
   const [isExecuting, setIsExecuting] = useState(false);
   const [isError, setIsError] = useState(false);
   
-  // Visualizer state
   const [visualData, setVisualData] = useState(null);
   const [isVisualizing, setIsVisualizing] = useState(false);
   
@@ -37,7 +37,6 @@ const Sandbox = () => {
     setExecutionOutput('Executing...');
     
     try {
-      // Connects to our backend proxy which connects to Piston API
       const response = await axios.post('http://localhost:5000/api/sandbox/execute', {
         language,
         code
@@ -76,63 +75,91 @@ const Sandbox = () => {
   };
 
   return (
-    <div className="flex h-full p-4 gap-4 overflow-hidden">
-      {/* Left Column: Editor & Terminal */}
-      <div className="flex flex-col w-1/2 gap-4 h-[calc(100vh-80px)]">
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="flex h-full p-6 gap-6 overflow-hidden"
+    >
+      <div className="flex flex-col w-1/2 gap-6 h-[calc(100vh-100px)]">
         
-        {/* Toolbar */}
-        <div className="flex items-center justify-between bg-card p-2 rounded-md border border-border shadow-sm">
-          <div className="flex items-center gap-2">
-            <select 
-              value={language} 
-              onChange={handleLanguageChange}
-              className="bg-transparent border border-input rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-            >
-              <option value="javascript">JavaScript</option>
-              <option value="python">Python</option>
-              <option value="cpp">C++</option>
-              <option value="java">Java</option>
-            </select>
-            <button className="p-1.5 text-muted-foreground hover:text-foreground transition-colors">
+        <motion.div 
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1, duration: 0.4 }}
+          className="flex items-center justify-between glass-card p-3 shadow-lg"
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center bg-[var(--color-nova-red)]/10 p-2 rounded-lg text-[var(--color-nova-red)]">
+              <Code2 size={20} />
+            </div>
+            <div className="relative">
+              <select 
+                value={language} 
+                onChange={handleLanguageChange}
+                className="appearance-none bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg pl-4 pr-10 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[var(--color-nova-red)]/50 transition-all cursor-pointer"
+              >
+                <option value="javascript">JavaScript</option>
+                <option value="python">Python</option>
+                <option value="cpp">C++</option>
+                <option value="java">Java</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+              </div>
+            </div>
+            <button className="p-2 text-gray-400 hover:text-[var(--color-nova-red)] hover:bg-[var(--color-nova-red)]/10 rounded-lg transition-all">
               <Settings size={18} />
             </button>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <button 
               onClick={handleVisualize}
               disabled={isVisualizing}
-              className="flex items-center gap-2 px-4 py-1.5 text-sm font-medium bg-secondary text-secondary-foreground hover:opacity-90 transition-opacity rounded-md disabled:opacity-50"
+              className="flex items-center gap-2 px-5 py-2 text-sm font-medium bg-gradient-to-r from-[var(--color-nova-brown)] to-[#a88a7c] hover:brightness-110 text-white shadow-md shadow-[var(--color-nova-brown)]/30 rounded-lg transition-all transform active:scale-95 disabled:opacity-50 disabled:active:scale-100"
             >
-              {isVisualizing ? <Loader2 size={16} className="animate-spin" /> : <Eye size={16} />}
+              {isVisualizing ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
               Visualize
             </button>
             <button 
               onClick={handleRunCode}
               disabled={isExecuting}
-              className="flex items-center gap-2 px-4 py-1.5 text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity rounded-md disabled:opacity-50"
+              className="flex items-center gap-2 px-6 py-2 text-sm font-bold bg-gradient-to-r from-[var(--color-nova-red)] to-[#C86B85] text-white shadow-lg shadow-[var(--color-nova-red)]/40 hover:shadow-[var(--color-nova-red)]/60 rounded-lg transition-all transform hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 disabled:hover:translate-y-0 disabled:active:scale-100"
             >
-              {isExecuting ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
-              Run
+              {isExecuting ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} className="fill-white" />}
+              Run Code
             </button>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Editor */}
-        <div className="flex-grow min-h-0">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2, duration: 0.4 }}
+          className="flex-grow min-h-0 glass-card p-1 shadow-xl relative group"
+        >
           <CodeEditor code={code} setCode={setCode} language={language} />
-        </div>
+        </motion.div>
 
-        {/* Terminal Output */}
-        <div className="h-48 shrink-0">
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.3, duration: 0.4 }}
+          className="h-56 shrink-0"
+        >
           <OutputTerminal isLoading={isExecuting} isError={isError} />
-        </div>
+        </motion.div>
       </div>
 
-      {/* Right Column: Visualizer */}
-      <div className="w-1/2 h-[calc(100vh-80px)]">
+      <motion.div 
+        initial={{ x: 20, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ delay: 0.4, duration: 0.5 }}
+        className="w-1/2 h-[calc(100vh-100px)]"
+      >
         <VisualCanvas data={visualData} isVisualizing={isVisualizing} />
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 

@@ -40,7 +40,7 @@ export default function MapVisualizer() {
       </div>
       
       {/* Control Panel */}
-      <div className="flex gap-4 items-center bg-gray-50 dark:bg-white/5 p-4 rounded-lg w-fit border border-gray-200 dark:border-gray-800">
+      <div className="flex flex-wrap gap-4 items-center bg-gray-50 dark:bg-white/5 p-4 rounded-lg w-full md:w-fit border border-gray-200 dark:border-gray-800">
         <div className="flex flex-col gap-1">
           <label className="text-xs text-gray-500 font-bold">Key (String)</label>
           <input 

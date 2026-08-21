@@ -30,7 +30,7 @@ export default function StackQueueVisualizer() {
         <h3 className="text-xl font-bold mb-2 text-[var(--color-nova-red)]">Stack (LIFO)</h3>
         <p className="text-xs text-gray-500 mb-4">Last In, First Out</p>
         
-        <div className="flex gap-2 mb-6 items-center">
+        <div className="flex flex-wrap justify-center gap-2 mb-6 items-center">
           <input 
             type="number" 
             value={stackInput}
@@ -64,7 +64,7 @@ export default function StackQueueVisualizer() {
         <h3 className="text-xl font-bold mb-2 text-[var(--color-nova-green)]">Queue (FIFO)</h3>
         <p className="text-xs text-gray-500 mb-4">First In, First Out</p>
         
-        <div className="flex gap-2 mb-6 items-center">
+        <div className="flex flex-wrap justify-center gap-2 mb-6 items-center">
           <input 
             type="number" 
             value={queueInput}
@@ -76,7 +76,7 @@ export default function StackQueueVisualizer() {
           <button onClick={dequeue} className="border border-[var(--color-nova-green)] text-[var(--color-nova-green)] px-3 py-1 rounded font-bold hover:bg-[var(--color-nova-green)] hover:text-black transition-colors">Dequeue</button>
         </div>
 
-        <div className="w-80 h-32 border-y-4 border-[var(--color-nova-green)] flex items-center p-2 gap-2 overflow-hidden bg-black/5 dark:bg-white/5 relative">
+        <div className="w-full max-w-[90vw] md:max-w-md h-32 border-y-4 border-[var(--color-nova-green)] flex items-center p-2 gap-2 overflow-x-auto bg-black/5 dark:bg-white/5 relative shadow-inner scrollbar-thin">
           <AnimatePresence>
             {queue.map((item, idx) => (
               <motion.div

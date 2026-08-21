@@ -28,7 +28,7 @@ export default function RailFenceVisualizer() {
       <h3 className="text-xl font-bold mb-2 text-[var(--color-nova-wheat)] tracking-widest">RAIL_FENCE_CIPHER</h3>
       <p className="text-sm text-gray-400 mb-8 text-center max-w-lg">Writes text downwards on successive "rails" in a zig-zag pattern, then reads off each row horizontally to encrypt.</p>
 
-      <div className="flex gap-4 mb-8 bg-black/40 p-4 rounded-lg border border-white/10 w-full max-w-lg justify-between items-center">
+      <div className="flex flex-wrap gap-4 mb-8 bg-black/40 p-4 rounded-lg border border-white/10 w-full max-w-lg justify-between items-center">
         <div className="flex flex-col gap-1">
           <label className="text-xs text-gray-400">INPUT</label>
           <input 

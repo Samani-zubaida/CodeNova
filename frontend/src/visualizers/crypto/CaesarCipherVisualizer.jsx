@@ -26,7 +26,7 @@ export default function CryptoVisualizer() {
       <div className="flex flex-col gap-10 items-center w-full max-w-lg z-10">
         
         {/* Controls */}
-        <div className="flex gap-4 items-center bg-black/40 p-4 rounded-lg border border-white/10 w-full justify-between">
+        <div className="flex flex-wrap gap-4 items-center bg-black/40 p-4 rounded-lg border border-white/10 w-full justify-between">
           <div className="flex flex-col gap-1">
             <label className="text-xs text-gray-400">INPUT (A-Z)</label>
             <input 
@@ -56,7 +56,7 @@ export default function CryptoVisualizer() {
         </div>
 
         {/* Visualization area */}
-        <div className="flex gap-4">
+        <div className="flex flex-wrap justify-center gap-4">
           <AnimatePresence mode="popLayout">
             {inputText.split('').map((char, i) => (
               <div key={i} className="flex flex-col items-center gap-4">

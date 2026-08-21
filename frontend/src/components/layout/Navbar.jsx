@@ -32,18 +32,18 @@ export default function Navbar() {
             </span>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2 md:gap-6">
             <NavLink to="/visualizer" className={navLinkClass}>
               <Blocks size={18} />
-              <span>Visualizers</span>
+              <span className="hidden md:inline">Visualizers</span>
             </NavLink>
             <NavLink to="/sandbox" className={navLinkClass}>
               <Code2 size={18} />
-              <span>Sandbox</span>
+              <span className="hidden md:inline">Sandbox</span>
             </NavLink>
             <NavLink to="/game" className={navLinkClass}>
               <Gamepad2 size={18} />
-              <span>3D Game</span>
+              <span className="hidden md:inline">3D Game</span>
             </NavLink>
 
             <div className="h-6 w-px bg-gray-300 dark:bg-white/20 mx-2"></div>

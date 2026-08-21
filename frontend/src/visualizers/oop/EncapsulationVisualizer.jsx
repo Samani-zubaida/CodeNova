@@ -11,7 +11,7 @@ export default function EncapsulationVisualizer() {
       <h3 className="text-xl font-bold mb-2 text-[var(--color-nova-brown)]">Encapsulation</h3>
       <p className="text-sm text-gray-500 mb-8">Bundling data and methods, restricting direct access to some components.</p>
 
-      <div className="flex gap-12 w-full max-w-2xl">
+      <div className="flex flex-col md:flex-row gap-12 w-full max-w-2xl">
         
         {/* Class Capsule */}
         <div className="flex-1 bg-gray-100 dark:bg-black/40 border-4 border-[var(--color-nova-brown)] rounded-[40px] p-6 relative overflow-hidden flex flex-col shadow-inner">

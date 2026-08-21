@@ -26,7 +26,7 @@ export default function LinkedListVisualizer() {
     <div className="w-full bg-white dark:bg-black/50 border border-gray-200 dark:border-white/10 rounded-xl p-6 overflow-hidden flex flex-col gap-8">
       <h3 className="text-xl font-bold text-[var(--color-nova-red)]">Singly Linked List</h3>
       
-      <div className="flex gap-4 items-center bg-gray-50 dark:bg-white/5 p-4 rounded-lg w-fit border border-gray-200 dark:border-gray-800">
+      <div className="flex flex-wrap gap-4 items-center bg-gray-50 dark:bg-white/5 p-4 rounded-lg w-full md:w-fit border border-gray-200 dark:border-gray-800">
         <label className="text-sm font-bold text-gray-500">Node Value</label>
         <input 
           type="number" 
@@ -40,7 +40,7 @@ export default function LinkedListVisualizer() {
         <button onClick={appendNode} className="bg-[var(--color-nova-brown)] text-white px-4 py-1 rounded font-bold hover:scale-105 transition-transform">Append Tail</button>
       </div>
 
-      <div className="flex items-center flex-wrap gap-y-12 min-h-[120px] p-4 bg-black/5 dark:bg-black/20 rounded-xl border border-gray-200 dark:border-white/5">
+      <div className="flex items-center overflow-x-auto gap-y-12 min-h-[120px] p-4 bg-black/5 dark:bg-black/20 rounded-xl border border-gray-200 dark:border-white/5 pb-8 scrollbar-thin">
         <div className="mr-4 font-bold text-gray-400">HEAD</div>
         <AnimatePresence mode="popLayout">
           {list.map((node, i) => (

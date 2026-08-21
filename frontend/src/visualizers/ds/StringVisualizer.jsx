@@ -73,26 +73,28 @@ export default function StringVisualizer() {
       <div>
         <h3 className="text-lg font-bold mb-2 text-[var(--color-nova-red)]">String (Immutable)</h3>
         <p className="text-xs text-gray-500 mb-4">Concatenating discards the old array and allocates a completely new array in memory.</p>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
           <button onClick={handleStringConcat} className="bg-[var(--color-nova-brown)] text-white px-4 py-1 rounded text-sm hover:scale-105 transition-transform font-bold">
             + Concat Word
           </button>
           
-          <AnimatePresence mode="wait">
-            <motion.div 
-              key={str}
-              initial={{ opacity: 0, y: -20, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 20, scale: 0.9 }}
-              className="flex border-2 border-[var(--color-nova-brown)] rounded overflow-hidden shadow-md"
-            >
-              {str.split('').map((char, i) => (
-                <div key={i} className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center bg-[var(--color-nova-wheat)] text-black font-mono font-bold border-r last:border-none border-black/10">
-                  {char}
-                </div>
-              ))}
-            </motion.div>
-          </AnimatePresence>
+          <div className="max-w-full overflow-x-auto pb-2 scrollbar-thin">
+            <AnimatePresence mode="wait">
+              <motion.div 
+                key={str}
+                initial={{ opacity: 0, y: -20, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 20, scale: 0.9 }}
+                className="inline-flex border-2 border-[var(--color-nova-brown)] rounded overflow-hidden shadow-md"
+              >
+                {str.split('').map((char, i) => (
+                  <div key={i} className="w-8 h-8 md:w-10 md:h-10 flex-shrink-0 flex items-center justify-center bg-[var(--color-nova-wheat)] text-black font-mono font-bold border-r last:border-none border-black/10">
+                    {char}
+                  </div>
+                ))}
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </div>
       </div>
 
@@ -100,7 +102,7 @@ export default function StringVisualizer() {
       <div>
         <h3 className="text-lg font-bold mb-2 text-[var(--color-nova-green)]">StringBuilder (Mutable)</h3>
         <p className="text-xs text-gray-500 mb-4">Appending pushes characters directly into the existing mutable buffer array sequentially.</p>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
           <button 
             onClick={handleStringBuilderAppend} 
             disabled={isAppending}

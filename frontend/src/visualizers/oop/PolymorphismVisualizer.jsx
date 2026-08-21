@@ -33,7 +33,7 @@ export default function PolymorphismVisualizer() {
         </div>
 
         {/* The Instances */}
-        <div className="flex gap-4 w-full justify-center">
+        <div className="flex flex-col md:flex-row gap-4 w-full justify-center">
           {animals.map((animal) => (
             <div key={animal.type} className="flex flex-col items-center gap-4 flex-1">
               <button 

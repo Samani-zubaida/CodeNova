@@ -48,10 +48,12 @@ export default function VisualizerDashboard() {
       <div className="flex-1 w-full max-w-7xl mx-auto px-4 py-8">
         
         {/* Tabs */}
-        <div className="flex justify-center border-b border-gray-200 dark:border-white/10 mb-12">
-          <TabButton id="ds" label="Data Structures" />
-          <TabButton id="oop" label="Object-Oriented Programming" />
-          <TabButton id="crypto" label="Cryptography" />
+        <div className="flex md:justify-center overflow-x-auto pb-2 border-b border-gray-200 dark:border-white/10 mb-12 w-full snap-x">
+          <div className="flex min-w-max px-4 md:px-0">
+            <TabButton id="ds" label="Data Structures" />
+            <TabButton id="oop" label="Object-Oriented Programming" />
+            <TabButton id="crypto" label="Cryptography" />
+          </div>
         </div>
 
         {/* Content Area */}

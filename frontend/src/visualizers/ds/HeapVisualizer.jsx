@@ -80,7 +80,7 @@ export default function HeapVisualizer() {
         </div>
       </div>
       
-      <div className="flex gap-4 items-center bg-gray-50 dark:bg-white/5 p-4 rounded-lg w-fit border border-gray-200 dark:border-gray-800">
+      <div className="flex flex-wrap gap-4 items-center bg-gray-50 dark:bg-white/5 p-4 rounded-lg w-fit border border-gray-200 dark:border-gray-800">
         <label className="text-sm font-bold text-gray-500">Value to Insert</label>
         <input 
           type="number" 

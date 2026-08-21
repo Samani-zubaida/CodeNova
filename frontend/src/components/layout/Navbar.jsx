@@ -1,39 +1,64 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Moon, Sun, User } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { NavLink } from 'react-router-dom';
+import { Moon, Sun, Code2, Gamepad2, Blocks } from 'lucide-react';
 import useAppStore from '../../store/useAppStore';
 
-const Navbar = () => {
-  const { theme, toggleTheme, user } = useAppStore();
+export default function Navbar() {
+  const { theme, toggleTheme } = useAppStore();
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
+
+  const navLinkClass = ({ isActive }) =>
+    `flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+      isActive
+        ? 'bg-[var(--color-nova-red)] text-white'
+        : 'text-gray-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10'
+    }`;
 
   return (
-    <nav className="border-b border-border bg-background px-6 py-4 flex items-center justify-between">
-      <div className="flex items-center space-x-6">
-        <Link to="/" className="text-2xl font-bold text-primary tracking-tight">Code Nova</Link>
-        <div className="hidden md:flex space-x-4 text-sm font-medium text-muted-foreground">
-          <Link to="/sandbox" className="hover:text-primary transition-colors">Sandbox</Link>
-          <Link to="/learn/data-structures" className="hover:text-primary transition-colors">Data Structures</Link>
-          <Link to="/game" className="hover:text-primary transition-colors">3D Towns</Link>
-        </div>
-      </div>
-      
-      <div className="flex items-center space-x-4">
-        <button onClick={toggleTheme} className="p-2 hover:bg-accent hover:text-accent-foreground rounded-full transition-colors">
-          {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-        </button>
-        {user ? (
-          <div className="flex items-center space-x-2 text-sm font-medium">
-            <User size={20} className="text-secondary" />
-            <span>{user.username}</span>
+    <nav className="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-white/10 bg-white/80 dark:bg-black/80 backdrop-blur-md">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16 items-center">
+          
+          <div className="flex items-center gap-2">
+            <span className="text-2xl font-extrabold bg-gradient-to-r from-[var(--color-nova-red)] to-[var(--color-nova-brown)] bg-clip-text text-transparent">
+              Code Nova
+            </span>
           </div>
-        ) : (
-          <button className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 transition-opacity">
-            Log In
-          </button>
-        )}
+
+          <div className="flex items-center gap-6">
+            <NavLink to="/visualizer" className={navLinkClass}>
+              <Blocks size={18} />
+              <span>Visualizers</span>
+            </NavLink>
+            <NavLink to="/sandbox" className={navLinkClass}>
+              <Code2 size={18} />
+              <span>Sandbox</span>
+            </NavLink>
+            <NavLink to="/game" className={navLinkClass}>
+              <Gamepad2 size={18} />
+              <span>3D Game</span>
+            </NavLink>
+
+            <div className="h-6 w-px bg-gray-300 dark:bg-white/20 mx-2"></div>
+
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+              aria-label="Toggle Dark Mode"
+            >
+              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+          </div>
+
+        </div>
       </div>
     </nav>
   );
-};
-
-export default Navbar;
+}

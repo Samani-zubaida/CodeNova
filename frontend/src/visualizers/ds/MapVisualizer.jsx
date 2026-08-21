@@ -33,7 +33,7 @@ export default function MapVisualizer() {
   };
 
   return (
-    <div className="w-full bg-white dark:bg-black/50 border border-gray-200 dark:border-white/10 rounded-xl p-8 flex flex-col gap-8">
+    <div className="w-full glass-card p-8 flex flex-col gap-8">
       <div>
         <h3 className="text-xl font-bold mb-2 text-[var(--color-nova-red)]">Hash Map</h3>
         <p className="text-sm text-gray-500">Keys are hashed to calculate a bucket index. Collisions are handled via chaining (arrays in buckets).</p>

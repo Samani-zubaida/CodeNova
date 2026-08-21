@@ -7,7 +7,7 @@ export default function EncapsulationVisualizer() {
   const [secret, setSecret] = useState("Hidden Data");
 
   return (
-    <div className="w-full bg-white dark:bg-black/50 border border-gray-200 dark:border-white/10 rounded-xl p-8 flex flex-col items-center">
+    <div className="w-full glass-card p-8 flex flex-col items-center">
       <h3 className="text-xl font-bold mb-2 text-[var(--color-nova-brown)]">Encapsulation</h3>
       <p className="text-sm text-gray-500 mb-8">Bundling data and methods, restricting direct access to some components.</p>
 

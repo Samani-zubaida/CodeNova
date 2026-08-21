@@ -38,7 +38,7 @@ export default function TreeGraphVisualizer() {
     if (!parentNode) return setError(`Parent node with value ${targetVal} not found.`);
 
     // Check if direction is already occupied by looking at edges
-    const isOccupied = edges.some(e => e.source === parentNode.id && e.sourceHandle === direction);
+    const isOccupied = edges.some(e => e.source === parentNode.id && e.data?.direction === direction);
     if (isOccupied) return setError(`Parent ${targetVal} already has a ${direction} child.`);
 
     const newNodeId = `node_${Date.now()}`;
@@ -55,9 +55,9 @@ export default function TreeGraphVisualizer() {
       id: `e_${parentNode.id}-${newNodeId}`,
       source: parentNode.id,
       target: newNodeId,
-      sourceHandle: direction,
+      data: { direction },
       animated: true,
-      style: { stroke: 'var(--color-nova-brown)' }
+      style: { stroke: 'var(--color-nova-brown)', strokeWidth: 2 }
     };
 
     setNodes([...nodes, newNode]);
@@ -68,7 +68,7 @@ export default function TreeGraphVisualizer() {
   return (
     <div className="flex flex-col gap-4">
       {/* Control Panel */}
-      <div className="flex flex-wrap gap-4 items-end bg-gray-50 dark:bg-white/5 p-4 rounded-lg border border-gray-200 dark:border-gray-800">
+      <div className="flex flex-wrap gap-4 items-end glass-panel p-4">
         <div className="flex flex-col gap-1">
           <label className="text-xs text-gray-500 font-bold">Value to Add</label>
           <input 
@@ -106,7 +106,7 @@ export default function TreeGraphVisualizer() {
         {error && <span className="text-red-500 text-sm font-semibold ml-4">{error}</span>}
       </div>
 
-      <div className="w-full h-[500px] border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-sm bg-white dark:bg-black/50">
+      <div className="w-full h-[500px] glass-card overflow-hidden">
         <ReactFlow
           nodes={nodes}
           edges={edges}

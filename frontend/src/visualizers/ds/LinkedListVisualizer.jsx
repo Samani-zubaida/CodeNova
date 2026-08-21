@@ -23,7 +23,7 @@ export default function LinkedListVisualizer() {
   };
 
   return (
-    <div className="w-full bg-white dark:bg-black/50 border border-gray-200 dark:border-white/10 rounded-xl p-6 overflow-hidden flex flex-col gap-8">
+    <div className="w-full glass-card p-6 overflow-hidden flex flex-col gap-8">
       <h3 className="text-xl font-bold text-[var(--color-nova-red)]">Singly Linked List</h3>
       
       <div className="flex flex-wrap gap-4 items-center bg-gray-50 dark:bg-white/5 p-4 rounded-lg w-full md:w-fit border border-gray-200 dark:border-gray-800">

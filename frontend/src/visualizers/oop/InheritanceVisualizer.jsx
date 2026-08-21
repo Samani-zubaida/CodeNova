@@ -5,7 +5,7 @@ export default function OOPVisualizer() {
   const [showChild, setShowChild] = useState(false);
 
   return (
-    <div className="w-full h-[500px] border border-gray-200 dark:border-gray-800 rounded-xl flex flex-col items-center justify-center p-8 bg-white dark:bg-black/50 overflow-hidden relative">
+    <div className="w-full h-[500px] glass-card p-8 flex flex-col items-center justify-center overflow-hidden relative">
       <h2 className="absolute top-6 left-6 text-xl font-bold text-[var(--color-nova-brown)]">OOP Inheritance</h2>
       
       <div className="flex flex-col items-center gap-12 w-full max-w-2xl">

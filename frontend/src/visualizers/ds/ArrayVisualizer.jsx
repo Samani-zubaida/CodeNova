@@ -21,7 +21,7 @@ export default function ArrayVisualizer() {
   };
 
   return (
-    <div className="w-full bg-white dark:bg-black/50 border border-gray-200 dark:border-white/10 rounded-xl p-6">
+    <div className="w-full glass-card p-6">
       <h3 className="text-xl font-bold mb-4 text-[var(--color-nova-red)]">Array</h3>
       
       <div className="flex flex-wrap gap-4 mb-8">

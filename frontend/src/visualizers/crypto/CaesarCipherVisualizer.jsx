@@ -20,7 +20,7 @@ export default function CryptoVisualizer() {
   };
 
   return (
-    <div className="w-full h-[500px] border border-gray-200 dark:border-gray-800 rounded-xl flex flex-col items-center justify-center p-8 bg-[#1a1a1a] text-white overflow-hidden relative font-mono shadow-inner">
+    <div className="w-full h-[500px] glass-card flex flex-col items-center justify-center p-8 text-white overflow-hidden relative font-mono shadow-inner">
       <h2 className="absolute top-6 left-6 text-xl font-bold text-[var(--color-nova-green)] tracking-widest">CIPHER_SHIFT</h2>
       
       <div className="flex flex-col gap-10 items-center w-full max-w-lg z-10">

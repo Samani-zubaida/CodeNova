@@ -39,10 +39,10 @@ export default function StringVisualizer() {
   };
 
   return (
-    <div className="w-full bg-white dark:bg-black/50 border border-gray-200 dark:border-white/10 rounded-xl p-6 flex flex-col gap-8">
+    <div className="w-full glass-card p-6 flex flex-col gap-8">
       
       {/* Controls */}
-      <div className="flex flex-wrap gap-6 items-end bg-gray-50 dark:bg-black/20 p-4 rounded-lg border border-gray-200 dark:border-gray-800">
+      <div className="flex flex-wrap gap-6 items-end glass-panel p-4">
         <div className="flex flex-col gap-1">
           <label className="text-xs text-gray-500 font-bold">Base String</label>
           <input 

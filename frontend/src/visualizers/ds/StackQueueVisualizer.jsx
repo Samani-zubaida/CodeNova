@@ -23,7 +23,7 @@ export default function StackQueueVisualizer() {
   const dequeue = () => setQueue(queue.slice(1));
 
   return (
-    <div className="w-full bg-white dark:bg-black/50 border border-gray-200 dark:border-white/10 rounded-xl p-6 flex flex-col md:flex-row gap-12 justify-around">
+    <div className="w-full glass-card p-6 flex flex-col md:flex-row gap-12 justify-around">
       
       {/* Stack Area */}
       <div className="flex flex-col items-center">

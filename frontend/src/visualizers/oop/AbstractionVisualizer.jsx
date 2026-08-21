@@ -6,7 +6,7 @@ export default function AbstractionVisualizer() {
   const [isRunning, setIsRunning] = useState(false);
 
   return (
-    <div className="w-full bg-white dark:bg-black/50 border border-gray-200 dark:border-white/10 rounded-xl p-8 flex flex-col items-center">
+    <div className="w-full glass-card p-8 flex flex-col items-center">
       <h3 className="text-xl font-bold mb-2 text-[var(--color-nova-red)]">Abstraction</h3>
       <p className="text-sm text-gray-500 mb-8">Hiding complex implementation details and showing only the essential features.</p>
 

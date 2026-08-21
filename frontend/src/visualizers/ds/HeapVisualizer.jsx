@@ -56,7 +56,7 @@ export default function HeapVisualizer() {
   };
 
   return (
-    <div className="w-full bg-white dark:bg-black/50 border border-gray-200 dark:border-white/10 rounded-xl p-6 flex flex-col gap-6">
+    <div className="w-full glass-card p-6 flex flex-col gap-6">
       
       <div className="flex flex-col md:flex-row gap-6 justify-between items-start md:items-center">
         <div>

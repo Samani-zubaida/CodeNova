@@ -24,7 +24,7 @@ export default function RailFenceVisualizer() {
   }, [text, rails]);
 
   return (
-    <div className="w-full bg-[#1a1a1a] border border-gray-200 dark:border-white/10 rounded-xl p-8 flex flex-col items-center text-white font-mono shadow-inner">
+    <div className="w-full min-h-[500px] glass-card flex flex-col items-center p-8 text-white overflow-hidden relative font-mono shadow-inner">
       <h3 className="text-xl font-bold mb-2 text-[var(--color-nova-wheat)] tracking-widest">RAIL_FENCE_CIPHER</h3>
       <p className="text-sm text-gray-400 mb-8 text-center max-w-lg">Writes text downwards on successive "rails" in a zig-zag pattern, then reads off each row horizontally to encrypt.</p>
 

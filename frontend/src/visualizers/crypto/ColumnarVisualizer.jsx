@@ -16,7 +16,7 @@ export default function ColumnarVisualizer() {
   const sortedKeyword = keyword.split('').map((char, index) => ({ char, index })).sort((a, b) => a.char.localeCompare(b.char));
 
   return (
-    <div className="w-full bg-[#1a1a1a] border border-gray-200 dark:border-white/10 rounded-xl p-8 flex flex-col items-center text-white font-mono shadow-inner">
+    <div className="w-full min-h-[500px] glass-card flex flex-col items-center p-8 text-white overflow-hidden relative font-mono shadow-inner">
       <h3 className="text-xl font-bold mb-2 text-[var(--color-nova-red)] tracking-widest">COLUMNAR_TRANSPOSITION</h3>
       <p className="text-sm text-gray-400 mb-8 text-center max-w-lg">Writes text into a grid, then reads the columns downwards in alphabetical order of the keyword.</p>
 

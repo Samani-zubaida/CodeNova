@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import PlaybackControls from '../visualizers/PlaybackControls';
-
+import { motion, AnimatePresence } from 'framer-motion';
 // Data Structures
 import ArrayVisualizer from '../visualizers/ds/ArrayVisualizer';
 import StringVisualizer from '../visualizers/ds/StringVisualizer';
@@ -27,77 +26,106 @@ export default function VisualizerDashboard() {
   const TabButton = ({ id, label }) => (
     <button
       onClick={() => setActiveTab(id)}
-      className={`px-6 py-3 font-semibold transition-colors border-b-4 ${
+      className={`relative px-6 py-3 font-semibold transition-colors rounded-full ${
         activeTab === id
-          ? 'border-[var(--color-nova-red)] text-[var(--color-nova-red)]'
-          : 'border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'
+          ? 'text-white'
+          : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'
       }`}
     >
-      {label}
+      {activeTab === id && (
+        <motion.div
+          layoutId="active-tab"
+          className="absolute inset-0 bg-gradient-to-r from-[var(--color-nova-red)] to-[var(--color-nova-brown)] rounded-full -z-10"
+          initial={false}
+          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+        />
+      )}
+      <span className="relative z-10">{label}</span>
     </button>
   );
 
   return (
     <div className="flex flex-col min-h-screen">
-      
-      {/* Global Controls Panel */}
-      <div className="bg-white/50 dark:bg-black/50 backdrop-blur border-b border-gray-200 dark:border-white/10 p-4">
-        <PlaybackControls />
-      </div>
-
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 py-8">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 py-12">
         
-        {/* Tabs */}
-        <div className="flex md:justify-center overflow-x-auto pb-2 border-b border-gray-200 dark:border-white/10 mb-12 w-full snap-x">
-          <div className="flex min-w-max px-4 md:px-0">
+        {/* Premium Hero Section */}
+        <div className="text-center mb-16 relative">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <h1 className="text-5xl md:text-6xl font-extrabold mb-6 tracking-tight">
+              Interactive <span className="bg-clip-text text-transparent bg-gradient-to-r from-[var(--color-nova-red)] via-[var(--color-nova-brown)] to-[var(--color-nova-green)]">Visualizers</span>
+            </h1>
+            <p className="text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
+              Explore dynamic, real-time representations of complex algorithms, data structures, and object-oriented paradigms.
+            </p>
+          </motion.div>
+        </div>
+
+        {/* Glassmorphic Tabs */}
+        <div className="flex justify-center mb-16 w-full">
+          <div className="flex bg-gray-100 dark:bg-white/5 p-1 rounded-full border border-gray-200 dark:border-white/10 shadow-inner overflow-x-auto snap-x max-w-full">
             <TabButton id="ds" label="Data Structures" />
-            <TabButton id="oop" label="Object-Oriented Programming" />
+            <TabButton id="oop" label="Object-Oriented" />
             <TabButton id="crypto" label="Cryptography" />
           </div>
         </div>
 
-        {/* Content Area */}
+        {/* Content Area with Staggered Entrance */}
         <div className="w-full">
-          {activeTab === 'ds' && (
-            <div className="space-y-16">
-              <div className="text-center">
-                <h2 className="text-4xl font-bold mb-4">Data Structures Visualizer</h2>
-                <p className="text-gray-500 max-w-2xl mx-auto">Interactive modules showing memory allocation, pointers, hierarchies, and algorithmic concepts behind standard data structures.</p>
-              </div>
-              <ArrayVisualizer />
-              <StringVisualizer />
-              <StackQueueVisualizer />
-              <LinkedListVisualizer />
-              <TreeGraphVisualizer />
-              <HeapVisualizer />
-              <MapVisualizer />
-            </div>
-          )}
+          <AnimatePresence mode="wait">
+            {activeTab === 'ds' && (
+              <motion.div 
+                key="ds"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5 }}
+                className="space-y-12"
+              >
+                <ArrayVisualizer />
+                <StringVisualizer />
+                <StackQueueVisualizer />
+                <LinkedListVisualizer />
+                <TreeGraphVisualizer />
+                <HeapVisualizer />
+                <MapVisualizer />
+              </motion.div>
+            )}
 
-          {activeTab === 'oop' && (
-            <div className="space-y-16">
-              <div className="text-center">
-                <h2 className="text-4xl font-bold mb-4">OOP Pillars Visualizer</h2>
-                <p className="text-gray-500 max-w-2xl mx-auto">Visualizing the four foundational pillars of Object-Oriented Programming.</p>
-              </div>
-              <EncapsulationVisualizer />
-              <AbstractionVisualizer />
-              <InheritanceVisualizer />
-              <PolymorphismVisualizer />
-            </div>
-          )}
+            {activeTab === 'oop' && (
+              <motion.div 
+                key="oop"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5 }}
+                className="space-y-12"
+              >
+                <EncapsulationVisualizer />
+                <AbstractionVisualizer />
+                <InheritanceVisualizer />
+                <PolymorphismVisualizer />
+              </motion.div>
+            )}
 
-          {activeTab === 'crypto' && (
-            <div className="space-y-16">
-              <div className="text-center">
-                <h2 className="text-4xl font-bold mb-4">Cryptography Visualizer</h2>
-                <p className="text-gray-500 max-w-2xl mx-auto">Interactive ciphers demonstrating basic cryptographic data transformations and shifts.</p>
-              </div>
-              <CaesarCipherVisualizer />
-              <RailFenceVisualizer />
-              <ColumnarVisualizer />
-            </div>
-          )}
+            {activeTab === 'crypto' && (
+              <motion.div 
+                key="crypto"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5 }}
+                className="space-y-12"
+              >
+                <CaesarCipherVisualizer />
+                <RailFenceVisualizer />
+                <ColumnarVisualizer />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
         
       </div>

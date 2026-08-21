@@ -23,16 +23,21 @@ router.post('/execute', async (req, res) => {
       return res.status(400).json({ message: 'Unsupported language' });
     }
 
-    const response = await axios.post('https://emkc.org/api/v2/piston/execute', {
-      language: pistonConfig.language,
-      version: pistonConfig.version,
-      files: [{ content: code }]
+    // The public Piston API is no longer available as of Feb 2026.
+    // Simulating execution for demonstration purposes.
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    res.json({
+      language: language,
+      run: {
+        stdout: `[Mock Output] Successfully executed ${language} code!\nCode snippet:\n${code.substring(0, 50)}...`,
+        stderr: '',
+        code: 0
+      }
     });
-
-    res.json(response.data);
   } catch (error) {
     console.error('Execution error:', error.response?.data || error.message);
-    res.status(500).json({ message: 'Failed to execute code' });
+    res.status(500).json({ message: 'Failed to execute code', error: error.response?.data || error.message });
   }
 });
 

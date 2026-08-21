@@ -23,7 +23,7 @@ router.post('/execute', async (req, res) => {
       return res.status(400).json({ message: 'Unsupported language' });
     }
 
-    const response = await axios.post('https://emacs.piston.rs/api/v2/execute', {
+    const response = await axios.post('https://emkc.org/api/v2/piston/execute', {
       language: pistonConfig.language,
       version: pistonConfig.version,
       files: [{ content: code }]

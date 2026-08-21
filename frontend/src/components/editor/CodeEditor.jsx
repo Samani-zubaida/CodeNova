@@ -10,7 +10,7 @@ const CodeEditor = ({ code, setCode, language }) => {
   };
 
   return (
-    <div className="h-full w-full rounded-xl overflow-hidden shadow-inner group-hover:ring-2 group-hover:ring-[var(--color-nova-red)]/30 transition-all duration-300">
+    <div className="h-full w-full rounded-[10px] overflow-hidden shadow-inner group-hover:ring-1 group-hover:ring-[var(--color-nova-red)]/30 transition-all duration-300">
       <Editor
         height="100%"
         language={language}
@@ -19,19 +19,19 @@ const CodeEditor = ({ code, setCode, language }) => {
         onChange={handleEditorChange}
         options={{
           minimap: { enabled: false },
-          fontSize: 15,
+          fontSize: 13,
           fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-          padding: { top: 24, bottom: 24 },
+          padding: { top: 16, bottom: 16 },
           scrollBeyondLastLine: false,
           smoothScrolling: true,
           cursorBlinking: "smooth",
-          lineNumbersMinChars: 4,
+          lineNumbersMinChars: 3,
           renderLineHighlight: "all",
           scrollbar: {
             useShadows: false,
             verticalHasArrows: false,
             horizontalHasArrows: false,
-            verticalScrollbarSize: 8,
+            verticalScrollbarSize: 6,
           }
         }}
       />

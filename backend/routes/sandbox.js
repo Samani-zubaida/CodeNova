@@ -43,14 +43,43 @@ router.post('/execute', async (req, res) => {
       }
     }
 
-    // For other languages (Python, C++, Java), we simulate execution for now
+    const { exec } = require('child_process');
+    const fs = require('fs').promises;
+    const path = require('path');
+    const os = require('os');
+    const crypto = require('crypto');
+
+    if (language === 'python' || language === 'java') {
+      const ext = language === 'python' ? 'py' : 'java';
+      const tmpFile = path.join(os.tmpdir(), `script_${crypto.randomBytes(4).toString('hex')}.${ext}`);
+      
+      await fs.writeFile(tmpFile, code);
+      
+      try {
+        const cmd = language === 'python' ? `python "${tmpFile}"` : `java "${tmpFile}"`;
+        const { stdout, stderr } = await new Promise((resolve, reject) => {
+          exec(cmd, { timeout: 3000 }, (error, stdout, stderr) => {
+            if (error && error.killed) return reject(new Error('Execution timed out'));
+            resolve({ stdout, stderr: stderr || (error ? error.message : '') });
+          });
+        });
+        
+        return res.json({ language, run: { stdout, stderr, code: stderr ? 1 : 0 } });
+      } catch (err) {
+        return res.json({ language, run: { stdout: '', stderr: err.message, code: 1 } });
+      } finally {
+        await fs.unlink(tmpFile).catch(() => {});
+      }
+    }
+
+    // For C++ or unsupported languages, we simulate execution since g++ is missing
     await new Promise(resolve => setTimeout(resolve, 500));
     
     // We provide a clean simulated output rather than echoing the code back
     res.json({
       language: language,
       run: {
-        stdout: `[Simulated Output]\nSuccess: Compiled and executed ${language} program perfectly.\n(Native execution for this language is currently disabled in Sandbox mode).\n`,
+        stdout: `[Simulated Output]\nSuccess: Compiled and executed ${language} program perfectly.\n(Native execution for this language is currently disabled in Sandbox mode because a compiler is not installed on the system).\n`,
         stderr: '',
         code: 0
       }

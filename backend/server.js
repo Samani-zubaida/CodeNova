@@ -4,6 +4,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
+const sandboxRoutes = require('./routes/sandbox');
 
 const app = express();
 
@@ -17,6 +18,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/codenova'
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/sandbox', sandboxRoutes);
 
 app.get('/', (req, res) => {
   res.send('Code Nova API is running');

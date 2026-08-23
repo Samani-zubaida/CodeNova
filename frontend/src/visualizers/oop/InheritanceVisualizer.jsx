@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function OOPVisualizer() {
   const [showChild, setShowChild] = useState(false);
 
   return (
-    <div className="w-full h-[500px] glass-card p-8 flex flex-col items-center justify-center overflow-hidden relative">
-      <h2 className="absolute top-6 left-6 text-xl font-bold text-[var(--color-nova-brown)]">OOP Inheritance</h2>
+    <div className="w-full max-w-4xl mx-auto min-h-[600px] glass-card p-8 flex flex-col items-center justify-center overflow-hidden relative">
+      <Link to="/visualizer" className="absolute top-8 left-8 text-gray-500 hover:text-[var(--color-nova-red)] transition-colors flex items-center gap-2 font-semibold z-10">
+        <ArrowLeft size={20} /> Back to Dashboard
+      </Link>
+      <h2 className="absolute top-8 right-8 text-xl font-bold text-[var(--color-nova-brown)]">OOP Inheritance</h2>
       
       <div className="flex flex-col items-center gap-12 w-full max-w-2xl">
         {/* Parent Class Object */}

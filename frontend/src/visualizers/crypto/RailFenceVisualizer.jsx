@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+import { ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function RailFenceVisualizer() {
   const [text, setText] = useState("CODENOVA");
@@ -24,10 +26,15 @@ export default function RailFenceVisualizer() {
   }, [text, rails]);
 
   return (
-    <div className="w-full min-h-[500px] glass-card flex flex-col items-center p-8 text-white overflow-hidden relative font-mono shadow-inner">
-      <h3 className="text-xl font-bold mb-2 text-[var(--color-nova-wheat)] tracking-widest">RAIL_FENCE_CIPHER</h3>
-      <p className="text-sm text-gray-400 mb-8 text-center max-w-lg">Writes text downwards on successive "rails" in a zig-zag pattern, then reads off each row horizontally to encrypt.</p>
-
+    <div className="w-full min-h-[600px] max-w-6xl mx-auto glass-card flex flex-col items-center p-8 text-white overflow-hidden relative font-mono shadow-inner">
+      <Link to="/visualizer" className="absolute top-8 left-8 text-gray-500 hover:text-[var(--color-nova-red)] transition-colors flex items-center gap-2 font-semibold z-10">
+        <ArrowLeft size={20} /> Back to Dashboard
+      </Link>
+      
+      <div className="text-center mt-12 mb-8">
+        <h3 className="text-xl font-bold mb-2 text-[var(--color-nova-wheat)] tracking-widest">RAIL_FENCE_CIPHER</h3>
+        <p className="text-sm text-gray-400 text-center max-w-lg mx-auto">Writes text downwards on successive "rails" in a zig-zag pattern, then reads off each row horizontally to encrypt.</p>
+      </div>
       <div className="flex flex-wrap gap-4 mb-8 bg-black/40 p-4 rounded-lg border border-white/10 w-full max-w-lg justify-between items-center">
         <div className="flex flex-col gap-1">
           <label className="text-xs text-gray-400">INPUT</label>

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
@@ -20,8 +22,11 @@ export default function CryptoVisualizer() {
   };
 
   return (
-    <div className="w-full h-[500px] glass-card flex flex-col items-center justify-center p-8 text-white overflow-hidden relative font-mono shadow-inner">
-      <h2 className="absolute top-6 left-6 text-xl font-bold text-[var(--color-nova-green)] tracking-widest">CIPHER_SHIFT</h2>
+    <div className="w-full min-h-[600px] max-w-6xl mx-auto glass-card flex flex-col items-center justify-center p-8 text-white overflow-hidden relative font-mono shadow-inner">
+      <Link to="/visualizer" className="absolute top-8 left-8 text-gray-500 hover:text-[var(--color-nova-red)] transition-colors flex items-center gap-2 font-semibold z-10">
+        <ArrowLeft size={20} /> Back to Dashboard
+      </Link>
+      <h2 className="absolute top-8 right-8 text-xl font-bold text-[var(--color-nova-green)] tracking-widest">CIPHER_SHIFT</h2>
       
       <div className="flex flex-col gap-10 items-center w-full max-w-lg z-10">
         

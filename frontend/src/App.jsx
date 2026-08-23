@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
 import VisualizerDashboard from './pages/VisualizerDashboard';
+import Sandbox from './pages/Sandbox';
 
 // Data Structures
 import ArrayVisualizer from './visualizers/ds/ArrayVisualizer';
@@ -58,8 +59,8 @@ function App() {
             <Route path="/visualizer/railfence" element={<div className="p-8"><RailFenceVisualizer /></div>} />
             <Route path="/visualizer/columnar" element={<div className="p-8"><ColumnarVisualizer /></div>} />
 
-            {/* Placeholder routes for future implementation */}
-            <Route path="/sandbox" element={<div className="p-8 text-center"><h1 className="text-3xl">Sandbox (Coming Soon)</h1></div>} />
+            {/* Sandbox */}
+            <Route path="/sandbox" element={<Sandbox />} />
             <Route path="/game" element={<div className="p-8 text-center"><h1 className="text-3xl">3D Game (Coming Soon)</h1></div>} />
           </Routes>
         </main>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Database, Binary, KeyRound, ChevronLeft, ChevronRight, Layers, Hash, Network, Type, Lock, Shield, ListTree, ArrowRight } from 'lucide-react';
 
 const categories = [
@@ -87,8 +87,12 @@ const itemVariants = {
 };
 
 export default function VisualizerDashboard() {
-  const [page, setPage] = useState(0);
+  const location = useLocation();
+  const initialPage = location.state?.activeTab === 'crypto' ? 2 : (location.state?.activeTab === 'oop' ? 1 : 0);
+  
+  const [page, setPage] = useState(initialPage);
   const [direction, setDirection] = useState(0);
+  const [isScrolling, setIsScrolling] = useState(false);
 
   const paginate = (newDirection) => {
     let newPage = page + newDirection;
@@ -101,10 +105,26 @@ export default function VisualizerDashboard() {
     }
   };
 
+  const handleWheel = (e) => {
+    if (isScrolling) return;
+    if (Math.abs(e.deltaX) > 50) {
+      setIsScrolling(true);
+      if (e.deltaX > 0) {
+        paginate(1); // Swipe left (scroll right) -> Next
+      } else {
+        paginate(-1); // Swipe right (scroll left) -> Previous
+      }
+      setTimeout(() => setIsScrolling(false), 500);
+    }
+  };
+
   const currentCategory = categories[page];
 
   return (
-    <div className="fixed top-[64px] bottom-0 left-0 right-0 overflow-hidden bg-gray-50 dark:bg-[#09090b] flex flex-col items-center justify-center">
+    <div 
+      className="fixed top-[64px] bottom-0 left-0 right-0 overflow-hidden bg-gray-50 dark:bg-[#09090b] flex flex-col items-center justify-center"
+      onWheel={handleWheel}
+    >
       
       <AnimatePresence initial={false} custom={direction}>
         <motion.div

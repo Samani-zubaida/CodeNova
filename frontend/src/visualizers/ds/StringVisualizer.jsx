@@ -193,7 +193,7 @@ export default function StringVisualizer() {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-500 opacity-5 blur-[100px] rounded-full pointer-events-none"></div>
 
           {/* String (Immutable) */}
-          <div className="w-full max-w-2xl bg-white/40 dark:bg-black/40 backdrop-blur border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-xl relative z-10">
+          <div className="w-full max-w-2xl bg-white/40 dark:bg-black/40 backdrop-blur border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-lg relative z-10">
              <div className="flex items-center gap-2 mb-4">
                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
                <h3 className="font-bold text-lg">String <span className="text-gray-500 font-normal text-sm">(Immutable)</span></h3>
@@ -232,7 +232,7 @@ export default function StringVisualizer() {
           </div>
 
           {/* StringBuilder */}
-          <div className="w-full max-w-2xl bg-white/40 dark:bg-black/40 backdrop-blur border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-xl relative z-10">
+          <div className="w-full max-w-2xl bg-white/40 dark:bg-black/40 backdrop-blur border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-lg relative z-10">
              <div className="flex items-center gap-2 mb-4">
                <div className="w-3 h-3 rounded-full bg-green-500"></div>
                <h3 className="font-bold text-lg">StringBuilder <span className="text-gray-500 font-normal text-sm">(Mutable)</span></h3>

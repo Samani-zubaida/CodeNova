@@ -39,25 +39,25 @@ function App() {
             <Route path="/visualizer" element={<VisualizerDashboard />} />
             
             {/* DS Routes */}
-            <Route path="/visualizer/array" element={<div className="p-8"><ArrayVisualizer /></div>} />
-            <Route path="/visualizer/string" element={<div className="p-8"><StringVisualizer /></div>} />
-            <Route path="/visualizer/stack" element={<div className="p-8"><StackVisualizer /></div>} />
-            <Route path="/visualizer/queue" element={<div className="p-8"><QueueVisualizer /></div>} />
-            <Route path="/visualizer/linkedlist" element={<div className="p-8"><LinkedListVisualizer /></div>} />
-            <Route path="/visualizer/tree" element={<div className="p-8"><TreeGraphVisualizer /></div>} />
-            <Route path="/visualizer/heap" element={<div className="p-8"><HeapVisualizer /></div>} />
-            <Route path="/visualizer/map" element={<div className="p-8"><MapVisualizer /></div>} />
+            <Route path="/visualizer/array" element={<ArrayVisualizer />} />
+            <Route path="/visualizer/string" element={<StringVisualizer />} />
+            <Route path="/visualizer/stack" element={<StackVisualizer />} />
+            <Route path="/visualizer/queue" element={<QueueVisualizer />} />
+            <Route path="/visualizer/linkedlist" element={<LinkedListVisualizer />} />
+            <Route path="/visualizer/tree" element={<TreeGraphVisualizer />} />
+            <Route path="/visualizer/heap" element={<HeapVisualizer />} />
+            <Route path="/visualizer/map" element={<MapVisualizer />} />
 
             {/* OOP Routes */}
-            <Route path="/visualizer/encapsulation" element={<div className="p-8"><EncapsulationVisualizer /></div>} />
-            <Route path="/visualizer/abstraction" element={<div className="p-8"><AbstractionVisualizer /></div>} />
-            <Route path="/visualizer/inheritance" element={<div className="p-8"><InheritanceVisualizer /></div>} />
-            <Route path="/visualizer/polymorphism" element={<div className="p-8"><PolymorphismVisualizer /></div>} />
+            <Route path="/visualizer/encapsulation" element={<EncapsulationVisualizer />} />
+            <Route path="/visualizer/abstraction" element={<AbstractionVisualizer />} />
+            <Route path="/visualizer/inheritance" element={<InheritanceVisualizer />} />
+            <Route path="/visualizer/polymorphism" element={<PolymorphismVisualizer />} />
 
             {/* Crypto Routes */}
-            <Route path="/visualizer/caesar" element={<div className="p-8"><CaesarCipherVisualizer /></div>} />
-            <Route path="/visualizer/railfence" element={<div className="p-8"><RailFenceVisualizer /></div>} />
-            <Route path="/visualizer/columnar" element={<div className="p-8"><ColumnarVisualizer /></div>} />
+            <Route path="/visualizer/caesar" element={<CaesarCipherVisualizer />} />
+            <Route path="/visualizer/railfence" element={<RailFenceVisualizer />} />
+            <Route path="/visualizer/columnar" element={<ColumnarVisualizer />} />
 
             {/* Sandbox */}
             <Route path="/sandbox" element={<Sandbox />} />

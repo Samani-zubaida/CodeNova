@@ -381,7 +381,7 @@ export default function TreeGraphVisualizer() {
             onConnect={onConnect}
             fitView
           >
-            <Controls className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden shadow-xl" />
+            <Controls className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden shadow-lg" />
             <Background variant="dots" gap={16} size={1} color="rgba(150,150,150,0.2)" />
           </ReactFlow>
         </div>

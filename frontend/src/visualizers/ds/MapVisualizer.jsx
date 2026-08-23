@@ -197,7 +197,7 @@ export default function MapVisualizer() {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-500 opacity-5 blur-[100px] rounded-full pointer-events-none"></div>
 
           {/* Premium Table Map Visualization */}
-          <div className="w-full max-w-2xl bg-white/60 dark:bg-black/60 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200 dark:border-white/10 overflow-hidden relative">
+          <div className="w-full max-w-2xl bg-white/60 dark:bg-black/60  rounded-2xl shadow-2xl border border-gray-200 dark:border-white/10 overflow-hidden relative">
             
             {/* Table Header */}
             <div className="grid grid-cols-[1fr_2fr_2fr_auto] gap-4 p-4 bg-gray-100/80 dark:bg-[#161b22] border-b border-gray-200 dark:border-white/10 text-xs font-bold text-gray-500 uppercase tracking-widest">

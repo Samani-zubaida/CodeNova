@@ -2,10 +2,15 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Terminal, ChevronDown, ChevronUp, ArrowRight as ArrowRightIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import VisualizerNav from '../../components/layout/VisualizerNav';
 
 export default function LinkedListVisualizer() {
   const [nodes, setNodes] = useState([10, 20, 30]);
   const [inputValue, setInputValue] = useState('');
+  const [findValue, setFindValue] = useState('');
+  const [isIterating, setIsIterating] = useState(false);
+  const [foundIndex, setFoundIndex] = useState(null);
+  const [activeIndex, setActiveIndex] = useState(null);
   
   // Console Output State
   const [outputLines, setOutputLines] = useState(["> Linked List Initialized"]);
@@ -104,9 +109,7 @@ export default function LinkedListVisualizer() {
         <div className="p-4 lg:p-6 flex flex-col gap-6 lg:gap-8 h-full">
           
           {/* In-flow Back Button */}
-          <Link to="/visualizer" className="text-gray-500 hover:text-teal-500 transition-colors flex items-center gap-2 font-semibold w-fit bg-black/5 dark:bg-white/5 px-3 py-1.5 rounded-full text-sm border border-gray-200 dark:border-white/10">
-            <ArrowLeft size={14} /> Back to Dashboard
-          </Link>
+          <VisualizerNav currentPath="/visualizer/linkedlist" />
 
           <div>
             <h1 className="text-2xl lg:text-3xl font-black text-teal-500 tracking-tight mb-2">Linked List</h1>

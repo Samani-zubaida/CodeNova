@@ -35,17 +35,30 @@ const TypewriterText = ({ text, color }) => {
       className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tighter text-center mt-8"
       style={{ color }}
     >
-      {text.split('').map((char, index) => (
-        <motion.span
-          key={`${char}-${index}`}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.1, delay: index * 0.05 }}
-          style={{ whiteSpace: 'pre' }}
-        >
-          {char}
-        </motion.span>
-      ))}
+      {text.split('').map((char, index) => {
+        // Stable random delay per character position
+        const randomDelay = ((index * 13) % 10) * 0.05 + Math.random() * 0.2;
+        
+        return (
+          <motion.span
+            key={`${char}-${index}`}
+            initial={{ opacity: 0, filter: 'brightness(2)' }}
+            animate={{ 
+              opacity: [0, 0.8, 0.3, 1],
+              filter: ['brightness(2)', 'brightness(1.5)', 'brightness(1)', 'brightness(1)']
+            }}
+            transition={{ 
+              duration: 0.8, 
+              delay: randomDelay,
+              times: [0, 0.4, 0.7, 1],
+              ease: "easeInOut"
+            }}
+            style={{ whiteSpace: 'pre', display: 'inline-block' }}
+          >
+            {char}
+          </motion.span>
+        );
+      })}
     </motion.h1>
   );
 };

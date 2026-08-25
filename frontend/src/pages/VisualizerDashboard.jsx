@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Code, BookOpen, Layers, Type, ListTree, Network, Hash, Shield, Lock, Cpu, Search, KeyRound, Crosshair, Settings } from 'lucide-react';
+import { Crosshair, Settings, Database, Binary, KeyRound, ChevronLeft, ChevronRight, Layers, Hash, Network, Type, Lock, Shield, ListTree, ArrowRight } from 'lucide-react';
 
 const categories = [
   {
@@ -12,18 +12,14 @@ const categories = [
     bgGlow: 'from-[var(--color-nova-red)] to-transparent',
     icon: <Database size={64} className="text-[var(--color-nova-red)] drop-shadow-2xl" />,
     items: [
-      { name: 'Caesar Cipher', path: '/visualizer/caesar', icon: <Lock size={28}/>, desc: 'Shift substitution', color: 'text-emerald-400', border: 'hover:border-emerald-400/50', shadow: 'hover:shadow-emerald-400/20' },
-      { name: 'Vigenère Cipher', path: '/visualizer/vigenere', icon: <Layers size={28}/>, desc: 'Polyalphabetic substitution', color: 'text-emerald-500', border: 'hover:border-emerald-500/50', shadow: 'hover:shadow-emerald-500/20' },
-      { name: 'Playfair Cipher', path: '/visualizer/playfair', icon: <Network size={28}/>, desc: '5x5 grid substitution', color: 'text-emerald-600', border: 'hover:border-emerald-600/50', shadow: 'hover:shadow-emerald-600/20' },
-      { name: 'Rail Fence', path: '/visualizer/railfence', icon: <Network size={28}/>, desc: 'Zig-zag transposition', color: 'text-teal-400', border: 'hover:border-teal-400/50', shadow: 'hover:shadow-teal-400/20' },
-      { name: 'Columnar', path: '/visualizer/columnar', icon: <Hash size={28}/>, desc: 'Grid transposition', color: 'text-teal-500', border: 'hover:border-teal-500/50', shadow: 'hover:shadow-teal-500/20' },
-      { name: 'AES-256', path: '/visualizer/aes', icon: <Shield size={28}/>, desc: 'Advanced Encryption Standard', color: 'text-cyan-400', border: 'hover:border-cyan-400/50', shadow: 'hover:shadow-cyan-400/20' },
-      { name: 'RSA Key Gen', path: '/visualizer/rsa', icon: <KeyRound size={28}/>, desc: 'Asymmetric cryptography', color: 'text-blue-400', border: 'hover:border-blue-400/50', shadow: 'hover:shadow-blue-400/20' },
-      { name: 'SHA-256', path: '/visualizer/hash', icon: <Hash size={28}/>, desc: 'Cryptographic hashing', color: 'text-pink-400', border: 'hover:border-pink-400/50', shadow: 'hover:shadow-pink-400/20' },
-      { name: 'Digital Signatures', path: '/visualizer/signature', icon: <Lock size={28}/>, desc: 'Authentication & Integrity', color: 'text-indigo-400', border: 'hover:border-indigo-400/50', shadow: 'hover:shadow-indigo-400/20' },
-      { name: 'Steganography', path: '/visualizer/steg', icon: <Layers size={28}/>, desc: 'Data obfuscation (LSB)', color: 'text-purple-400', border: 'hover:border-purple-400/50', shadow: 'hover:shadow-purple-400/20' },
-      { name: 'Enigma Machine', path: '/visualizer/enigma', icon: <Settings size={28}/>, desc: 'WWII rotor cipher', color: 'text-amber-400', border: 'hover:border-amber-400/50', shadow: 'hover:shadow-amber-400/20' },
-      { name: 'Hacker Mode', path: '/visualizer/hacker', icon: <Crosshair size={28}/>, desc: 'Cryptanalysis tools', color: 'text-rose-400', border: 'hover:border-rose-400/50', shadow: 'hover:shadow-rose-400/20' }
+      { name: 'Array', path: '/visualizer/array', icon: <Layers size={28}/>, desc: 'Contiguous memory blocks', color: 'text-blue-400', border: 'hover:border-blue-400/50', shadow: 'hover:shadow-blue-400/20' },
+      { name: 'String', path: '/visualizer/string', icon: <Type size={28}/>, desc: 'Immutable vs Mutable', color: 'text-purple-400', border: 'hover:border-purple-400/50', shadow: 'hover:shadow-purple-400/20' },
+      { name: 'Stack', path: '/visualizer/stack', icon: <Layers size={28}/>, desc: 'LIFO principle', color: 'text-orange-400', border: 'hover:border-orange-400/50', shadow: 'hover:shadow-orange-400/20' },
+      { name: 'Queue', path: '/visualizer/queue', icon: <ListTree size={28}/>, desc: 'FIFO principle', color: 'text-green-400', border: 'hover:border-green-400/50', shadow: 'hover:shadow-green-400/20' },
+      { name: 'Linked List', path: '/visualizer/linkedlist', icon: <Network size={28}/>, desc: 'Nodes and pointers', color: 'text-teal-400', border: 'hover:border-teal-400/50', shadow: 'hover:shadow-teal-400/20' },
+      { name: 'Tree', path: '/visualizer/tree', icon: <ListTree size={28}/>, desc: 'Hierarchical nodes', color: 'text-emerald-400', border: 'hover:border-emerald-400/50', shadow: 'hover:shadow-emerald-400/20' },
+      { name: 'Heap', path: '/visualizer/heap', icon: <Layers size={28}/>, desc: 'Priority queues', color: 'text-yellow-400', border: 'hover:border-yellow-400/50', shadow: 'hover:shadow-yellow-400/20' },
+      { name: 'Hash Map', path: '/visualizer/map', icon: <Hash size={28}/>, desc: 'O(1) lookups', color: 'text-pink-400', border: 'hover:border-pink-400/50', shadow: 'hover:shadow-pink-400/20' },
     ]
   },
   {
@@ -34,18 +30,10 @@ const categories = [
     bgGlow: 'from-[var(--color-nova-brown)] to-transparent',
     icon: <Binary size={64} className="text-[var(--color-nova-brown)] drop-shadow-2xl" />,
     items: [
-      { name: 'Caesar Cipher', path: '/visualizer/caesar', icon: <Lock size={28}/>, desc: 'Shift substitution', color: 'text-emerald-400', border: 'hover:border-emerald-400/50', shadow: 'hover:shadow-emerald-400/20' },
-      { name: 'Vigenère Cipher', path: '/visualizer/vigenere', icon: <Layers size={28}/>, desc: 'Polyalphabetic substitution', color: 'text-emerald-500', border: 'hover:border-emerald-500/50', shadow: 'hover:shadow-emerald-500/20' },
-      { name: 'Playfair Cipher', path: '/visualizer/playfair', icon: <Network size={28}/>, desc: '5x5 grid substitution', color: 'text-emerald-600', border: 'hover:border-emerald-600/50', shadow: 'hover:shadow-emerald-600/20' },
-      { name: 'Rail Fence', path: '/visualizer/railfence', icon: <Network size={28}/>, desc: 'Zig-zag transposition', color: 'text-teal-400', border: 'hover:border-teal-400/50', shadow: 'hover:shadow-teal-400/20' },
-      { name: 'Columnar', path: '/visualizer/columnar', icon: <Hash size={28}/>, desc: 'Grid transposition', color: 'text-teal-500', border: 'hover:border-teal-500/50', shadow: 'hover:shadow-teal-500/20' },
-      { name: 'AES-256', path: '/visualizer/aes', icon: <Shield size={28}/>, desc: 'Advanced Encryption Standard', color: 'text-cyan-400', border: 'hover:border-cyan-400/50', shadow: 'hover:shadow-cyan-400/20' },
-      { name: 'RSA Key Gen', path: '/visualizer/rsa', icon: <KeyRound size={28}/>, desc: 'Asymmetric cryptography', color: 'text-blue-400', border: 'hover:border-blue-400/50', shadow: 'hover:shadow-blue-400/20' },
-      { name: 'SHA-256', path: '/visualizer/hash', icon: <Hash size={28}/>, desc: 'Cryptographic hashing', color: 'text-pink-400', border: 'hover:border-pink-400/50', shadow: 'hover:shadow-pink-400/20' },
-      { name: 'Digital Signatures', path: '/visualizer/signature', icon: <Lock size={28}/>, desc: 'Authentication & Integrity', color: 'text-indigo-400', border: 'hover:border-indigo-400/50', shadow: 'hover:shadow-indigo-400/20' },
-      { name: 'Steganography', path: '/visualizer/steg', icon: <Layers size={28}/>, desc: 'Data obfuscation (LSB)', color: 'text-purple-400', border: 'hover:border-purple-400/50', shadow: 'hover:shadow-purple-400/20' },
-      { name: 'Enigma Machine', path: '/visualizer/enigma', icon: <Settings size={28}/>, desc: 'WWII rotor cipher', color: 'text-amber-400', border: 'hover:border-amber-400/50', shadow: 'hover:shadow-amber-400/20' },
-      { name: 'Hacker Mode', path: '/visualizer/hacker', icon: <Crosshair size={28}/>, desc: 'Cryptanalysis tools', color: 'text-rose-400', border: 'hover:border-rose-400/50', shadow: 'hover:shadow-rose-400/20' }
+      { name: 'Encapsulation', path: '/visualizer/encapsulation', icon: <Lock size={28}/>, desc: 'Protecting internal state', color: 'text-indigo-400', border: 'hover:border-indigo-400/50', shadow: 'hover:shadow-indigo-400/20' },
+      { name: 'Abstraction', path: '/visualizer/abstraction', icon: <Shield size={28}/>, desc: 'Hiding complexity', color: 'text-rose-400', border: 'hover:border-rose-400/50', shadow: 'hover:shadow-rose-400/20' },
+      { name: 'Inheritance', path: '/visualizer/inheritance', icon: <Network size={28}/>, desc: 'Hierarchy and code reuse', color: 'text-amber-400', border: 'hover:border-amber-400/50', shadow: 'hover:shadow-amber-400/20' },
+      { name: 'Polymorphism', path: '/visualizer/polymorphism', icon: <Layers size={28}/>, desc: 'Many forms, one interface', color: 'text-cyan-400', border: 'hover:border-cyan-400/50', shadow: 'hover:shadow-cyan-400/20' },
     ]
   },
   {
@@ -57,7 +45,7 @@ const categories = [
     icon: <KeyRound size={64} className="text-[var(--color-nova-green)] drop-shadow-2xl" />,
     items: [
       { name: 'Caesar Cipher', path: '/visualizer/caesar', icon: <Lock size={28}/>, desc: 'Shift substitution', color: 'text-emerald-400', border: 'hover:border-emerald-400/50', shadow: 'hover:shadow-emerald-400/20' },
-      { name: 'Vigenère Cipher', path: '/visualizer/vigenere', icon: <Layers size={28}/>, desc: 'Polyalphabetic substitution', color: 'text-emerald-500', border: 'hover:border-emerald-500/50', shadow: 'hover:shadow-emerald-500/20' },
+      { name: 'VigenÃ¨re Cipher', path: '/visualizer/vigenere', icon: <Layers size={28}/>, desc: 'Polyalphabetic substitution', color: 'text-emerald-500', border: 'hover:border-emerald-500/50', shadow: 'hover:shadow-emerald-500/20' },
       { name: 'Playfair Cipher', path: '/visualizer/playfair', icon: <Network size={28}/>, desc: '5x5 grid substitution', color: 'text-emerald-600', border: 'hover:border-emerald-600/50', shadow: 'hover:shadow-emerald-600/20' },
       { name: 'Rail Fence', path: '/visualizer/railfence', icon: <Network size={28}/>, desc: 'Zig-zag transposition', color: 'text-teal-400', border: 'hover:border-teal-400/50', shadow: 'hover:shadow-teal-400/20' },
       { name: 'Columnar', path: '/visualizer/columnar', icon: <Hash size={28}/>, desc: 'Grid transposition', color: 'text-teal-500', border: 'hover:border-teal-500/50', shadow: 'hover:shadow-teal-500/20' },
@@ -67,7 +55,7 @@ const categories = [
       { name: 'Digital Signatures', path: '/visualizer/signature', icon: <Lock size={28}/>, desc: 'Authentication & Integrity', color: 'text-indigo-400', border: 'hover:border-indigo-400/50', shadow: 'hover:shadow-indigo-400/20' },
       { name: 'Steganography', path: '/visualizer/steg', icon: <Layers size={28}/>, desc: 'Data obfuscation (LSB)', color: 'text-purple-400', border: 'hover:border-purple-400/50', shadow: 'hover:shadow-purple-400/20' },
       { name: 'Enigma Machine', path: '/visualizer/enigma', icon: <Settings size={28}/>, desc: 'WWII rotor cipher', color: 'text-amber-400', border: 'hover:border-amber-400/50', shadow: 'hover:shadow-amber-400/20' },
-      { name: 'Hacker Mode', path: '/visualizer/hacker', icon: <Crosshair size={28}/>, desc: 'Cryptanalysis tools', color: 'text-rose-400', border: 'hover:border-rose-400/50', shadow: 'hover:shadow-rose-400/20' }
+      { name: 'Hacker Mode', path: '/visualizer/hacker', icon: <Crosshair size={28}/>, desc: 'Cryptanalysis tools', color: 'text-rose-400', border: 'hover:border-rose-400/50', shadow: 'hover:shadow-rose-400/20' },
     ]
   }
 ];

@@ -1,14 +1,22 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Settings, Power } from 'lucide-react';
 
 export default function AbstractionVisualizer() {
   const [isRunning, setIsRunning] = useState(false);
 
   return (
-    <div className="w-full glass-card p-8 flex flex-col items-center">
-      <h3 className="text-xl font-bold mb-2 text-[var(--color-nova-red)]">Abstraction</h3>
-      <p className="text-sm text-gray-500 mb-8">Hiding complex implementation details and showing only the essential features.</p>
+    <div className="w-full max-w-6xl mx-auto glass-card p-8 min-h-[600px] flex flex-col items-center relative">
+      <Link to="/visualizer" className="absolute top-8 left-8 text-gray-500 hover:text-[var(--color-nova-red)] transition-colors flex items-center gap-2 font-semibold z-10">
+        <ArrowLeft size={20} /> Back to Dashboard
+      </Link>
+      
+      <div className="text-center mt-12 mb-12">
+        <h1 className="text-4xl font-extrabold mb-4 text-[var(--color-nova-red)] tracking-tight">Abstraction</h1>
+        <p className="text-gray-500 max-w-2xl mx-auto">Hiding complex implementation details and showing only the essential features of the object.</p>
+      </div>
 
       <div className="flex flex-col md:flex-row gap-8 items-center w-full max-w-3xl">
         

@@ -1,134 +1,244 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-// Data Structures
-import ArrayVisualizer from '../visualizers/ds/ArrayVisualizer';
-import StringVisualizer from '../visualizers/ds/StringVisualizer';
-import StackQueueVisualizer from '../visualizers/ds/StackQueueVisualizer';
-import LinkedListVisualizer from '../visualizers/ds/LinkedListVisualizer';
-import TreeGraphVisualizer from '../visualizers/ds/TreeGraphVisualizer';
-import HeapVisualizer from '../visualizers/ds/HeapVisualizer';
-import MapVisualizer from '../visualizers/ds/MapVisualizer';
+import { Link } from 'react-router-dom';
+import { Database, Binary, KeyRound, ChevronLeft, ChevronRight, Layers, Hash, Network, Type, Lock, Shield, ListTree, ArrowRight } from 'lucide-react';
 
-// OOP
-import EncapsulationVisualizer from '../visualizers/oop/EncapsulationVisualizer';
-import AbstractionVisualizer from '../visualizers/oop/AbstractionVisualizer';
-import InheritanceVisualizer from '../visualizers/oop/InheritanceVisualizer';
-import PolymorphismVisualizer from '../visualizers/oop/PolymorphismVisualizer';
+const categories = [
+  {
+    id: 'ds',
+    title: 'Data Structures',
+    description: 'Master memory allocation, pointers, and algorithmic efficiency with interactive visualizers.',
+    color: 'var(--color-nova-red)',
+    bgGlow: 'from-[var(--color-nova-red)] to-transparent',
+    icon: <Database size={64} className="text-[var(--color-nova-red)] drop-shadow-2xl" />,
+    items: [
+      { name: 'Array', path: '/visualizer/array', icon: <Layers size={28}/>, desc: 'Contiguous memory blocks', color: 'text-blue-400', border: 'hover:border-blue-400/50', shadow: 'hover:shadow-blue-400/20' },
+      { name: 'String', path: '/visualizer/string', icon: <Type size={28}/>, desc: 'Immutable vs Mutable', color: 'text-purple-400', border: 'hover:border-purple-400/50', shadow: 'hover:shadow-purple-400/20' },
+      { name: 'Stack', path: '/visualizer/stack', icon: <Layers size={28}/>, desc: 'LIFO principle', color: 'text-orange-400', border: 'hover:border-orange-400/50', shadow: 'hover:shadow-orange-400/20' },
+      { name: 'Queue', path: '/visualizer/queue', icon: <ListTree size={28}/>, desc: 'FIFO principle', color: 'text-green-400', border: 'hover:border-green-400/50', shadow: 'hover:shadow-green-400/20' },
+      { name: 'Linked List', path: '/visualizer/linkedlist', icon: <Network size={28}/>, desc: 'Nodes and pointers', color: 'text-teal-400', border: 'hover:border-teal-400/50', shadow: 'hover:shadow-teal-400/20' },
+      { name: 'Tree', path: '/visualizer/tree', icon: <ListTree size={28}/>, desc: 'Hierarchical nodes', color: 'text-emerald-400', border: 'hover:border-emerald-400/50', shadow: 'hover:shadow-emerald-400/20' },
+      { name: 'Heap', path: '/visualizer/heap', icon: <Layers size={28}/>, desc: 'Priority queues', color: 'text-yellow-400', border: 'hover:border-yellow-400/50', shadow: 'hover:shadow-yellow-400/20' },
+      { name: 'Hash Map', path: '/visualizer/map', icon: <Hash size={28}/>, desc: 'O(1) lookups', color: 'text-pink-400', border: 'hover:border-pink-400/50', shadow: 'hover:shadow-pink-400/20' },
+    ]
+  },
+  {
+    id: 'oop',
+    title: 'Object-Oriented',
+    description: 'Visualize the four foundational pillars of Object-Oriented Programming architecture.',
+    color: 'var(--color-nova-brown)',
+    bgGlow: 'from-[var(--color-nova-brown)] to-transparent',
+    icon: <Binary size={64} className="text-[var(--color-nova-brown)] drop-shadow-2xl" />,
+    items: [
+      { name: 'Encapsulation', path: '/visualizer/encapsulation', icon: <Lock size={28}/>, desc: 'Protecting internal state', color: 'text-indigo-400', border: 'hover:border-indigo-400/50', shadow: 'hover:shadow-indigo-400/20' },
+      { name: 'Abstraction', path: '/visualizer/abstraction', icon: <Shield size={28}/>, desc: 'Hiding complexity', color: 'text-rose-400', border: 'hover:border-rose-400/50', shadow: 'hover:shadow-rose-400/20' },
+      { name: 'Inheritance', path: '/visualizer/inheritance', icon: <Network size={28}/>, desc: 'Hierarchy and code reuse', color: 'text-amber-400', border: 'hover:border-amber-400/50', shadow: 'hover:shadow-amber-400/20' },
+      { name: 'Polymorphism', path: '/visualizer/polymorphism', icon: <Layers size={28}/>, desc: 'Many forms, one interface', color: 'text-cyan-400', border: 'hover:border-cyan-400/50', shadow: 'hover:shadow-cyan-400/20' },
+    ]
+  },
+  {
+    id: 'crypto',
+    title: 'Cryptography',
+    description: 'Interactive ciphers demonstrating historic data transformations and encryption.',
+    color: 'var(--color-nova-green)',
+    bgGlow: 'from-[var(--color-nova-green)] to-transparent',
+    icon: <KeyRound size={64} className="text-[var(--color-nova-green)] drop-shadow-2xl" />,
+    items: [
+      { name: 'Caesar Cipher', path: '/visualizer/caesar', icon: <Lock size={28}/>, desc: 'Alphabetical shift substitution', color: 'text-emerald-400', border: 'hover:border-emerald-400/50', shadow: 'hover:shadow-emerald-400/20' },
+      { name: 'Rail Fence', path: '/visualizer/railfence', icon: <Network size={28}/>, desc: 'Zig-zag transposition', color: 'text-fuchsia-400', border: 'hover:border-fuchsia-400/50', shadow: 'hover:shadow-fuchsia-400/20' },
+      { name: 'Columnar', path: '/visualizer/columnar', icon: <Hash size={28}/>, desc: 'Grid-based transposition', color: 'text-sky-400', border: 'hover:border-sky-400/50', shadow: 'hover:shadow-sky-400/20' },
+    ]
+  }
+];
 
-// Cryptography
-import CaesarCipherVisualizer from '../visualizers/crypto/CaesarCipherVisualizer';
-import RailFenceVisualizer from '../visualizers/crypto/RailFenceVisualizer';
-import ColumnarVisualizer from '../visualizers/crypto/ColumnarVisualizer';
+const variants = {
+  enter: (direction) => ({
+    x: direction > 0 ? '100%' : '-100%',
+    opacity: 0,
+    scale: 0.95
+  }),
+  center: {
+    zIndex: 1,
+    x: 0,
+    opacity: 1,
+    scale: 1
+  },
+  exit: (direction) => ({
+    zIndex: 0,
+    x: direction < 0 ? '100%' : '-100%',
+    opacity: 0,
+    scale: 0.95
+  })
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 30, scale: 0.9 },
+  show: i => ({
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      delay: i * 0.08,
+      type: "spring",
+      stiffness: 300,
+      damping: 20
+    }
+  })
+};
 
 export default function VisualizerDashboard() {
-  const [activeTab, setActiveTab] = useState('ds'); // 'ds', 'oop', 'crypto'
+  const [page, setPage] = useState(0);
+  const [direction, setDirection] = useState(0);
 
-  const TabButton = ({ id, label }) => (
-    <button
-      onClick={() => setActiveTab(id)}
-      className={`relative px-6 py-3 font-semibold transition-colors rounded-full ${
-        activeTab === id
-          ? 'text-white'
-          : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'
-      }`}
-    >
-      {activeTab === id && (
-        <motion.div
-          layoutId="active-tab"
-          className="absolute inset-0 bg-gradient-to-r from-[var(--color-nova-red)] to-[var(--color-nova-brown)] rounded-full -z-10"
-          initial={false}
-          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-        />
-      )}
-      <span className="relative z-10">{label}</span>
-    </button>
-  );
+  const paginate = (newDirection) => {
+    let newPage = page + newDirection;
+    if (newPage < 0) newPage = 0;
+    if (newPage >= categories.length) newPage = categories.length - 1;
+    
+    if (newPage !== page) {
+      setDirection(newDirection);
+      setPage(newPage);
+    }
+  };
+
+  const currentCategory = categories[page];
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 py-12">
-        
-        {/* Premium Hero Section */}
-        <div className="text-center mb-16 relative">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <h1 className="text-5xl md:text-6xl font-extrabold mb-6 tracking-tight">
-              Interactive <span className="bg-clip-text text-transparent bg-gradient-to-r from-[var(--color-nova-red)] via-[var(--color-nova-brown)] to-[var(--color-nova-green)]">Visualizers</span>
-            </h1>
-            <p className="text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
-              Explore dynamic, real-time representations of complex algorithms, data structures, and object-oriented paradigms.
-            </p>
-          </motion.div>
-        </div>
+    <div className="fixed top-[64px] bottom-0 left-0 right-0 overflow-hidden bg-gray-50 dark:bg-[#09090b] flex flex-col items-center justify-center">
+      
+      <AnimatePresence initial={false} custom={direction}>
+        <motion.div
+          key={page}
+          custom={direction}
+          variants={variants}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          transition={{ x: { type: "spring", stiffness: 300, damping: 30 }, opacity: { duration: 0.2 } }}
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={1}
+          onDragEnd={(e, { offset }) => {
+            // Simplify drag logic: if dragged more than 100px, trigger page change
+            if (offset.x < -100) {
+              paginate(1);
+            } else if (offset.x > 100) {
+              paginate(-1);
+            }
+          }}
+          className="absolute inset-0 w-full h-full flex flex-col px-4 sm:px-8 md:px-12 lg:px-16 pt-8 pb-48 overflow-y-auto overflow-x-hidden scrollbar-hide"
+        >
+          {/* Decorative Background Blob */}
+          <motion.div 
+            animate={{ 
+              scale: [1, 1.1, 1],
+              rotate: [0, 90, 0],
+            }}
+            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            className={`absolute top-0 right-0 w-[80vw] h-[80vw] md:w-[50vw] md:h-[50vw] rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[100px] md:blur-[120px] opacity-30 dark:opacity-40 pointer-events-none -z-10 bg-gradient-to-tr ${currentCategory.bgGlow}`}
+            style={{ transform: 'translate(20%, -20%)' }}
+          />
 
-        {/* Glassmorphic Tabs */}
-        <div className="flex justify-center mb-16 w-full">
-          <div className="flex bg-gray-100 dark:bg-white/5 p-1 rounded-full border border-gray-200 dark:border-white/10 shadow-inner overflow-x-auto snap-x max-w-full">
-            <TabButton id="ds" label="Data Structures" />
-            <TabButton id="oop" label="Object-Oriented" />
-            <TabButton id="crypto" label="Cryptography" />
+          <div className="flex flex-col lg:flex-row items-center lg:items-start justify-between gap-12 w-full max-w-screen-xl mx-auto h-full pt-8">
+            
+            {/* Category Header Area */}
+            <div className="lg:w-1/3 flex flex-col gap-4 text-center lg:text-left mt-8 lg:mt-16 xl:mt-24">
+              <motion.div 
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="flex justify-center lg:justify-start"
+              >
+                {currentCategory.icon}
+              </motion.div>
+              <h1 
+                className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter leading-tight"
+                style={{ color: currentCategory.color }}
+              >
+                {currentCategory.title}
+              </h1>
+              <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 max-w-md mx-auto lg:mx-0">
+                {currentCategory.description}
+              </p>
+            </div>
+
+            {/* Interactive Grid of Items */}
+            <div className="lg:w-2/3 w-full grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6 mt-8 lg:mt-0 items-start content-start">
+              {currentCategory.items.map((item, i) => (
+                <Link key={item.name} to={item.path} className="block w-full">
+                  <motion.div
+                    custom={i}
+                    variants={itemVariants}
+                    initial="hidden"
+                    animate="show"
+                    whileHover={{ scale: 1.03, y: -6 }}
+                    whileTap={{ scale: 0.96 }}
+                    className={`glass-panel p-5 h-full flex flex-col justify-between cursor-pointer transition-all duration-300 border-2 border-transparent ${item.border} ${item.shadow} hover:shadow-2xl group bg-white/60 dark:bg-black/60`}
+                  >
+                    <div className="flex items-center gap-4 mb-3">
+                      <div className={`p-2.5 bg-white dark:bg-black rounded-lg shadow-sm border border-gray-100 dark:border-gray-800 ${item.color} group-hover:scale-110 transition-transform`}>
+                        {item.icon}
+                      </div>
+                      <h3 className="text-xl font-bold group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
+                        {item.name}
+                      </h3>
+                    </div>
+                    
+                    <div className="flex items-end justify-between mt-2">
+                      <p className="text-gray-500 text-sm font-medium">
+                        {item.desc}
+                      </p>
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2 group-hover:translate-x-0 transform duration-300">
+                        <ArrowRight className={item.color} size={18} />
+                      </div>
+                    </div>
+                  </motion.div>
+                </Link>
+              ))}
+            </div>
+
           </div>
-        </div>
+        </motion.div>
+      </AnimatePresence>
 
-        {/* Content Area with Staggered Entrance */}
-        <div className="w-full">
-          <AnimatePresence mode="wait">
-            {activeTab === 'ds' && (
-              <motion.div 
-                key="ds"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.5 }}
-                className="space-y-12"
-              >
-                <ArrayVisualizer />
-                <StringVisualizer />
-                <StackQueueVisualizer />
-                <LinkedListVisualizer />
-                <TreeGraphVisualizer />
-                <HeapVisualizer />
-                <MapVisualizer />
-              </motion.div>
-            )}
-
-            {activeTab === 'oop' && (
-              <motion.div 
-                key="oop"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.5 }}
-                className="space-y-12"
-              >
-                <EncapsulationVisualizer />
-                <AbstractionVisualizer />
-                <InheritanceVisualizer />
-                <PolymorphismVisualizer />
-              </motion.div>
-            )}
-
-            {activeTab === 'crypto' && (
-              <motion.div 
-                key="crypto"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.5 }}
-                className="space-y-12"
-              >
-                <CaesarCipherVisualizer />
-                <RailFenceVisualizer />
-                <ColumnarVisualizer />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+      {/* Navigation Controls Overlay */}
+      <div className="absolute bottom-4 md:bottom-8 left-4 md:left-8 flex justify-start items-center gap-4 md:gap-8 z-50 pointer-events-none">
         
+        <button 
+          onClick={() => paginate(-1)}
+          disabled={page === 0}
+          className={`pointer-events-auto p-2 md:p-3 rounded-full glass-card transition-all hover:scale-110 ${page === 0 ? 'opacity-30 cursor-not-allowed' : 'opacity-100 hover:bg-white dark:hover:bg-gray-800 shadow-xl'}`}
+        >
+          <ChevronLeft size={20} className="text-gray-700 dark:text-gray-300" />
+        </button>
+
+        <div className="flex gap-2 md:gap-4 pointer-events-auto bg-black/5 dark:bg-white/10 px-4 md:px-6 py-2 md:py-3 rounded-full backdrop-blur-md border border-gray-200 dark:border-white/20 shadow-sm">
+          {categories.map((cat, idx) => (
+            <button
+              key={idx}
+              onClick={() => {
+                setDirection(idx > page ? 1 : -1);
+                setPage(idx);
+              }}
+              className={`w-2.5 h-2.5 md:w-3 md:h-3 rounded-full transition-all duration-300 ${
+                page === idx 
+                  ? 'scale-150' 
+                  : 'bg-gray-400 dark:bg-gray-500 hover:bg-gray-500 dark:hover:bg-gray-400'
+              }`}
+              style={{ backgroundColor: page === idx ? cat.color : undefined }}
+            />
+          ))}
+        </div>
+
+        <button 
+          onClick={() => paginate(1)}
+          disabled={page === categories.length - 1}
+          className={`pointer-events-auto p-2 md:p-3 rounded-full glass-card transition-all hover:scale-110 ${page === categories.length - 1 ? 'opacity-30 cursor-not-allowed' : 'opacity-100 hover:bg-white dark:hover:bg-gray-800 shadow-xl'}`}
+        >
+          <ChevronRight size={20} className="text-gray-700 dark:text-gray-300" />
+        </button>
       </div>
+
     </div>
   );
 }

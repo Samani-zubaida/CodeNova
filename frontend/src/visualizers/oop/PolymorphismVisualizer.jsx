@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function PolymorphismVisualizer() {
   const [activeAnimal, setActiveAnimal] = useState(null);
@@ -16,9 +18,15 @@ export default function PolymorphismVisualizer() {
   };
 
   return (
-    <div className="w-full glass-card p-8 flex flex-col items-center">
-      <h3 className="text-xl font-bold mb-2 text-[var(--color-nova-brown)]">Polymorphism</h3>
-      <p className="text-sm text-gray-500 mb-8">Different classes can be treated as instances of the same class through a common interface.</p>
+    <div className="w-full max-w-6xl mx-auto min-h-[600px] glass-card p-8 flex flex-col items-center relative">
+      <Link to="/visualizer" className="absolute top-8 left-8 text-gray-500 hover:text-[var(--color-nova-red)] transition-colors flex items-center gap-2 font-semibold z-10">
+        <ArrowLeft size={20} /> Back to Dashboard
+      </Link>
+      
+      <div className="text-center mt-12 mb-12">
+        <h1 className="text-4xl font-extrabold mb-4 text-[var(--color-nova-brown)] tracking-tight">Polymorphism</h1>
+        <p className="text-gray-500 max-w-2xl mx-auto">Different classes can be treated as instances of the same class through a common interface.</p>
+      </div>
 
       <div className="flex flex-col items-center gap-8 w-full max-w-2xl">
         

@@ -114,11 +114,10 @@
     scroll-behavior: smooth;
   }
 
-  }
-
   button,
   input,
   textarea,
   select {
     font: inherit;
   }
+}

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Crosshair, Settings, Database, Binary, KeyRound, ChevronLeft, ChevronRight, Layers, Hash, Network, Type, Lock, Shield, ListTree, ArrowRight } from 'lucide-react';
+import { GitMerge, Crosshair, Settings, Database, Binary, KeyRound, ChevronLeft, ChevronRight, Layers, Hash, Network, Type, Lock, Shield, ListTree, ArrowRight } from 'lucide-react';
 
 const categories = [
   {
@@ -45,7 +45,7 @@ const categories = [
     icon: <KeyRound size={64} className="text-[var(--color-nova-green)] drop-shadow-2xl" />,
     items: [
       { name: 'Caesar Cipher', path: '/visualizer/caesar', icon: <Lock size={28}/>, desc: 'Shift substitution', color: 'text-emerald-400', border: 'hover:border-emerald-400/50', shadow: 'hover:shadow-emerald-400/20' },
-      { name: 'VigenÃ¨re Cipher', path: '/visualizer/vigenere', icon: <Layers size={28}/>, desc: 'Polyalphabetic substitution', color: 'text-emerald-500', border: 'hover:border-emerald-500/50', shadow: 'hover:shadow-emerald-500/20' },
+      { name: 'VigenÃƒÂ¨re Cipher', path: '/visualizer/vigenere', icon: <Layers size={28}/>, desc: 'Polyalphabetic substitution', color: 'text-emerald-500', border: 'hover:border-emerald-500/50', shadow: 'hover:shadow-emerald-500/20' },
       { name: 'Playfair Cipher', path: '/visualizer/playfair', icon: <Network size={28}/>, desc: '5x5 grid substitution', color: 'text-emerald-600', border: 'hover:border-emerald-600/50', shadow: 'hover:shadow-emerald-600/20' },
       { name: 'Rail Fence', path: '/visualizer/railfence', icon: <Network size={28}/>, desc: 'Zig-zag transposition', color: 'text-teal-400', border: 'hover:border-teal-400/50', shadow: 'hover:shadow-teal-400/20' },
       { name: 'Columnar', path: '/visualizer/columnar', icon: <Hash size={28}/>, desc: 'Grid transposition', color: 'text-teal-500', border: 'hover:border-teal-500/50', shadow: 'hover:shadow-teal-500/20' },
@@ -56,6 +56,7 @@ const categories = [
       { name: 'Steganography', path: '/visualizer/steg', icon: <Layers size={28}/>, desc: 'Data obfuscation (LSB)', color: 'text-purple-400', border: 'hover:border-purple-400/50', shadow: 'hover:shadow-purple-400/20' },
       { name: 'Enigma Machine', path: '/visualizer/enigma', icon: <Settings size={28}/>, desc: 'WWII rotor cipher', color: 'text-amber-400', border: 'hover:border-amber-400/50', shadow: 'hover:shadow-amber-400/20' },
       { name: 'Hacker Mode', path: '/visualizer/hacker', icon: <Crosshair size={28}/>, desc: 'Cryptanalysis tools', color: 'text-rose-400', border: 'hover:border-rose-400/50', shadow: 'hover:shadow-rose-400/20' },
+      { name: 'Diffie-Hellman', path: '/visualizer/dh', icon: <GitMerge size={28}/>, desc: 'Key Exchange Protocol', color: 'text-emerald-400', border: 'hover:border-emerald-400/50', shadow: 'hover:shadow-emerald-400/20' },
     ]
   }
 ];

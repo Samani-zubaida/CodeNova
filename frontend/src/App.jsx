@@ -33,6 +33,7 @@ import DigitalSignatureVisualizer from './visualizers/crypto/DigitalSignatureVis
 import SteganographyVisualizer from './visualizers/crypto/SteganographyVisualizer';
 import EnigmaVisualizer from './visualizers/crypto/EnigmaVisualizer';
 import HackerModeVisualizer from './visualizers/crypto/HackerModeVisualizer';
+import DHVisualizer from './visualizers/crypto/DHVisualizer';
 
 function App() {
   return (

@@ -77,6 +77,7 @@ function App() {
             <Route path="/visualizer/steg" element={<div className="p-8"><SteganographyVisualizer /></div>} />
             <Route path="/visualizer/enigma" element={<div className="p-8"><EnigmaVisualizer /></div>} />
             <Route path="/visualizer/hacker" element={<div className="p-8"><HackerModeVisualizer /></div>} />
+            <Route path="/visualizer/dh" element={<div className="p-8"><DHVisualizer /></div>} />
 
             {/* Sandbox */}
             <Route path="/sandbox" element={<Sandbox />} />

@@ -121,3 +121,23 @@
     font: inherit;
   }
 }
+
+/* Theme Toggle View Transitions */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 2;
+}
+
+/* Disable the default theme transition on body when using view transitions */
+html.view-transition-active body {
+  transition: none !important;
+}

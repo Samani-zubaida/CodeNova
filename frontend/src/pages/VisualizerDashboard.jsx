@@ -1,16 +1,64 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useLocation } from 'react-router-dom';
-import { GitMerge, Crosshair, Settings, Database, Binary, KeyRound, ChevronLeft, ChevronRight, Layers, Hash, Network, Type, Lock, Shield, ListTree, ArrowRight } from 'lucide-react';
+import { GitMerge, Crosshair, Settings, Database, Binary, KeyRound, Layers, Hash, Network, Type, Lock, Shield, ListTree, ArrowRight } from 'lucide-react';
+
+const splashIcons = {
+  ds: (color) => (
+    <motion.svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <motion.ellipse cx="12" cy="5" rx="9" ry="3" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.5, ease: "easeInOut" }} />
+      <motion.path d="M3 5V19A9 3 0 0 0 21 19V5" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.5, ease: "easeInOut", delay: 0.2 }} />
+      <motion.path d="M3 12A9 3 0 0 0 21 12" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.5, ease: "easeInOut", delay: 0.4 }} />
+    </motion.svg>
+  ),
+  oop: (color) => (
+    <motion.svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <motion.rect x="14" y="14" width="4" height="6" rx="2" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.5 }} />
+      <motion.rect x="6" y="4" width="4" height="6" rx="2" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.5, delay: 0.2 }} />
+      <motion.path d="M6 20h4" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1 }} />
+      <motion.path d="M14 10h4" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1, delay: 0.2 }} />
+      <motion.path d="M6 14h2v6" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1, delay: 0.4 }} />
+      <motion.path d="M14 4h2v6" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1, delay: 0.6 }} />
+    </motion.svg>
+  ),
+  crypto: (color) => (
+    <motion.svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <motion.path d="M2 18v3c0 .6.4 1 1 1h4v-3h3v-3h2l1.4-1.4a6.5 6.5 0 1 0-4-4Z" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 2, ease: "easeInOut" }} />
+      <motion.circle cx="16.5" cy="7.5" r="1.5" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ duration: 0.5, delay: 1.5 }} fill="currentColor" />
+    </motion.svg>
+  )
+};
+
+const TypewriterText = ({ text, color }) => {
+  return (
+    <motion.h1 
+      className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tighter text-center mt-8"
+      style={{ color }}
+    >
+      {text.split('').map((char, index) => (
+        <motion.span
+          key={`${char}-${index}`}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.1, delay: index * 0.05 }}
+          style={{ whiteSpace: 'pre' }}
+        >
+          {char}
+        </motion.span>
+      ))}
+    </motion.h1>
+  );
+};
 
 const categories = [
   {
     id: 'ds',
-    title: 'Data Structures',
+    title: 'Data Structures & Algorithms',
+    shortTitle: 'DS',
     description: 'Master memory allocation, pointers, and algorithmic efficiency with interactive visualizers.',
     color: 'var(--color-nova-red)',
     bgGlow: 'from-[var(--color-nova-red)] to-transparent',
-    icon: <Database size={64} className="text-[var(--color-nova-red)] drop-shadow-2xl" />,
+    dialIcon: <Database size={28} />,
     items: [
       { name: 'Array', path: '/visualizer/array', icon: <Layers size={28}/>, desc: 'Contiguous memory blocks', color: 'text-blue-400', border: 'hover:border-blue-400/50', shadow: 'hover:shadow-blue-400/20' },
       { name: 'String', path: '/visualizer/string', icon: <Type size={28}/>, desc: 'Immutable vs Mutable', color: 'text-purple-400', border: 'hover:border-purple-400/50', shadow: 'hover:shadow-purple-400/20' },
@@ -24,11 +72,12 @@ const categories = [
   },
   {
     id: 'oop',
-    title: 'Object-Oriented',
+    title: 'Object-Oriented Programming',
+    shortTitle: 'OOP',
     description: 'Visualize the four foundational pillars of Object-Oriented Programming architecture.',
     color: 'var(--color-nova-brown)',
     bgGlow: 'from-[var(--color-nova-brown)] to-transparent',
-    icon: <Binary size={64} className="text-[var(--color-nova-brown)] drop-shadow-2xl" />,
+    dialIcon: <Binary size={28} />,
     items: [
       { name: 'Encapsulation', path: '/visualizer/encapsulation', icon: <Lock size={28}/>, desc: 'Protecting internal state', color: 'text-indigo-400', border: 'hover:border-indigo-400/50', shadow: 'hover:shadow-indigo-400/20' },
       { name: 'Abstraction', path: '/visualizer/abstraction', icon: <Shield size={28}/>, desc: 'Hiding complexity', color: 'text-rose-400', border: 'hover:border-rose-400/50', shadow: 'hover:shadow-rose-400/20' },
@@ -39,10 +88,11 @@ const categories = [
   {
     id: 'crypto',
     title: 'Cryptography',
+    shortTitle: 'Crypto',
     description: 'Interactive ciphers demonstrating historic data transformations and encryption.',
     color: 'var(--color-nova-green)',
     bgGlow: 'from-[var(--color-nova-green)] to-transparent',
-    icon: <KeyRound size={64} className="text-[var(--color-nova-green)] drop-shadow-2xl" />,
+    dialIcon: <KeyRound size={28} />,
     items: [
       { name: 'Caesar Cipher', path: '/visualizer/caesar', icon: <Lock size={28}/>, desc: 'Shift substitution', color: 'text-emerald-400', border: 'hover:border-emerald-400/50', shadow: 'hover:shadow-emerald-400/20' },
       { name: 'Vigenère Cipher', path: '/visualizer/vigenere', icon: <Layers size={28}/>, desc: 'Polyalphabetic substitution', color: 'text-emerald-500', border: 'hover:border-emerald-500/50', shadow: 'hover:shadow-emerald-500/20' },
@@ -63,32 +113,27 @@ const categories = [
 
 const variants = {
   enter: (direction) => ({
-    x: direction > 0 ? '100%' : '-100%',
+    y: direction > 0 ? 50 : -50,
     opacity: 0,
-    scale: 0.95
   }),
   center: {
-    zIndex: 1,
-    x: 0,
+    y: 0,
     opacity: 1,
-    scale: 1
   },
   exit: (direction) => ({
-    zIndex: 0,
-    x: direction < 0 ? '100%' : '-100%',
+    y: direction < 0 ? 50 : -50,
     opacity: 0,
-    scale: 0.95
   })
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 30, scale: 0.9 },
+  hidden: { opacity: 0, x: 30, scale: 0.95 },
   show: i => ({
     opacity: 1,
-    y: 0,
+    x: 0,
     scale: 1,
     transition: {
-      delay: i * 0.08,
+      delay: i * 0.05,
       type: "spring",
       stiffness: 300,
       damping: 20
@@ -102,173 +147,170 @@ export default function VisualizerDashboard() {
   
   const [page, setPage] = useState(initialPage);
   const [direction, setDirection] = useState(0);
-  const [isScrolling, setIsScrolling] = useState(false);
+  const [splashCategory, setSplashCategory] = useState(null);
 
-  const paginate = (newDirection) => {
-    let newPage = page + newDirection;
-    if (newPage < 0) newPage = 0;
-    if (newPage >= categories.length) newPage = categories.length - 1;
-    
-    if (newPage !== page) {
-      setDirection(newDirection);
-      setPage(newPage);
-    }
-  };
-
-  const handleWheel = (e) => {
-    if (isScrolling) return;
-    if (Math.abs(e.deltaX) > 50) {
-      setIsScrolling(true);
-      if (e.deltaX > 0) {
-        paginate(1); // Swipe left (scroll right) -> Next
-      } else {
-        paginate(-1); // Swipe right (scroll left) -> Previous
-      }
-      setTimeout(() => setIsScrolling(false), 500);
-    }
-  };
+  const dialAngles = [-35, 0, 35]; // Angles for DS, OOP, Crypto respectively
+  const currentDialRotation = -dialAngles[page]; // Dial rotates opposite to bring selected item to 0deg (equator)
 
   const currentCategory = categories[page];
 
+  const handleCategoryChange = (idx) => {
+    if (idx !== page) {
+      setDirection(idx > page ? 1 : -1);
+      setPage(idx);
+      setSplashCategory(categories[idx]);
+      setTimeout(() => {
+        setSplashCategory(null);
+      }, 2500);
+    }
+  };
+
   return (
-    <div 
-      className="fixed top-[64px] bottom-0 left-0 right-0 overflow-hidden bg-gray-50 dark:bg-[#09090b] flex flex-col items-center justify-center"
-      onWheel={handleWheel}
-    >
+    <div className="fixed top-[64px] bottom-0 left-0 right-0 overflow-hidden bg-gray-50 dark:bg-[#09090b] flex">
       
-      <AnimatePresence initial={false} custom={direction}>
+      {/* Decorative Background Blob tied to current category */}
+      <motion.div 
+        key={page}
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 0.4, scale: 1 }}
+        exit={{ opacity: 0, scale: 1.2 }}
+        transition={{ duration: 1 }}
+        className={`absolute top-0 right-0 w-[60vw] h-[60vw] rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[120px] pointer-events-none -z-10 bg-gradient-to-tr ${currentCategory.bgGlow}`}
+        style={{ transform: 'translate(20%, -20%)' }}
+      />
+
+      {/* Radial Menu Dial */}
+      <div className="absolute top-0 bottom-0 left-0 w-16 sm:w-24 md:w-32 z-40 pointer-events-none flex items-center shadow-[10px_0_40px_rgba(0,0,0,0.05)] dark:shadow-[10px_0_40px_rgba(0,0,0,0.4)]">
         <motion.div
-          key={page}
-          custom={direction}
-          variants={variants}
-          initial="enter"
-          animate="center"
-          exit="exit"
-          transition={{ x: { type: "spring", stiffness: 300, damping: 30 }, opacity: { duration: 0.2 } }}
-          drag="x"
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={1}
-          onDragEnd={(e, { offset }) => {
-            // Simplify drag logic: if dragged more than 100px, trigger page change
-            if (offset.x < -100) {
-              paginate(1);
-            } else if (offset.x > 100) {
-              paginate(-1);
-            }
+          className="absolute pointer-events-auto rounded-full border border-gray-200 dark:border-white/10 bg-white/70 dark:bg-black/70 backdrop-blur-3xl flex items-center justify-center shadow-[inset_-10px_0_30px_rgba(0,0,0,0.05)] dark:shadow-[inset_-10px_0_30px_rgba(255,255,255,0.02)]"
+          style={{
+            width: '600px',
+            height: '600px',
+            left: '-480px', // Leaves 120px exposed on the screen (dial edge)
+            transformOrigin: 'center center'
           }}
-          className="absolute inset-0 w-full h-full flex flex-col px-4 sm:px-8 md:px-12 lg:px-16 pt-8 pb-48 overflow-y-auto overflow-x-hidden scrollbar-hide"
+          animate={{ rotate: currentDialRotation }}
+          transition={{ type: "spring", stiffness: 200, damping: 25, mass: 1 }}
         >
-          {/* Decorative Background Blob */}
-          <motion.div 
-            animate={{ 
-              scale: [1, 1.1, 1],
-              rotate: [0, 90, 0],
-            }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            className={`absolute top-0 right-0 w-[80vw] h-[80vw] md:w-[50vw] md:h-[50vw] rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[100px] md:blur-[120px] opacity-30 dark:opacity-40 pointer-events-none -z-10 bg-gradient-to-tr ${currentCategory.bgGlow}`}
-            style={{ transform: 'translate(20%, -20%)' }}
-          />
-
-          <div className="flex flex-col lg:flex-row items-center lg:items-start justify-between gap-12 w-full max-w-screen-xl mx-auto h-full pt-8">
+          {categories.map((cat, idx) => {
+            const itemAngle = dialAngles[idx];
+            const isSelected = page === idx;
+            const absoluteRotation = currentDialRotation + itemAngle;
             
-            {/* Category Header Area */}
-            <div className="lg:w-1/3 flex flex-col gap-4 text-center lg:text-left mt-8 lg:mt-16 xl:mt-24">
-              <motion.div 
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="flex justify-center lg:justify-start"
+            return (
+              <div
+                key={cat.id}
+                className="absolute top-1/2 left-1/2 w-0 h-0"
+                style={{
+                  transform: `rotate(${itemAngle}deg)`,
+                }}
               >
-                {currentCategory.icon}
-              </motion.div>
-              <h1 
-                className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter leading-tight"
-                style={{ color: currentCategory.color }}
-              >
-                {currentCategory.title}
-              </h1>
-              <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 max-w-md mx-auto lg:mx-0">
-                {currentCategory.description}
-              </p>
-            </div>
-
-            {/* Interactive Grid of Items */}
-            <div className="lg:w-2/3 w-full grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6 mt-8 lg:mt-0 items-start content-start">
-              {currentCategory.items.map((item, i) => (
-                <Link key={item.name} to={item.path} className="block w-full">
-                  <motion.div
-                    custom={i}
-                    variants={itemVariants}
-                    initial="hidden"
-                    animate="show"
-                    whileHover={{ scale: 1.03, y: -6 }}
-                    whileTap={{ scale: 0.96 }}
-                    className={`glass-panel p-5 h-full flex flex-col justify-between cursor-pointer transition-all duration-300 border-2 border-transparent ${item.border} ${item.shadow} hover:shadow-2xl group bg-white/60 dark:bg-black/60`}
+                <div 
+                  className="absolute"
+                  style={{ transform: 'translate(280px, -50%)' }} // Positioned near the right edge of the 300px radius
+                >
+                  <motion.button
+                    onClick={() => handleCategoryChange(idx)}
+                    className={`flex flex-col items-center justify-center gap-1 group transition-colors px-4 py-2 ${isSelected ? '' : 'cursor-pointer'}`}
+                    animate={{ 
+                      rotate: -absoluteRotation, // Counter-rotate so it stays upright
+                      scale: isSelected ? 1.2 : 0.9,
+                    }}
+                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                    style={{
+                      transformOrigin: 'center center'
+                    }}
                   >
-                    <div className="flex items-center gap-4 mb-3">
-                      <div className={`p-2.5 bg-white dark:bg-black rounded-lg shadow-sm border border-gray-100 dark:border-gray-800 ${item.color} group-hover:scale-110 transition-transform`}>
-                        {item.icon}
-                      </div>
-                      <h3 className="text-xl font-bold group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
-                        {item.name}
-                      </h3>
+                    <div 
+                      className={`p-3 rounded-full transition-all duration-300 ${isSelected ? 'bg-black/5 dark:bg-white/10 shadow-lg' : 'group-hover:bg-black/5 dark:group-hover:bg-white/5 opacity-60 group-hover:opacity-100'}`}
+                      style={{ color: isSelected ? cat.color : undefined }}
+                    >
+                      {cat.dialIcon}
                     </div>
-                    
-                    <div className="flex items-end justify-between mt-2">
-                      <p className="text-gray-500 text-sm font-medium">
-                        {item.desc}
-                      </p>
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2 group-hover:translate-x-0 transform duration-300">
-                        <ArrowRight className={item.color} size={18} />
-                      </div>
-                    </div>
-                  </motion.div>
-                </Link>
-              ))}
-            </div>
-
-          </div>
+                    <span 
+                      className={`font-bold tracking-wider text-xs uppercase transition-all duration-300 ${isSelected ? 'opacity-100 drop-shadow-md' : 'opacity-40 group-hover:opacity-80 text-gray-500'}`}
+                      style={{ color: isSelected ? cat.color : undefined }}
+                    >
+                      {cat.shortTitle}
+                    </span>
+                  </motion.button>
+                </div>
+              </div>
+            );
+          })}
         </motion.div>
-      </AnimatePresence>
-
-      {/* Navigation Controls Overlay */}
-      <div className="absolute bottom-4 md:bottom-8 left-4 md:left-8 flex justify-start items-center gap-4 md:gap-8 z-50 pointer-events-none">
-        
-        <button 
-          onClick={() => paginate(-1)}
-          disabled={page === 0}
-          className={`pointer-events-auto p-2 md:p-3 rounded-full glass-card transition-all hover:scale-110 ${page === 0 ? 'opacity-30 cursor-not-allowed' : 'opacity-100 hover:bg-white dark:hover:bg-gray-800 shadow-xl'}`}
-        >
-          <ChevronLeft size={20} className="text-gray-700 dark:text-gray-300" />
-        </button>
-
-        <div className="flex gap-2 md:gap-4 pointer-events-auto bg-black/5 dark:bg-white/10 px-4 md:px-6 py-2 md:py-3 rounded-full backdrop-blur-md border border-gray-200 dark:border-white/20 shadow-sm">
-          {categories.map((cat, idx) => (
-            <button
-              key={idx}
-              onClick={() => {
-                setDirection(idx > page ? 1 : -1);
-                setPage(idx);
-              }}
-              className={`w-2.5 h-2.5 md:w-3 md:h-3 rounded-full transition-all duration-300 ${
-                page === idx 
-                  ? 'scale-150' 
-                  : 'bg-gray-400 dark:bg-gray-500 hover:bg-gray-500 dark:hover:bg-gray-400'
-              }`}
-              style={{ backgroundColor: page === idx ? cat.color : undefined }}
-            />
-          ))}
-        </div>
-
-        <button 
-          onClick={() => paginate(1)}
-          disabled={page === categories.length - 1}
-          className={`pointer-events-auto p-2 md:p-3 rounded-full glass-card transition-all hover:scale-110 ${page === categories.length - 1 ? 'opacity-30 cursor-not-allowed' : 'opacity-100 hover:bg-white dark:hover:bg-gray-800 shadow-xl'}`}
-        >
-          <ChevronRight size={20} className="text-gray-700 dark:text-gray-300" />
-        </button>
       </div>
 
+      {/* Main Content Area */}
+      <div className="flex-1 ml-[120px] md:ml-[160px] pl-2 md:pl-8 pr-4 md:pr-12 lg:pr-16 pt-8 pb-12 overflow-y-auto overflow-x-hidden scrollbar-hide relative z-10 flex justify-center">
+        <AnimatePresence initial={false} custom={direction} mode="wait">
+          {!splashCategory && (
+            <motion.div
+              key={page}
+              custom={direction}
+              variants={variants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ type: "spring", stiffness: 300, damping: 30, opacity: { duration: 0.2 } }}
+              className="w-full max-w-screen-xl flex flex-col items-center pt-4 md:pt-12"
+            >
+              {/* Interactive Grid (Full Width) */}
+              <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 items-start content-start">
+                {currentCategory.items.map((item, i) => (
+                  <Link key={item.name} to={item.path} className="block w-full">
+                    <motion.div
+                      custom={i}
+                      variants={itemVariants}
+                      initial="hidden"
+                      animate="show"
+                      whileHover={{ scale: 1.02, y: -4 }}
+                      whileTap={{ scale: 0.98 }}
+                      className={`glass-card p-5 h-full flex flex-col justify-between cursor-pointer transition-all duration-300 border-2 border-transparent ${item.border} ${item.shadow} hover:shadow-2xl group`}
+                    >
+                      <div className="flex items-center gap-4 mb-3">
+                        <div className={`p-2.5 bg-gray-50 dark:bg-black/50 rounded-lg shadow-inner border border-gray-100 dark:border-gray-800 ${item.color} group-hover:scale-110 transition-transform duration-300`}>
+                          {item.icon}
+                        </div>
+                        <h3 className="text-xl font-bold group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
+                          {item.name}
+                        </h3>
+                      </div>
+                      
+                      <div className="flex items-end justify-between mt-2">
+                        <p className="text-gray-500 text-sm font-medium">
+                          {item.desc}
+                        </p>
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2 group-hover:translate-x-0 transform duration-300">
+                          <ArrowRight className={item.color} size={18} />
+                        </div>
+                      </div>
+                    </motion.div>
+                  </Link>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Fullscreen Splash Screen */}
+      <AnimatePresence>
+        {splashCategory && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gray-50/90 dark:bg-[#09090b]/90 backdrop-blur-2xl"
+          >
+            <div className="flex flex-col items-center gap-8">
+              {splashIcons[splashCategory.id](splashCategory.color)}
+              <TypewriterText text={splashCategory.title} color={splashCategory.color} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

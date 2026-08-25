@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
+import { flushSync } from 'react-dom';
 import { Moon, Sun, Code2, Gamepad2, Blocks } from 'lucide-react';
 import useAppStore from '../../store/useAppStore';
 
@@ -20,6 +21,48 @@ export default function Navbar() {
         ? 'bg-[var(--color-nova-red)] text-white'
         : 'text-gray-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10'
     }`;
+
+  const handleThemeToggle = async (e) => {
+    if (!document.startViewTransition) {
+      toggleTheme();
+      return;
+    }
+
+    const x = e.clientX;
+    const y = e.clientY;
+    const endRadius = Math.hypot(
+      Math.max(x, window.innerWidth - x),
+      Math.max(y, window.innerHeight - y)
+    );
+
+    document.documentElement.classList.add('view-transition-active');
+    
+    const transition = document.startViewTransition(() => {
+      flushSync(() => {
+        toggleTheme();
+      });
+    });
+
+    transition.ready.then(() => {
+      document.documentElement.animate(
+        {
+          clipPath: [
+            `circle(0px at ${x}px ${y}px)`,
+            `circle(${endRadius}px at ${x}px ${y}px)`
+          ]
+        },
+        {
+          duration: 700,
+          easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
+          pseudoElement: '::view-transition-new(root)'
+        }
+      );
+    });
+    
+    transition.finished.then(() => {
+      document.documentElement.classList.remove('view-transition-active');
+    });
+  };
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-white/10 bg-white/80 dark:bg-black/80 backdrop-blur-md">
@@ -49,7 +92,7 @@ export default function Navbar() {
             <div className="h-6 w-px bg-gray-300 dark:bg-white/20 mx-2"></div>
 
             <button
-              onClick={toggleTheme}
+              onClick={handleThemeToggle}
               className="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
               aria-label="Toggle Dark Mode"
             >

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Terminal, ChevronDown, ChevronUp, Search } from 'lucide-react';
+import { ArrowLeft, Terminal, ChevronDown, ChevronUp, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function MapVisualizer() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [mapData, setMapData] = useState([
     { key: "Alice", value: 95 },
     { key: "Bob", value: 82 },
@@ -134,7 +135,7 @@ export default function MapVisualizer() {
     <div className="fixed top-[64px] bottom-0 left-0 right-0 bg-gray-50 dark:bg-[#09090b] flex flex-col lg:flex-row overflow-hidden">
 
       {/* Left Sidebar: Controls & Output */}
-      <div className="w-full lg:w-[350px] xl:w-[400px] h-1/2 lg:h-full bg-white/80 dark:bg-black/40 backdrop-blur-xl border-r border-b lg:border-b-0 border-gray-200 dark:border-white/10 shadow-2xl flex flex-col z-10 shrink-0 overflow-y-auto">
+      <div className={`w-full lg:w-[350px] xl:w-[400px] h-1/2 lg:h-full bg-white/80 dark:bg-black/40 backdrop-blur-xl border-r border-b lg:border-b-0 border-gray-200 dark:border-white/10 shadow-2xl flex flex-col z-10 shrink-0 overflow-y-auto transition-all duration-300 ${isSidebarOpen ? "ml-0" : "-ml-[100%] lg:-ml-[400px]"}`}>
         <div className="p-4 lg:p-6 flex flex-col gap-6 h-full">
           
           {/* In-flow Back Button */}
@@ -190,6 +191,14 @@ export default function MapVisualizer() {
 
       {/* Right Canvas: Visualization & Console */}
       <div className="w-full lg:flex-1 h-1/2 lg:h-full flex flex-col relative overflow-hidden">
+        {/* Sidebar Toggle Button */}
+        <button 
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className="absolute top-4 left-4 z-50 p-2 bg-white/80 dark:bg-black/40 backdrop-blur border border-gray-200 dark:border-white/10 rounded shadow-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+        >
+          {isSidebarOpen ? <ChevronLeft size={20} className="text-gray-600 dark:text-gray-300" /> : <ChevronRight size={20} className="text-gray-600 dark:text-gray-300" />}
+        </button>
+
         
         {/* Main Visualization Area */}
         <div className="flex-1 flex flex-col items-center justify-center p-4 lg:p-12 overflow-y-auto overflow-x-auto relative z-10">

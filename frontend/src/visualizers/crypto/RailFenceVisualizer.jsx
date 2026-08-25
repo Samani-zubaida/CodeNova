@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function RailFenceVisualizer() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [text, setText] = useState("CODENOVA");
   const [rails, setRails] = useState(3);
   const [grid, setGrid] = useState([]);

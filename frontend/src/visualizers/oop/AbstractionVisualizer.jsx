@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Terminal, ChevronDown, ChevronUp, Play, Settings, CreditCard, ShieldAlert, Database, Banknote, ShieldCheck } from 'lucide-react';
+import { Terminal, ChevronDown, ChevronUp, Play, Settings, CreditCard, ShieldAlert, Database, Banknote, ShieldCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import VisualizerNav from '../../components/layout/VisualizerNav';
 
 export default function AbstractionVisualizer() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [amount, setAmount] = useState(50);
   
   const [isRunning, setIsRunning] = useState(false);
@@ -53,7 +54,7 @@ export default function AbstractionVisualizer() {
     <div className="fixed top-[64px] bottom-0 left-0 right-0 bg-gray-50 dark:bg-[#09090b] flex flex-col lg:flex-row overflow-hidden">
       
       {/* Left Sidebar: Controls & Output */}
-      <div className="w-full lg:w-[350px] xl:w-[400px] h-1/2 lg:h-full bg-white/80 dark:bg-black/40 backdrop-blur-xl border-r border-b lg:border-b-0 border-gray-200 dark:border-white/10 shadow-2xl flex flex-col z-10 shrink-0 overflow-y-auto">
+      <div className={`w-full lg:w-[350px] xl:w-[400px] h-1/2 lg:h-full bg-white/80 dark:bg-black/40 backdrop-blur-xl border-r border-b lg:border-b-0 border-gray-200 dark:border-white/10 shadow-2xl flex flex-col z-10 shrink-0 overflow-y-auto transition-all duration-300 ${isSidebarOpen ? "ml-0" : "-ml-[100%] lg:-ml-[400px]"}`}>
         <div className="p-4 lg:p-6 flex flex-col gap-6 lg:gap-8 h-full">
           
           <VisualizerNav currentPath="/visualizer/abstraction" />
@@ -98,6 +99,14 @@ export default function AbstractionVisualizer() {
 
       {/* Right Canvas: Visualization & Console */}
       <div className="w-full lg:flex-1 h-1/2 lg:h-full flex flex-col relative overflow-hidden bg-gray-50/50 dark:bg-black/20">
+        {/* Sidebar Toggle Button */}
+        <button 
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className="absolute top-4 left-4 z-50 p-2 bg-white/80 dark:bg-black/40 backdrop-blur border border-gray-200 dark:border-white/10 rounded shadow-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+        >
+          {isSidebarOpen ? <ChevronLeft size={20} className="text-gray-600 dark:text-gray-300" /> : <ChevronRight size={20} className="text-gray-600 dark:text-gray-300" />}
+        </button>
+
         
         {/* Main Visualization Area */}
         <div className="flex-1 flex flex-col p-8 lg:p-12 overflow-y-auto overflow-x-auto relative items-center justify-center min-h-[400px]">

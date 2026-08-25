@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Terminal, ChevronDown, ChevronUp, ArrowRight as ArrowRightIcon } from 'lucide-react';
+import { ArrowLeft, Terminal, ChevronDown, ChevronUp, ArrowRight as ArrowRightIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import VisualizerNav from '../../components/layout/VisualizerNav';
 
 export default function LinkedListVisualizer() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [nodes, setNodes] = useState([10, 20, 30]);
   const [inputValue, setInputValue] = useState('');
   const [findValue, setFindValue] = useState('');
   const [isIterating, setIsIterating] = useState(false);
   const [foundIndex, setFoundIndex] = useState(null);
   const [activeIndex, setActiveIndex] = useState(null);
+  const [reversingIndex, setReversingIndex] = useState(-1);
   
   // Console Output State
   const [outputLines, setOutputLines] = useState(["> Linked List Initialized"]);
@@ -84,18 +86,24 @@ export default function LinkedListVisualizer() {
     if (nodes.length <= 1 || isIterating) return;
     setIsIterating(true);
     logOutput(`> list.reverse()`);
-    logOutput(`  Reversing pointers...`);
+    logOutput(`  Reversing pointers iteratively...`);
     
-    // Create reversed array for logic
-    const reversed = [...nodes].reverse();
-    
-    // Simulate iterative pointer swapping
+    // Simulate pointer flipping
     for (let i = 0; i < nodes.length; i++) {
       setActiveIndex(i);
-      await new Promise(r => setTimeout(r, 300));
+      setReversingIndex(i);
+      logOutput(`  curr.next = prev (at node ${nodes[i]})`);
+      await new Promise(r => setTimeout(r, 800));
     }
     
+    logOutput(`  Rearranging view for standard left-to-right display...`);
+    await new Promise(r => setTimeout(r, 600));
+    
+    // Once pointers are "flipped", we physically reverse the array to restore the left-to-right view
+    const reversed = [...nodes].reverse();
     setNodes(reversed);
+    
+    setReversingIndex(-1);
     setActiveIndex(null);
     setIsIterating(false);
     logOutput(`  List successfully reversed.`);
@@ -105,7 +113,7 @@ export default function LinkedListVisualizer() {
     <div className="fixed top-[64px] bottom-0 left-0 right-0 bg-gray-50 dark:bg-[#09090b] flex flex-col lg:flex-row overflow-hidden">
 
       {/* Left Sidebar: Controls & Output */}
-      <div className="w-full lg:w-[350px] xl:w-[400px] h-1/2 lg:h-full bg-white/80 dark:bg-black/40 backdrop-blur-xl border-r border-b lg:border-b-0 border-gray-200 dark:border-white/10 shadow-2xl flex flex-col z-10 shrink-0 overflow-y-auto">
+      <div className={`w-full lg:w-[350px] xl:w-[400px] h-1/2 lg:h-full bg-white/80 dark:bg-black/40 backdrop-blur-xl border-r border-b lg:border-b-0 border-gray-200 dark:border-white/10 shadow-2xl flex flex-col z-10 shrink-0 overflow-y-auto transition-all duration-300 ${isSidebarOpen ? "ml-0" : "-ml-[100%] lg:-ml-[400px]"}`}>
         <div className="p-4 lg:p-6 flex flex-col gap-6 lg:gap-8 h-full">
           
           {/* In-flow Back Button */}
@@ -155,6 +163,14 @@ export default function LinkedListVisualizer() {
 
       {/* Right Canvas: Visualization & Console */}
       <div className="w-full lg:flex-1 h-1/2 lg:h-full flex flex-col relative overflow-hidden">
+        {/* Sidebar Toggle Button */}
+        <button 
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className="absolute top-4 left-4 z-50 p-2 bg-white/80 dark:bg-black/40 backdrop-blur border border-gray-200 dark:border-white/10 rounded shadow-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+        >
+          {isSidebarOpen ? <ChevronLeft size={20} className="text-gray-600 dark:text-gray-300" /> : <ChevronRight size={20} className="text-gray-600 dark:text-gray-300" />}
+        </button>
+
         
         {/* Main Visualization Area */}
         <div className="flex-1 flex items-center justify-center p-8 lg:p-12 overflow-x-auto relative">
@@ -162,6 +178,16 @@ export default function LinkedListVisualizer() {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-teal-500 opacity-5 blur-[100px] rounded-full pointer-events-none"></div>
 
           <div className="flex flex-wrap gap-2 md:gap-4 items-center justify-center p-4">
+            {reversingIndex !== -1 && nodes.length > 0 && (
+              <motion.div
+                 initial={{ opacity: 0 }}
+                 animate={{ opacity: 1 }}
+                 className="flex items-center gap-2 text-teal-600 dark:text-teal-400 font-mono font-bold mr-2 md:mr-4"
+              >
+                NULL <ArrowLeft size={24} />
+              </motion.div>
+            )}
+
             <AnimatePresence>
               {nodes.map((val, idx) => (
                 <React.Fragment key={`${idx}-${val}`}>
@@ -182,8 +208,8 @@ export default function LinkedListVisualizer() {
                         *next
                       </div>
                     </div>
-                    {idx === 0 && <span className="absolute -top-6 text-xs font-bold text-teal-600 dark:text-teal-400 uppercase tracking-widest font-mono">Head</span>}
-                    {idx === nodes.length - 1 && <span className="absolute -bottom-6 text-xs font-bold text-teal-600 dark:text-teal-400 uppercase tracking-widest font-mono">Tail</span>}
+                    {idx === (reversingIndex !== -1 ? nodes.length - 1 : 0) && <span className="absolute -top-6 text-xs font-bold text-teal-600 dark:text-teal-400 uppercase tracking-widest font-mono">Head</span>}
+                    {idx === (reversingIndex !== -1 ? 0 : nodes.length - 1) && <span className="absolute -bottom-6 text-xs font-bold text-teal-600 dark:text-teal-400 uppercase tracking-widest font-mono">Tail</span>}
                   </motion.div>
                   
                   {idx < nodes.length - 1 && (
@@ -193,14 +219,18 @@ export default function LinkedListVisualizer() {
                       exit={{ opacity: 0, width: 0 }}
                       className="text-teal-500"
                     >
-                      <ArrowRightIcon size={24} className="md:w-8 md:h-8" />
+                      {idx < reversingIndex ? (
+                        <ArrowLeft size={24} className="md:w-8 md:h-8" />
+                      ) : (
+                        <ArrowRightIcon size={24} className="md:w-8 md:h-8" />
+                      )}
                     </motion.div>
                   )}
                 </React.Fragment>
               ))}
             </AnimatePresence>
             
-            {nodes.length > 0 && (
+            {reversingIndex === -1 && nodes.length > 0 && (
               <motion.div
                  initial={{ opacity: 0 }}
                  animate={{ opacity: 1 }}

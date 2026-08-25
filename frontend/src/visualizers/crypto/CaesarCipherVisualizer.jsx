@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 export default function CryptoVisualizer() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [shift, setShift] = useState(3);
   const [inputText, setInputText] = useState('CODE');
   const [isEncrypting, setIsEncrypting] = useState(false);

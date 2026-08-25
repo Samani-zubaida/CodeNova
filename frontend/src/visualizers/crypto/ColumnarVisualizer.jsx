@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function ColumnarVisualizer() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [text, setText] = useState("CODENOVA");
   const [keyword, setKeyword] = useState("KEY");
   

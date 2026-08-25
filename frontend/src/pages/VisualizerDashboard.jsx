@@ -145,25 +145,34 @@ export default function VisualizerDashboard() {
   const location = useLocation();
   const initialPage = location.state?.activeTab === 'crypto' ? 2 : (location.state?.activeTab === 'oop' ? 1 : 0);
   
-  const [page, setPage] = useState(initialPage);
+  const [rotationIndex, setRotationIndex] = useState(initialPage);
   const [direction, setDirection] = useState(0);
   const [splashCategory, setSplashCategory] = useState(null);
 
-  const dialAngles = [-35, 0, 35]; // Angles for DS, OOP, Crypto respectively
-  const currentDialRotation = -dialAngles[page]; // Dial rotates opposite to bring selected item to 0deg (equator)
-
+  const page = ((rotationIndex % 3) + 3) % 3;
   const currentCategory = categories[page];
 
-  const handleCategoryChange = (idx) => {
-    if (idx !== page) {
-      setDirection(idx > page ? 1 : -1);
-      setPage(idx);
-      setSplashCategory(categories[idx]);
+  const currentDialRotation = -rotationIndex * 35; // Dial rotates opposite to bring selected item to equator
+
+  const handleCategoryChange = (clickedIndex, category) => {
+    if (clickedIndex !== rotationIndex) {
+      setDirection(clickedIndex > rotationIndex ? 1 : -1);
+      setRotationIndex(clickedIndex);
+      setSplashCategory(category);
       setTimeout(() => {
         setSplashCategory(null);
       }, 2500);
     }
   };
+
+  const dialItems = [-2, -1, 0, 1, 2].map(offset => {
+    const itemIndex = rotationIndex + offset;
+    const catIndex = ((itemIndex % 3) + 3) % 3;
+    return {
+      index: itemIndex,
+      category: categories[catIndex]
+    };
+  });
 
   return (
     <div className="fixed top-[64px] bottom-0 left-0 right-0 overflow-hidden bg-gray-50 dark:bg-[#09090b] flex">
@@ -192,14 +201,14 @@ export default function VisualizerDashboard() {
           animate={{ rotate: currentDialRotation }}
           transition={{ type: "spring", stiffness: 200, damping: 25, mass: 1 }}
         >
-          {categories.map((cat, idx) => {
-            const itemAngle = dialAngles[idx];
-            const isSelected = page === idx;
+          {dialItems.map((item) => {
+            const itemAngle = item.index * 35;
+            const isSelected = item.index === rotationIndex;
             const absoluteRotation = currentDialRotation + itemAngle;
             
             return (
               <div
-                key={cat.id}
+                key={item.index}
                 className="absolute top-1/2 left-1/2 w-0 h-0"
                 style={{
                   transform: `rotate(${itemAngle}deg)`,
@@ -210,7 +219,7 @@ export default function VisualizerDashboard() {
                   style={{ transform: 'translate(280px, -50%)' }} // Positioned near the right edge of the 300px radius
                 >
                   <motion.button
-                    onClick={() => handleCategoryChange(idx)}
+                    onClick={() => handleCategoryChange(item.index, item.category)}
                     className={`flex flex-col items-center justify-center gap-1 group transition-colors px-4 py-2 ${isSelected ? '' : 'cursor-pointer'}`}
                     animate={{ 
                       rotate: -absoluteRotation, // Counter-rotate so it stays upright
@@ -223,15 +232,15 @@ export default function VisualizerDashboard() {
                   >
                     <div 
                       className={`p-3 rounded-full transition-all duration-300 ${isSelected ? 'bg-black/5 dark:bg-white/10 shadow-lg' : 'group-hover:bg-black/5 dark:group-hover:bg-white/5 opacity-60 group-hover:opacity-100'}`}
-                      style={{ color: isSelected ? cat.color : undefined }}
+                      style={{ color: isSelected ? item.category.color : undefined }}
                     >
-                      {cat.dialIcon}
+                      {item.category.dialIcon}
                     </div>
                     <span 
                       className={`font-bold tracking-wider text-xs uppercase transition-all duration-300 ${isSelected ? 'opacity-100 drop-shadow-md' : 'opacity-40 group-hover:opacity-80 text-gray-500'}`}
-                      style={{ color: isSelected ? cat.color : undefined }}
+                      style={{ color: isSelected ? item.category.color : undefined }}
                     >
-                      {cat.shortTitle}
+                      {item.category.shortTitle}
                     </span>
                   </motion.button>
                 </div>

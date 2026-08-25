@@ -22,8 +22,17 @@ import PolymorphismVisualizer from './visualizers/oop/PolymorphismVisualizer';
 
 // Cryptography
 import CaesarCipherVisualizer from './visualizers/crypto/CaesarCipherVisualizer';
+import VigenereCipherVisualizer from './visualizers/crypto/VigenereCipherVisualizer';
+import PlayfairCipherVisualizer from './visualizers/crypto/PlayfairCipherVisualizer';
 import RailFenceVisualizer from './visualizers/crypto/RailFenceVisualizer';
 import ColumnarVisualizer from './visualizers/crypto/ColumnarVisualizer';
+import AESVisualizer from './visualizers/crypto/AESVisualizer';
+import RSAVIsualizer from './visualizers/crypto/RSAVIsualizer';
+import SHA256Visualizer from './visualizers/crypto/SHA256Visualizer';
+import DigitalSignatureVisualizer from './visualizers/crypto/DigitalSignatureVisualizer';
+import SteganographyVisualizer from './visualizers/crypto/SteganographyVisualizer';
+import EnigmaVisualizer from './visualizers/crypto/EnigmaVisualizer';
+import HackerModeVisualizer from './visualizers/crypto/HackerModeVisualizer';
 
 function App() {
   return (
@@ -56,8 +65,17 @@ function App() {
 
             {/* Crypto Routes */}
             <Route path="/visualizer/caesar" element={<div className="p-8"><CaesarCipherVisualizer /></div>} />
+            <Route path="/visualizer/vigenere" element={<div className="p-8"><VigenereCipherVisualizer /></div>} />
+            <Route path="/visualizer/playfair" element={<div className="p-8"><PlayfairCipherVisualizer /></div>} />
             <Route path="/visualizer/railfence" element={<div className="p-8"><RailFenceVisualizer /></div>} />
             <Route path="/visualizer/columnar" element={<div className="p-8"><ColumnarVisualizer /></div>} />
+            <Route path="/visualizer/aes" element={<div className="p-8"><AESVisualizer /></div>} />
+            <Route path="/visualizer/rsa" element={<div className="p-8"><RSAVIsualizer /></div>} />
+            <Route path="/visualizer/hash" element={<div className="p-8"><SHA256Visualizer /></div>} />
+            <Route path="/visualizer/signature" element={<div className="p-8"><DigitalSignatureVisualizer /></div>} />
+            <Route path="/visualizer/steg" element={<div className="p-8"><SteganographyVisualizer /></div>} />
+            <Route path="/visualizer/enigma" element={<div className="p-8"><EnigmaVisualizer /></div>} />
+            <Route path="/visualizer/hacker" element={<div className="p-8"><HackerModeVisualizer /></div>} />
 
             {/* Sandbox */}
             <Route path="/sandbox" element={<Sandbox />} />

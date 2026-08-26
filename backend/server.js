@@ -12,9 +12,21 @@ app.use(cors());
 app.use(express.json());
 
 // MongoDB connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/codenova')
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
+
+
+console.log("MongoDB URI exists:", !!process.env.MONGODB_URI);
+console.log("Starting MongoDB connection...");
+
+mongoose.connect(process.env.MONGODB_URI, {
+  serverSelectionTimeoutMS: 10000
+})
+.then(() => {
+  console.log("Connected to MongoDB");
+})
+.catch((err) => {
+  console.error("MongoDB connection error:");
+  console.error(err);
+});
 
 // Routes
 app.use('/api/auth', authRoutes);

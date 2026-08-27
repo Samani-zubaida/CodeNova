@@ -80,6 +80,7 @@ router.post('/visualize', async (req, res) => {
  const prompt = `
 You are a code execution tracing engine for a D3.js algorithm and data-structure visualizer.
 
+
 Analyze the provided ${language} code and simulate its ACTUAL runtime execution step-by-step.
 
 The code may contain ANY algorithm or data structure, including but not limited to:
@@ -918,69 +919,43 @@ heap, parent, children, current
 This makes the frontend D3.js renderer easier to implement.
 
 ==================================================
-40. OUTPUT FORMAT
-==================================================
-
-You MUST return ONLY valid JSON.
-
-Do NOT use markdown.
-
-Do NOT use \`\`\`json.
-
-Do NOT include explanations before or after the JSON.
-
-Return an array containing AT MOST 12 objects.
-
-Every object MUST contain EXACTLY these keys:
-
-- "line"
-- "action"
-- "state"
-
-"line" must be an integer.
-
-"action" must be a short string.
-
-"state" must be an object.
-
-EVERY value inside "state" MUST be a STRING.
-
-Example:
-
-[
-  {
-    "line": 5,
-    "action": "Initialize array",
-    "state": {
-      "array": "[5,2,8,1]",
-      "i": "0"
-    }
-  },
-  {
-    "line": 8,
-    "action": "Compare elements",
-    "state": {
-      "array": "[5,2,8,1]",
-      "i": "0",
-      "j": "1",
-      "comparing": "[5,2]"
-    }
-  },
-  {
-    "line": 9,
-    "action": "Swap elements",
-    "state": {
-      "array": "[2,5,8,1]",
-      "i": "0",
-      "j": "1",
-      "swapped": "[5,2]"
-    }
-  }
-]
-
-==================================================
 CODE TO ANALYZE
 ==================================================
+You MUST return ONLY a valid JSON array where each object represents a step in execution.
+DO NOT wrap the response in markdown blocks like \`\`\`json. Return pure JSON only.
+
+The JSON array must contain objects with exactly these keys:
+- "line": The integer line number being executed
+- "action": A short string description of what this line does
+- "state": A dictionary object representing variable/structure names as keys and their current values as STRICTLY TYPED JSON OBJECTS (not strings) following the schemas below.
+
+State Value Schemas (Choose the appropriate schema for each variable):
+
+1. Arrays / Strings:
+{ "type": "array", "values": [1, 2, 3], "active": [1], "swapping": [0, 1] }
+- "active": Array of indices currently being accessed/compared.
+- "swapping": Array of exactly two indices being swapped (optional).
+
+2. Trees (Binary Trees, BSTs, Tries, Heaps):
+{ "type": "tree", "root": { "name": "1", "children": [{"name": "2"}, {"name": "3"}] }, "active": ["2"] }
+- "root": A recursive object. Use "name" for the node value as a string. "children" is an array of child node objects. Omit "children" if it's a leaf.
+- "active": Array of "name" strings that are currently being visited or evaluated.
+
+3. Stacks / Queues:
+{ "type": "stack", "values": [1, 2], "active": [1] }
+
+4. Graph (Adjacency List/Matrix):
+{ "type": "graph", "nodes": ["A", "B", "C"], "edges": [{"from": "A", "to": "B"}], "active": ["A"] }
+
+5. Primitives / Pointers (Integers, booleans, simple strings):
+{ "type": "primitive", "value": 1 }
+
+General rules:
+- Cap at 12 key execution steps. Prioritize steps that change the core data structure (a swap, a visit, a push/pop) over steps that don't.
+- For loops/recursion over many elements, sample representative iterations.
+- If an array has more than 8 elements, show only the relevant window and note truncation with "...".
+- The entire response must be valid, complete, parseable JSON — always finish the array with a closing "]". Do not run out of room mid-object.
+
 
 \`\`\`${language}
 ${code}

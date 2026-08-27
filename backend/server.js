@@ -31,6 +31,8 @@ mongoose.connect(process.env.MONGODB_URI, {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/sandbox', sandboxRoutes);
+const progressRoutes = require('./routes/progress');
+app.use('/api/progress', progressRoutes);
 
 app.get('/', (req, res) => {
   res.send('Code Nova API is running');

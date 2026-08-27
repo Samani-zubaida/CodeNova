@@ -80,7 +80,6 @@ router.post('/visualize', async (req, res) => {
  const prompt = `
 You are a code execution tracing engine for a D3.js algorithm and data-structure visualizer.
 
-
 Analyze the provided ${language} code and simulate its ACTUAL runtime execution step-by-step.
 
 The code may contain ANY algorithm or data structure, including but not limited to:
@@ -955,7 +954,6 @@ General rules:
 - For loops/recursion over many elements, sample representative iterations.
 - If an array has more than 8 elements, show only the relevant window and note truncation with "...".
 - The entire response must be valid, complete, parseable JSON — always finish the array with a closing "]". Do not run out of room mid-object.
-
 
 \`\`\`${language}
 ${code}

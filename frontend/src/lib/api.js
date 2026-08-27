@@ -6,14 +6,14 @@ const getAuthHeaders = () => {
   const token = localStorage.getItem('token');
   return {
     headers: {
-      Authorization: \Bearer \\
+      Authorization: `Bearer ${token}`
     }
   };
 };
 
 export const updateGameScore = async (score) => {
   try {
-    const response = await axios.post(\\/progress/update\, { score }, getAuthHeaders());
+    const response = await axios.post(`${API_URL}/progress/update`, { score }, getAuthHeaders());
     return response.data;
   } catch (error) {
     console.error('Failed to update game score', error);
@@ -26,7 +26,7 @@ export const unlockTown = async (townNumber) => {
     const payload = {};
     if (townNumber === 2) payload.town2Unlocked = true;
     if (townNumber === 3) payload.town3Unlocked = true;
-    const response = await axios.post(\\/progress/update\, payload, getAuthHeaders());
+    const response = await axios.post(`${API_URL}/progress/update`, payload, getAuthHeaders());
     return response.data;
   } catch (error) {
     console.error('Failed to unlock town', error);

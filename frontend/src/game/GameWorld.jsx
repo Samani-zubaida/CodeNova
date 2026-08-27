@@ -1,123 +1,85 @@
-import React, { useEffect, useState, useRef } from 'react';
-import Phaser from 'phaser';
-import { config } from './phaser/GameConfig';
-import { EventBus } from './phaser/EventBus';
-import QuizModal from './QuizModal';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Coins, HardHat } from 'lucide-react';
-import { AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Database, Box, Key, Lock, Unlock } from 'lucide-react';
+import DataStructuresGame from './DataStructuresGame';
+import OOPGame from './OOPGame';
+import CryptoGame from './CryptoGame';
 
 export default function GameWorld() {
   const navigate = useNavigate();
-  const gameRef = useRef(null);
-  
-  // React State for UI
-  const [activeQuiz, setActiveQuiz] = useState(null);
-  const [coins, setCoins] = useState(37200);
+  const [activeSubject, setActiveSubject] = useState(null);
 
-  useEffect(() => {
-    // 1. Mount Phaser Game exactly once
-    if (!gameRef.current) {
-      gameRef.current = new Phaser.Game(config);
-    }
-
-    // 2. Setup Event Bus listeners for communication FROM Phaser
-    const handleQuizTrigger = (quizData) => {
-      // Phaser tells React to show the quiz
-      setActiveQuiz(quizData);
-    };
-
-    EventBus.on('quiz:trigger', handleQuizTrigger);
-
-    // Cleanup on unmount
-    return () => {
-      EventBus.off('quiz:trigger', handleQuizTrigger);
-      if (gameRef.current) {
-        gameRef.current.destroy(true);
-        gameRef.current = null;
-      }
-    };
-  }, []);
-
-  const handleQuizPass = () => {
-    setActiveQuiz(null);
-    setCoins(prev => prev + 500); // Reward for passing!
-    EventBus.emit('quiz:complete', { success: true });
-  };
-
-  const handleQuizClose = () => {
-    setActiveQuiz(null);
-    EventBus.emit('quiz:complete', { success: false });
-  };
+  if (activeSubject === 'ds') {
+    return <DataStructuresGame onBack={() => setActiveSubject(null)} />;
+  }
+  if (activeSubject === 'oop') {
+    return <OOPGame onBack={() => setActiveSubject(null)} />;
+  }
+  if (activeSubject === 'crypto') {
+    return <CryptoGame onBack={() => setActiveSubject(null)} />;
+  }
 
   return (
-    <div className="w-full h-screen relative bg-[#87ceeb] font-sans select-none overflow-hidden">
+    <div className="w-full min-h-screen bg-slate-900 font-sans text-slate-100 p-8 flex flex-col items-center">
       
-      {/* Phaser Canvas Container */}
-      <div id="phaser-game-container" className="absolute inset-0 w-full h-full z-0" />
-
-      {/* --- UI OVERLAY --- */}
-
-      {/* Top Banner (Wood Texture Simulation) */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-16 bg-gradient-to-b from-[#a85f34] to-[#874b29] rounded-b-3xl border-b-4 border-[#5a321b] shadow-2xl z-10 flex items-center justify-center">
-        <h1 className="text-white text-3xl font-extrabold tracking-wider drop-shadow-md" style={{ textShadow: '2px 2px 0px #5a321b' }}>
-          BUILD YOUR DREAM CITY!
-        </h1>
-        
-        {/* Exit Button positioned inside banner */}
+      {/* Header */}
+      <div className="w-full max-w-5xl flex items-center justify-between mb-12">
         <button 
-          onClick={() => navigate('/visualizer')}
-          className="absolute left-6 top-1/2 -translate-y-1/2 bg-white/20 p-2 rounded-full hover:bg-white/40 transition-colors border border-white/50"
+          onClick={() => navigate('/')}
+          className="bg-slate-800 p-3 rounded-full hover:bg-slate-700 transition-colors border border-slate-700"
         >
           <ArrowLeft size={24} className="text-white" />
         </button>
+        <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
+          ALGOVERSE CHALLENGES
+        </h1>
+        <div className="w-12"></div> {/* Spacer for centering */}
       </div>
 
-      {/* Top Right: Coin Counter */}
-      <div className="absolute top-20 right-6 z-10 flex items-center gap-0">
-        <div className="bg-[#facc15] w-12 h-12 rounded-full border-4 border-[#ca8a04] shadow-lg flex items-center justify-center z-20 shadow-inner">
-          <Coins size={24} className="text-[#854d0e]" />
-        </div>
-        <div className="bg-black/40 backdrop-blur -ml-6 pl-10 pr-6 py-2 rounded-r-full border-t border-b border-r border-white/20 shadow-md">
-          <span className="text-white font-bold text-xl drop-shadow">{coins.toLocaleString()}</span>
-        </div>
-        <button className="ml-2 bg-[#22c55e] w-10 h-10 rounded-full border-2 border-white shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-transform text-white font-bold text-2xl pb-1">
-          +
-        </button>
-      </div>
+      <p className="text-xl text-slate-400 mb-12 text-center max-w-2xl">
+        Select a subject below to begin your training. Pass the quizzes in each level to unlock the next challenge!
+      </p>
 
-      {/* Bottom Left: Character Avatars */}
-      <div className="absolute bottom-6 left-6 z-10 flex flex-col gap-2">
-        <div className="bg-[#fefce8] p-2 rounded-2xl shadow-xl border-4 border-[#fef08a] flex gap-2 items-center">
-          <div className="w-16 h-16 bg-[#fbbf24] rounded-xl flex items-center justify-center overflow-hidden border-2 border-white/50">
-            {/* Placeholder for Boy */}
-            <User size={40} className="text-[#b45309]" />
+      {/* Subject Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-5xl">
+        
+        {/* Data Structures */}
+        <div 
+          onClick={() => setActiveSubject('ds')}
+          className="bg-slate-800 border-2 border-blue-500/50 rounded-2xl p-8 cursor-pointer hover:scale-105 hover:border-blue-400 transition-all shadow-lg shadow-blue-900/20 flex flex-col items-center text-center group"
+        >
+          <div className="bg-blue-500/20 p-6 rounded-full mb-6 group-hover:bg-blue-500/30 transition-colors">
+            <Database size={64} className="text-blue-400" />
           </div>
-          <div className="w-16 h-16 bg-[#f472b6] rounded-xl flex items-center justify-center overflow-hidden border-2 border-white/50">
-            {/* Placeholder for Girl */}
-            <User size={40} className="text-[#831843]" />
-          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">Data Structures</h2>
+          <p className="text-slate-400">Master Arrays, Linked Lists, and Trees.</p>
         </div>
+
+        {/* OOP */}
+        <div 
+          onClick={() => setActiveSubject('oop')}
+          className="bg-slate-800 border-2 border-green-500/50 rounded-2xl p-8 cursor-pointer hover:scale-105 hover:border-green-400 transition-all shadow-lg shadow-green-900/20 flex flex-col items-center text-center group"
+        >
+          <div className="bg-green-500/20 p-6 rounded-full mb-6 group-hover:bg-green-500/30 transition-colors">
+            <Box size={64} className="text-green-400" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">Object-Oriented</h2>
+          <p className="text-slate-400">Master Classes, Inheritance, and Polymorphism.</p>
+        </div>
+
+        {/* Cryptography */}
+        <div 
+          onClick={() => setActiveSubject('crypto')}
+          className="bg-slate-800 border-2 border-yellow-500/50 rounded-2xl p-8 cursor-pointer hover:scale-105 hover:border-yellow-400 transition-all shadow-lg shadow-yellow-900/20 flex flex-col items-center text-center group"
+        >
+          <div className="bg-yellow-500/20 p-6 rounded-full mb-6 group-hover:bg-yellow-500/30 transition-colors">
+            <Key size={64} className="text-yellow-400" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">Cryptography</h2>
+          <p className="text-slate-400">Master Ciphers, Encryption, and Security.</p>
+        </div>
+
       </div>
-
-      {/* Bottom Right: Build Menu Button */}
-      <div className="absolute bottom-6 right-6 z-10">
-        <button className="w-24 h-24 bg-[#fefce8] rounded-3xl shadow-xl border-4 border-[#fef08a] flex items-center justify-center hover:scale-105 active:scale-95 transition-transform group">
-          <HardHat size={56} className="text-[#eab308] group-hover:-rotate-12 transition-transform" />
-        </button>
-      </div>
-
-      {/* Modals */}
-      <AnimatePresence>
-        {activeQuiz && (
-          <QuizModal 
-            quiz={activeQuiz} 
-            onPass={handleQuizPass} 
-            onClose={handleQuizClose} 
-          />
-        )}
-      </AnimatePresence>
-
     </div>
   );
 }

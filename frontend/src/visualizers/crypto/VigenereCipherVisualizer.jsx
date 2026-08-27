@@ -272,3 +272,4 @@ export default function VigenereCipherVisualizer() {
     </div>
   );
 }
+

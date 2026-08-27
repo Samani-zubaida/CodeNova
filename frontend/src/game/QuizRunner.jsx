@@ -150,7 +150,7 @@ export default function QuizRunner({ subject, levelId, levelTitle, onBack, onLev
         />
       </div>
 
-      <div className="w-full relative overflow-hidden bg-slate-800 border-2 border-slate-700 rounded-2xl shadow-2xl min-h-[450px]">
+      <div className="w-full relative overflow-hidden bg-slate-800 border-2 border-slate-700 rounded-2xl shadow-2xl min-h-[400px]">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentQ.id}
@@ -158,7 +158,7 @@ export default function QuizRunner({ subject, levelId, levelTitle, onBack, onLev
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -300, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-            className="absolute inset-0 p-8 flex flex-col"
+            className="w-full flex flex-col p-8"
           >
             <h3 className="text-2xl text-white mb-8 font-semibold">{currentQ.question}</h3>
 
@@ -181,7 +181,7 @@ export default function QuizRunner({ subject, levelId, levelTitle, onBack, onLev
             )}
 
             {currentQ.type === 'code-editor' && (
-              <div className="flex-1 rounded-xl overflow-hidden border-2 border-slate-700 mb-4 shadow-inner">
+              <div className="w-full h-[350px] rounded-xl overflow-hidden border-2 border-slate-700 mb-6 shadow-inner">
                 <Editor
                   height="100%"
                   defaultLanguage="javascript"
@@ -229,3 +229,4 @@ export default function QuizRunner({ subject, levelId, levelTitle, onBack, onLev
     </div>
   );
 }
+

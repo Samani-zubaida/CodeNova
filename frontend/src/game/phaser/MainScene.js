@@ -51,16 +51,30 @@ export class MainScene extends Phaser.Scene {
     });
   }
 
-  // --- Grayscale Color Math ---
+  // --- Safe Color Math ---
   applyColorFilter(hexColor, isLocked) {
     if (!isLocked) return hexColor;
-    
-    // Convert to grayscale
     const color = Phaser.Display.Color.IntegerToColor(hexColor);
-    const gray = (color.red * 0.3 + color.green * 0.59 + color.blue * 0.11);
-    
-    // Return the grayscale integer
+    const gray = Math.floor(color.red * 0.3 + color.green * 0.59 + color.blue * 0.11);
     return Phaser.Display.Color.GetColor(gray, gray, gray);
+  }
+
+  lightenColor(hexColor, amount) {
+    const c = Phaser.Display.Color.IntegerToColor(hexColor);
+    return Phaser.Display.Color.GetColor(
+      Math.min(255, c.red + amount),
+      Math.min(255, c.green + amount),
+      Math.min(255, c.blue + amount)
+    );
+  }
+
+  darkenColor(hexColor, amount) {
+    const c = Phaser.Display.Color.IntegerToColor(hexColor);
+    return Phaser.Display.Color.GetColor(
+      Math.max(0, c.red - amount),
+      Math.max(0, c.green - amount),
+      Math.max(0, c.blue - amount)
+    );
   }
 
   cartesianToIso(col, row, tileW, tileH) {
@@ -151,8 +165,8 @@ export class MainScene extends Phaser.Scene {
     const y = iso.y;
     
     const color = this.applyColorFilter(colorHex, isLocked);
-    const topColor = this.applyColorFilter(Phaser.Display.Color.IntegerToColor(colorHex).lighten(20).color, isLocked);
-    const rightColor = this.applyColorFilter(Phaser.Display.Color.IntegerToColor(colorHex).darken(20).color, isLocked);
+    const topColor = this.applyColorFilter(this.lightenColor(colorHex, 40), isLocked);
+    const rightColor = this.applyColorFilter(this.darkenColor(colorHex, 40), isLocked);
 
     const g = this.add.graphics();
     this.propsGroup.add(g);

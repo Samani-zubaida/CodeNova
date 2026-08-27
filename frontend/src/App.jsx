@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Navbar from './components/layout/Navbar';
 import VisualizerDashboard from './pages/VisualizerDashboard';
 import Sandbox from './pages/Sandbox';
+import GameWorld from './game/GameWorld';
 
 // Data Structures
 import ArrayVisualizer from './visualizers/ds/ArrayVisualizer';
@@ -76,6 +77,8 @@ function App() {
             <Route path="/visualizer/enigma" element={<div className="p-8"><EnigmaVisualizer /></div>} />
             <Route path="/visualizer/hacker" element={<div className="p-8"><HackerModeVisualizer /></div>} />
             <Route path="/visualizer/dh" element={<div className="p-8"><DHVisualizer /></div>} />
+
+            <Route path="/game" element={<GameWorld />} />
 
             {/* Sandbox */}
             <Route path="/sandbox" element={<Sandbox />} />

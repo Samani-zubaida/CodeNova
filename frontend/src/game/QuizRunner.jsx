@@ -218,7 +218,7 @@ export default function QuizRunner({ subject, levelId, levelTitle, onBack, onLev
                 disabled={feedback?.success || (currentQ.type === 'multiple-choice' && selectedOption === null)}
                 className="px-8 py-4 rounded-xl font-bold bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors shadow-[0_0_20px_rgba(59,130,246,0.3)] flex items-center gap-3 text-lg"
               >
-                Run System <Play size={20} fill="currentColor" />
+                {currentQ.type === 'code-editor' ? (<>Run Code <Play size={20} fill="currentColor" /></>) : (<>Submit Answer <CheckCircle2 size={20} /></>)}
               </button>
             </div>
 

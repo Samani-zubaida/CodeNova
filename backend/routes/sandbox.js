@@ -80,31 +80,40 @@ router.post('/visualize', async (req, res) => {
     const prompt = `
 Analyze the provided ${language} code step-by-step as it executes, tracing actual runtime behavior (use reasonable sample input if the code doesn't already define one).
 
-This code may implement ANY data structure or algorithm — arrays, strings, linked lists, stacks, queues, hash maps, binary search, sorting, trees (binary trees, BSTs, tries, heaps), graphs (adjacency list/matrix), BFS, DFS, dynamic programming (tabulation or memoization), backtracking, recursion, greedy, two-pointer, or sliding window. Trace whichever of these actually appear in the code, using these conventions for "state" so the visualization is meaningful:
-
-- Arrays / strings: show the full array/string each step, and call out the active index or pointer(s) (e.g. "i": 3, "left": 0, "right": 6).
-- Linked lists: show node values as an ordered list in traversal order, and the current pointer (e.g. "current node").
-- Stacks / queues: show current contents as an ordered list (top/front first), labeled clearly.
-- Trees: show the current node's value, and the relevant traversal/recursion path so far (e.g. ["root","left","left.right"]).
-- Graphs: show the adjacency structure once, then per-step show the current node, the visited set, and the frontier (queue for BFS / stack or call stack for DFS).
-- Dynamic programming: show the relevant slice of the DP table/array as it's filled in each step, not just the final value — this is the most important thing to visualize for DP.
-- Recursion / backtracking: show the current call's arguments and the effective call-stack depth or path.
-- Hash maps / sets: show current key-value pairs or elements relevant to that step.
-
-General rules:
-- Cap at 12 key execution steps — this is a hard limit, not a target, because output length is constrained. Prioritize steps that change the core data structure (a swap, a visit, a DP cell fill, a push/pop, a comparison result) over steps that don't (e.g. skip trivial variable increments if they don't affect the structure being visualized).
-- For loops/recursion over many elements, sample representative iterations (first couple, one middle, last couple) rather than every single one, but never skip the step where the final result is produced.
-- Keep every state value SHORT. If an array, DP table, or adjacency list has more than 8 elements/cells, show only the relevant window (e.g. the row/cell just filled plus its direct dependencies) rather than the whole structure, and note truncation with "...". Never dump a full large structure into one state value.
-- Keep all state values as compact strings (stringify arrays/objects, e.g. "[1, 2, 3]" or "{0: 'A', 2: 'B'}"). Do not add commentary inside state values.
-- The entire response must be valid, complete, parseable JSON — always finish the array with a closing "]". Do not run out of room mid-object.
-
 You MUST return ONLY a valid JSON array where each object represents a step in execution.
 DO NOT wrap the response in markdown blocks like \`\`\`json. Return pure JSON only.
 
 The JSON array must contain objects with exactly these keys:
 - "line": The integer line number being executed
 - "action": A short string description of what this line does
-- "state": A dictionary object representing variable/structure names as keys and their current values as strings, following the conventions above
+- "state": A dictionary object representing variable/structure names as keys and their current values as STRICTLY TYPED JSON OBJECTS (not strings) following the schemas below.
+
+State Value Schemas (Choose the appropriate schema for each variable):
+
+1. Arrays / Strings:
+{ "type": "array", "values": [1, 2, 3], "active": [1], "swapping": [0, 1] }
+- "active": Array of indices currently being accessed/compared.
+- "swapping": Array of exactly two indices being swapped (optional).
+
+2. Trees (Binary Trees, BSTs, Tries, Heaps):
+{ "type": "tree", "root": { "name": "1", "children": [{"name": "2"}, {"name": "3"}] }, "active": ["2"] }
+- "root": A recursive object. Use "name" for the node value as a string. "children" is an array of child node objects. Omit "children" if it's a leaf.
+- "active": Array of "name" strings that are currently being visited or evaluated.
+
+3. Stacks / Queues:
+{ "type": "stack", "values": [1, 2], "active": [1] }
+
+4. Graph (Adjacency List/Matrix):
+{ "type": "graph", "nodes": ["A", "B", "C"], "edges": [{"from": "A", "to": "B"}], "active": ["A"] }
+
+5. Primitives / Pointers (Integers, booleans, simple strings):
+{ "type": "primitive", "value": 1 }
+
+General rules:
+- Cap at 12 key execution steps. Prioritize steps that change the core data structure (a swap, a visit, a push/pop) over steps that don't.
+- For loops/recursion over many elements, sample representative iterations.
+- If an array has more than 8 elements, show only the relevant window and note truncation with "...".
+- The entire response must be valid, complete, parseable JSON — always finish the array with a closing "]". Do not run out of room mid-object.
 
 Code to analyze:
 \`\`\`${language}

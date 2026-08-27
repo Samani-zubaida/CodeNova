@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Play, CheckCircle2 } from 'lucide-react';
+import { Play, CheckCircle2, Timer } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 
 export default function QuizRunner({ subject, levelId, levelTitle, onBack, onLevelComplete }) {
@@ -12,6 +12,10 @@ export default function QuizRunner({ subject, levelId, levelTitle, onBack, onLev
   const [selectedOption, setSelectedOption] = useState(null);
   const [codeValue, setCodeValue] = useState('');
   const [feedback, setFeedback] = useState(null);
+
+  // Timer state
+  const [timeLeft, setTimeLeft] = useState(60); // 60 seconds per level sequence
+  const [isTimedOut, setIsTimedOut] = useState(false);
 
   useEffect(() => {
     fetch(`http://localhost:5000/api/levels/${subject}/${levelId}`)
@@ -32,9 +36,30 @@ export default function QuizRunner({ subject, levelId, levelTitle, onBack, onLev
       });
   }, [subject, levelId]);
 
+  // Timer logic
+  useEffect(() => {
+    if (loading || isTimedOut || feedback?.success || currentIndex >= questions.length) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setIsTimedOut(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [loading, isTimedOut, feedback, currentIndex, questions.length]);
+
+
   const currentQ = questions[currentIndex];
 
   const handleSubmit = () => {
+    if (isTimedOut) return;
+
     if (currentQ.type === 'multiple-choice') {
       if (selectedOption === currentQ.answer) {
         setFeedback({ success: true, text: 'Correct!' });
@@ -43,7 +68,6 @@ export default function QuizRunner({ subject, levelId, levelTitle, onBack, onLev
         setFeedback({ success: false, text: 'Incorrect. Try again.' });
       }
     } else if (currentQ.type === 'code-editor') {
-      // Basic regex validation for prototype
       const regex = new RegExp(currentQ.validationRegex);
       if (regex.test(codeValue)) {
         setFeedback({ success: true, text: currentQ.successMessage || 'Tests Passed!' });
@@ -78,7 +102,22 @@ export default function QuizRunner({ subject, levelId, levelTitle, onBack, onLev
   }
 
   if (error) {
-    return <div className="text-red-400 p-8">Error: {error}</div>;
+    return <div className="text-red-400 p-8 font-bold text-xl bg-slate-900 rounded-2xl border border-red-500 shadow-2xl">Network Error: Is the backend server running?</div>;
+  }
+
+  if (isTimedOut) {
+    return (
+      <div className="w-full max-w-2xl bg-slate-900 border-2 border-red-500 rounded-3xl p-12 flex flex-col items-center justify-center text-center shadow-[0_0_50px_rgba(239,68,68,0.3)]">
+        <h2 className="text-5xl font-black text-red-500 mb-6">TIME OUT</h2>
+        <p className="text-slate-300 text-xl mb-12">The system detected you and locked you out.</p>
+        <button 
+          onClick={onBack}
+          className="px-8 py-4 rounded-xl font-bold bg-slate-800 hover:bg-slate-700 text-white transition-colors border border-slate-700 w-full"
+        >
+          Disconnect & Run
+        </button>
+      </div>
+    )
   }
 
   if (!currentQ) return null;
@@ -88,23 +127,30 @@ export default function QuizRunner({ subject, levelId, levelTitle, onBack, onLev
       
       {/* Header */}
       <div className="w-full flex items-center justify-between mb-8">
-        <button onClick={onBack} className="bg-slate-800 p-3 rounded-full hover:bg-slate-700 transition-colors border border-slate-700">
-          <ArrowLeft size={24} className="text-white" />
-        </button>
-        <h2 className="text-2xl font-bold text-white">
+        <h2 className="text-2xl font-bold text-white bg-slate-800 px-6 py-3 rounded-full border border-slate-700">
           {levelTitle} - Challenge {currentIndex + 1} of {questions.length}
         </h2>
         
-        {/* Progress Bar */}
-        <div className="w-48 h-3 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
-          <div 
-            className="h-full bg-blue-500 transition-all duration-500"
-            style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
-          />
+        {/* Timer */}
+        <div className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold text-xl border shadow-lg ${
+          timeLeft <= 10 
+            ? 'bg-red-500/20 text-red-400 border-red-500/50 animate-pulse' 
+            : 'bg-slate-800 text-white border-slate-700'
+        }`}>
+          <Timer size={24} className={timeLeft <= 10 ? 'text-red-400' : 'text-blue-400'} />
+          {timeLeft}s
         </div>
       </div>
 
-      <div className="w-full relative overflow-hidden bg-slate-800 border-2 border-slate-700 rounded-2xl shadow-2xl min-h-[400px]">
+      {/* Progress Bar */}
+      <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden border border-slate-700 mb-8">
+        <div 
+          className="h-full bg-blue-500 transition-all duration-500"
+          style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
+        />
+      </div>
+
+      <div className="w-full relative overflow-hidden bg-slate-800 border-2 border-slate-700 rounded-2xl shadow-2xl min-h-[450px]">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentQ.id}
@@ -114,7 +160,7 @@ export default function QuizRunner({ subject, levelId, levelTitle, onBack, onLev
             transition={{ type: 'spring', stiffness: 200, damping: 20 }}
             className="absolute inset-0 p-8 flex flex-col"
           >
-            <h3 className="text-xl text-slate-200 mb-6 font-semibold">{currentQ.question}</h3>
+            <h3 className="text-2xl text-white mb-8 font-semibold">{currentQ.question}</h3>
 
             {currentQ.type === 'multiple-choice' && (
               <div className="flex flex-col gap-4 flex-1">
@@ -122,7 +168,7 @@ export default function QuizRunner({ subject, levelId, levelTitle, onBack, onLev
                   <button
                     key={idx}
                     onClick={() => setSelectedOption(idx)}
-                    className={`p-4 rounded-xl text-left font-medium transition-all border-2 ${
+                    className={`p-5 rounded-xl text-left font-medium transition-all border-2 text-lg ${
                       selectedOption === idx 
                         ? 'bg-blue-500/20 border-blue-500 text-blue-300 transform scale-[1.02]' 
                         : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500'
@@ -135,7 +181,7 @@ export default function QuizRunner({ subject, levelId, levelTitle, onBack, onLev
             )}
 
             {currentQ.type === 'code-editor' && (
-              <div className="flex-1 rounded-xl overflow-hidden border-2 border-slate-700 mb-4 h-64">
+              <div className="flex-1 rounded-xl overflow-hidden border-2 border-slate-700 mb-4 shadow-inner">
                 <Editor
                   height="100%"
                   defaultLanguage="javascript"
@@ -144,9 +190,9 @@ export default function QuizRunner({ subject, levelId, levelTitle, onBack, onLev
                   onChange={(val) => setCodeValue(val)}
                   options={{
                     minimap: { enabled: false },
-                    fontSize: 14,
+                    fontSize: 16,
                     scrollBeyondLastLine: false,
-                    padding: { top: 16 }
+                    padding: { top: 24 }
                   }}
                 />
               </div>
@@ -159,9 +205,9 @@ export default function QuizRunner({ subject, levelId, levelTitle, onBack, onLev
                   <motion.div 
                     initial={{ opacity: 0, y: 10 }} 
                     animate={{ opacity: 1, y: 0 }}
-                    className={`font-bold flex items-center gap-2 ${feedback.success ? 'text-green-400' : 'text-red-400'}`}
+                    className={`font-bold flex items-center gap-2 text-lg ${feedback.success ? 'text-green-400' : 'text-red-400'}`}
                   >
-                    {feedback.success && <CheckCircle2 size={20} />}
+                    {feedback.success && <CheckCircle2 size={24} />}
                     {feedback.text}
                   </motion.div>
                 )}
@@ -170,9 +216,9 @@ export default function QuizRunner({ subject, levelId, levelTitle, onBack, onLev
               <button 
                 onClick={handleSubmit}
                 disabled={feedback?.success || (currentQ.type === 'multiple-choice' && selectedOption === null)}
-                className="px-8 py-3 rounded-xl font-bold bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors shadow-lg shadow-blue-500/30 flex items-center gap-2"
+                className="px-8 py-4 rounded-xl font-bold bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors shadow-[0_0_20px_rgba(59,130,246,0.3)] flex items-center gap-3 text-lg"
               >
-                Run Code <Play size={18} fill="currentColor" />
+                Run System <Play size={20} fill="currentColor" />
               </button>
             </div>
 

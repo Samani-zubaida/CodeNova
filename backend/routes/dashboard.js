@@ -70,7 +70,16 @@ router.get('/leaderboard', async (req, res) => {
 router.get('/competitions', async (req, res) => {
   try {
     const competitions = await Competition.find({});
-    res.json(competitions);
+    const now = new Date();
+    const updatedCompetitions = competitions.map(comp => {
+      if (comp.type === "Hosted" && comp.startTime) {
+        if (now >= comp.startTime && now <= comp.endTime) comp.status = "Active";
+        else if (now > comp.endTime) comp.status = "Completed";
+        else comp.status = "Upcoming";
+      }
+      return comp;
+    });
+    res.json(updatedCompetitions);
   } catch (err) {
     res.status(500).json({ error: 'Server error fetching competitions' });
   }

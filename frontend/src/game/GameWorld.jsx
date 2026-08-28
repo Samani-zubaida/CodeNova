@@ -1,75 +1,120 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Phaser from 'phaser';
-import { GameConfig } from './phaser/GameConfig';
-import { EventBus } from './phaser/EventBus';
+import { ArrowLeft, Code2, Database, Shield, ChevronRight, Lock } from 'lucide-react';
 import QuizRunner from './QuizRunner';
-import { ArrowLeft } from 'lucide-react';
 
 export default function GameWorld() {
   const navigate = useNavigate();
-  const gameRef = useRef(null);
   const [activeQuiz, setActiveQuiz] = useState(null); // { subject, level }
 
-  useEffect(() => {
-    // Initialize Phaser
-    const game = new Phaser.Game(GameConfig);
-    gameRef.current = game;
+  // We hardcode the available subjects and levels for the dashboard
+  const subjects = [
+    {
+      id: 'ds',
+      title: 'Data Structures',
+      icon: <Database size={24} />,
+      color: 'blue',
+      levels: [
+        { id: 1, title: 'Arrays & Memory', locked: false },
+        { id: 2, title: 'Linked Lists', locked: true },
+        { id: 3, title: 'Binary Trees', locked: true }
+      ]
+    },
+    {
+      id: 'oop',
+      title: 'Object-Oriented Design',
+      icon: <Code2 size={24} />,
+      color: 'green',
+      levels: [
+        { id: 1, title: 'Classes & Objects', locked: false },
+        { id: 2, title: 'Inheritance', locked: true }
+      ]
+    },
+    {
+      id: 'crypto',
+      title: 'Cryptography',
+      icon: <Shield size={24} />,
+      color: 'purple',
+      levels: [
+        { id: 1, title: 'Prime Factorization (RSA)', locked: false }
+      ]
+    }
+  ];
 
-    // Listen for terminal collisions from MainScene
-    EventBus.on('start-quiz', (data) => {
-      setActiveQuiz(data);
-    });
-
-    return () => {
-      EventBus.off('start-quiz');
-      game.destroy(true);
-    };
-  }, []);
-
-  const handleQuizComplete = () => {
-    setActiveQuiz(null);
-    EventBus.emit('resume-game');
-  };
-
-  const handleQuizFail = () => {
-    setActiveQuiz(null);
-    EventBus.emit('resume-game');
-  };
+  if (activeQuiz) {
+    return (
+      <div className="w-full min-h-screen bg-[#0f172a] font-sans">
+        <QuizRunner 
+          subject={activeQuiz.subject}
+          levelId={activeQuiz.level}
+          onBack={() => setActiveQuiz(null)}
+          onLevelComplete={() => setActiveQuiz(null)}
+        />
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full min-h-screen bg-slate-900 flex flex-col relative overflow-hidden">
+    <div className="w-full min-h-screen bg-[#0f172a] font-sans text-slate-100 p-8 flex flex-col items-center">
+      
       {/* Header */}
-      <div className="absolute top-4 left-4 z-10 flex items-center gap-4">
+      <div className="w-full max-w-6xl flex items-center mb-12">
         <button 
           onClick={() => navigate('/')}
-          className="bg-slate-800 p-3 rounded-full hover:bg-slate-700 transition-colors border border-slate-700 shadow-xl"
+          className="bg-slate-800 p-3 rounded-xl hover:bg-slate-700 transition-colors border border-slate-700 mr-6"
         >
-          <ArrowLeft size={24} className="text-white" />
+          <ArrowLeft size={24} className="text-slate-300" />
         </button>
-        <div className="bg-slate-800/80 px-4 py-2 rounded-lg border border-slate-700 shadow-xl">
-          <h1 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
-            ALGOVERSE PLATFORMER
-          </h1>
-          <p className="text-xs text-slate-400">Use Arrows to Move, Up to Jump. Find Terminals!</p>
+        <div>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Challenge Academy</h1>
+          <p className="text-slate-400 mt-1">Master computer science concepts through interactive problem solving.</p>
         </div>
       </div>
 
-      {/* Phaser Canvas Container */}
-      <div id="phaser-container" className="w-full h-full flex-1 flex items-center justify-center" />
+      {/* Main Grid */}
+      <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {subjects.map(subject => (
+          <div key={subject.id} className="bg-[#1e293b] border border-slate-700 rounded-2xl overflow-hidden shadow-xl flex flex-col">
+            
+            {/* Card Header */}
+            <div className="p-6 border-b border-slate-700 flex items-center gap-4 bg-slate-800/50">
+              <div className={`p-3 rounded-lg bg-${subject.color}-500/20 text-${subject.color}-400`}>
+                {subject.icon}
+              </div>
+              <h2 className="text-xl font-bold text-white">{subject.title}</h2>
+            </div>
 
-      {/* React UI Overlay (QuizRunner) */}
-      {activeQuiz && (
-        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-8">
-          <QuizRunner 
-            subject={activeQuiz.subject}
-            levelId={activeQuiz.level}
-            levelTitle={`Terminal Hacked: ${activeQuiz.subject.toUpperCase()}`}
-            onBack={handleQuizFail}
-            onLevelComplete={handleQuizComplete}
-          />
-        </div>
-      )}
+            {/* Level List */}
+            <div className="flex-1 p-4 flex flex-col gap-2">
+              {subject.levels.map((level, idx) => (
+                <div 
+                  key={level.id}
+                  onClick={() => !level.locked && setActiveQuiz({ subject: subject.id, level: level.id })}
+                  className={`w-full p-4 rounded-xl flex items-center justify-between border transition-all ${
+                    level.locked 
+                      ? 'bg-slate-800/30 border-transparent opacity-50 cursor-not-allowed' 
+                      : 'bg-slate-800 border-slate-600 hover:border-slate-400 cursor-pointer group'
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <span className="text-slate-500 font-mono text-sm">{String(idx + 1).padStart(2, '0')}</span>
+                    <span className="font-semibold text-slate-200">{level.title}</span>
+                  </div>
+                  
+                  {level.locked ? (
+                    <Lock size={18} className="text-slate-500" />
+                  ) : (
+                    <ChevronRight size={20} className="text-slate-400 group-hover:text-white transition-colors" />
+                  )}
+                </div>
+              ))}
+            </div>
+
+          </div>
+        ))}
+
+      </div>
     </div>
   );
 }

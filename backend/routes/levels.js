@@ -1,57 +1,32 @@
 const express = require('express');
 const router = express.Router();
 
-// Mock Database of rich multi-format questions
+// Premium Educational Database
 const levelData = {
   ds: {
     1: [
       {
         id: 'ds1-q1',
         type: 'multiple-choice',
+        difficulty: 'Easy',
+        topicTags: ['Arrays', 'Time Complexity'],
         question: 'What is the time complexity of accessing an element in an array by index?',
+        description: 'Consider an array allocated in contiguous memory. If you know the base address and the index, how long does it take to retrieve the element?',
         options: ['O(1)', 'O(n)', 'O(log n)', 'O(n^2)'],
-        answer: 0
+        answer: 0,
+        explanation: 'Arrays allocate memory in a contiguous block. The memory address of any element can be calculated instantly using the formula: Base Address + (Index * Size of Element). Thus, access is O(1).'
       },
       {
         id: 'ds1-q2',
         type: 'code-editor',
-        question: 'Write a function named `getFirst` that takes an array and returns its first element.',
-        initialCode: 'function getFirst(arr) {\n  // Your code here\n}',
-        validationRegex: 'return\\s+arr\\[0\\]',
-        successMessage: 'Excellent! Array indices start at 0 in JavaScript.'
-      },
-      {
-        id: 'ds1-q3',
-        type: 'multiple-choice',
-        question: 'Which method adds one or more elements to the end of an array?',
-        options: ['.shift()', '.push()', '.pop()', '.unshift()'],
-        answer: 1
-      }
-    ],
-    2: [
-      {
-        id: 'ds2-q1',
-        type: 'multiple-choice',
-        question: 'Which is a primary advantage of a Linked List over an Array?',
-        options: ['Faster random access', 'Dynamic size without reallocation', 'Less memory usage', 'Better cache locality'],
-        answer: 1
-      },
-      {
-        id: 'ds2-q2',
-        type: 'code-editor',
-        question: 'Complete the Node class for a Singly Linked List.',
-        initialCode: 'class Node {\n  constructor(value) {\n    this.value = value;\n    // Set the next pointer\n  }\n}',
-        validationRegex: 'this\\.next\\s*=\\s*null',
-        successMessage: 'Great job! A new node always points to null initially.'
-      }
-    ],
-    3: [
-      {
-        id: 'ds3-q1',
-        type: 'multiple-choice',
-        question: 'In a Binary Search Tree, where are smaller values placed relative to a parent node?',
-        options: ['Right child', 'Left child', 'Root', 'Any leaf'],
-        answer: 1
+        difficulty: 'Medium',
+        topicTags: ['Arrays', 'Implementation'],
+        question: 'Implement getFirstElement(arr)',
+        description: 'Write a robust function named `getFirstElement` that takes an array and returns its first element. If the array is empty, it should return `null`.',
+        initialCode: 'function getFirstElement(arr) {\n  // Write your code here\n}',
+        validationRegex: 'return\\s+(arr\\[0\\]|null)',
+        successMessage: 'Excellent implementation.',
+        explanation: 'Returning arr[0] is O(1) time complexity. Adding the null check ensures robust error handling.'
       }
     ]
   },
@@ -59,44 +34,15 @@ const levelData = {
     1: [
       {
         id: 'oop1-q1',
-        type: 'multiple-choice',
-        question: 'Which keyword is used to instantiate a new object from a class?',
-        options: ['create', 'new', 'this', 'init'],
-        answer: 1
-      },
-      {
-        id: 'oop1-q2',
         type: 'code-editor',
-        question: 'Create a simple class named `Animal` with an empty constructor.',
+        difficulty: 'Medium',
+        topicTags: ['Classes', 'Constructors'],
+        question: 'Design an Animal Class',
+        description: 'Create a class named `Animal`. It must contain a constructor that accepts a `name` parameter and assigns it to `this.name`.',
         initialCode: '// Write your class here\n',
-        validationRegex: 'class\\s+Animal\\s*\\{\\s*constructor\\s*\\(\\s*\\)\\s*\\{',
-        successMessage: 'Perfect! You created your first class.'
-      }
-    ],
-    2: [
-      {
-        id: 'oop2-q1',
-        type: 'multiple-choice',
-        question: 'What principle allows a class to derive properties from a parent class?',
-        options: ['Encapsulation', 'Polymorphism', 'Inheritance', 'Abstraction'],
-        answer: 2
-      },
-      {
-        id: 'oop2-q2',
-        type: 'code-editor',
-        question: 'Make the `Dog` class inherit from the `Animal` class.',
-        initialCode: 'class Dog // Your code here {\n  constructor() {\n    super();\n  }\n}',
-        validationRegex: 'extends\\s+Animal',
-        successMessage: 'Awesome! Inheritance makes code highly reusable.'
-      }
-    ],
-    3: [
-      {
-        id: 'oop3-q1',
-        type: 'multiple-choice',
-        question: 'When a subclass provides a specific implementation of a method that is already provided by its parent, it is called:',
-        options: ['Overloading', 'Overriding', 'Hiding', 'Casting'],
-        answer: 1
+        validationRegex: 'class\\s+Animal\\s*\\{[^]*constructor\\s*\\(\\s*name\\s*\\)\\s*\\{[^]*this\\.name\\s*=\\s*name',
+        successMessage: 'Class structure is completely valid.',
+        explanation: 'Classes in JavaScript are syntactic sugar over prototypal inheritance. The constructor method is a special method for creating and initializing an object created with a class.'
       }
     ]
   },
@@ -105,41 +51,18 @@ const levelData = {
       {
         id: 'cry1-q1',
         type: 'multiple-choice',
-        question: 'If a Caesar cipher has a shift of +3, what does "A" become?',
-        options: ['B', 'C', 'D', 'E'],
-        answer: 2
-      },
-      {
-        id: 'cry1-q2',
-        type: 'code-editor',
-        question: 'Write the math to shift a character code `c` by 3 places (ignore wrapping for this test).',
-        initialCode: 'function shiftChar(c) {\n  // Return c + 3\n}',
-        validationRegex: 'return\\s+c\\s*\\+\\s*3',
-        successMessage: 'Correct! Substitution ciphers are basic math operations.'
-      }
-    ],
-    2: [
-      {
-        id: 'cry2-q1',
-        type: 'multiple-choice',
-        question: 'What does the Vigenère cipher use to shift letters dynamically?',
-        options: ['A constant number', 'A keyword', 'Prime numbers', 'A matrix'],
-        answer: 1
-      }
-    ],
-    3: [
-      {
-        id: 'cry3-q1',
-        type: 'multiple-choice',
+        difficulty: 'Hard',
+        topicTags: ['RSA', 'Prime Factorization'],
         question: 'RSA relies on the mathematical difficulty of factoring which of the following?',
+        description: 'RSA is an asymmetric cryptographic algorithm widely used for secure data transmission. Its security relies on a specific mathematical problem.',
         options: ['Large prime numbers', 'Large composite numbers', 'Matrices', 'Polynomials'],
-        answer: 1
+        answer: 1,
+        explanation: 'RSA relies on the difficulty of prime factorization. It multiplies two large prime numbers to create a massive composite number. While multiplying them is easy, factoring the massive composite number back into the original primes is computationally infeasible for modern computers.'
       }
     ]
   }
 };
 
-// GET /api/levels/:subject/:levelId
 router.get('/:subject/:levelId', (req, res) => {
   const { subject, levelId } = req.params;
   

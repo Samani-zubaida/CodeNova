@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Play, CheckCircle2, Timer } from 'lucide-react';
+import { ArrowLeft, Play, CheckCircle2, AlertCircle, TerminalSquare, BookOpen, Tag } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 
-export default function QuizRunner({ subject, levelId, levelTitle, onBack, onLevelComplete }) {
+export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }) {
   const [questions, setQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -12,10 +11,7 @@ export default function QuizRunner({ subject, levelId, levelTitle, onBack, onLev
   const [selectedOption, setSelectedOption] = useState(null);
   const [codeValue, setCodeValue] = useState('');
   const [feedback, setFeedback] = useState(null);
-
-  // Timer state
-  const [timeLeft, setTimeLeft] = useState(60); // 60 seconds per level sequence
-  const [isTimedOut, setIsTimedOut] = useState(false);
+  const [showExplanation, setShowExplanation] = useState(false);
 
   useEffect(() => {
     fetch(`http://localhost:5000/api/levels/${subject}/${levelId}`)
@@ -36,44 +32,23 @@ export default function QuizRunner({ subject, levelId, levelTitle, onBack, onLev
       });
   }, [subject, levelId]);
 
-  // Timer logic
-  useEffect(() => {
-    if (loading || isTimedOut || feedback?.success || currentIndex >= questions.length) return;
-
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          setIsTimedOut(true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [loading, isTimedOut, feedback, currentIndex, questions.length]);
-
-
   const currentQ = questions[currentIndex];
 
   const handleSubmit = () => {
-    if (isTimedOut) return;
-
     if (currentQ.type === 'multiple-choice') {
       if (selectedOption === currentQ.answer) {
-        setFeedback({ success: true, text: 'Correct!' });
-        setTimeout(nextQuestion, 1500);
+        setFeedback({ success: true, text: 'Accepted' });
+        setShowExplanation(true);
       } else {
-        setFeedback({ success: false, text: 'Incorrect. Try again.' });
+        setFeedback({ success: false, text: 'Wrong Answer' });
       }
     } else if (currentQ.type === 'code-editor') {
       const regex = new RegExp(currentQ.validationRegex);
       if (regex.test(codeValue)) {
-        setFeedback({ success: true, text: currentQ.successMessage || 'Tests Passed!' });
-        setTimeout(nextQuestion, 2000);
+        setFeedback({ success: true, text: 'Accepted' });
+        setShowExplanation(true);
       } else {
-        setFeedback({ success: false, text: 'Compilation failed or logic incorrect.' });
+        setFeedback({ success: false, text: 'Compilation Error / Wrong Output' });
       }
     }
   };
@@ -81,6 +56,8 @@ export default function QuizRunner({ subject, levelId, levelTitle, onBack, onLev
   const nextQuestion = () => {
     setFeedback(null);
     setSelectedOption(null);
+    setShowExplanation(false);
+    
     if (currentIndex < questions.length - 1) {
       const nextQ = questions[currentIndex + 1];
       if (nextQ.type === 'code-editor') {
@@ -88,92 +65,124 @@ export default function QuizRunner({ subject, levelId, levelTitle, onBack, onLev
       }
       setCurrentIndex(prev => prev + 1);
     } else {
-      // Level completed!
-      onLevelComplete(levelId);
+      onLevelComplete();
     }
   };
 
   if (loading) {
     return (
-      <div className="w-full flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+      <div className="w-full min-h-screen flex items-center justify-center bg-[#0f172a]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-blue-500"></div>
       </div>
     );
   }
 
-  if (error) {
-    return <div className="text-red-400 p-8 font-bold text-xl bg-slate-900 rounded-2xl border border-red-500 shadow-2xl">Network Error: Is the backend server running?</div>;
+  if (error || !currentQ) {
+    return <div className="text-red-400 p-8 bg-[#0f172a] h-screen">Error: {error}</div>;
   }
 
-  if (isTimedOut) {
-    return (
-      <div className="w-full max-w-2xl bg-slate-900 border-2 border-red-500 rounded-3xl p-12 flex flex-col items-center justify-center text-center shadow-[0_0_50px_rgba(239,68,68,0.3)]">
-        <h2 className="text-5xl font-black text-red-500 mb-6">TIME OUT</h2>
-        <p className="text-slate-300 text-xl mb-12">The system detected you and locked you out.</p>
-        <button 
-          onClick={onBack}
-          className="px-8 py-4 rounded-xl font-bold bg-slate-800 hover:bg-slate-700 text-white transition-colors border border-slate-700 w-full"
-        >
-          Disconnect & Run
-        </button>
-      </div>
-    )
-  }
-
-  if (!currentQ) return null;
+  const getDifficultyColor = (diff) => {
+    switch(diff) {
+      case 'Easy': return 'text-teal-400 bg-teal-400/10 border-teal-400/20';
+      case 'Medium': return 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20';
+      case 'Hard': return 'text-red-400 bg-red-400/10 border-red-400/20';
+      default: return 'text-slate-400 bg-slate-800 border-slate-700';
+    }
+  };
 
   return (
-    <div className="w-full max-w-4xl flex flex-col items-center">
+    <div className="w-full h-screen bg-[#0f172a] flex flex-col font-sans text-slate-200">
       
-      {/* Header */}
-      <div className="w-full flex items-center justify-between mb-8">
-        <h2 className="text-2xl font-bold text-white bg-slate-800 px-6 py-3 rounded-full border border-slate-700">
-          {levelTitle} - Challenge {currentIndex + 1} of {questions.length}
-        </h2>
+      {/* Top Navbar */}
+      <div className="h-14 border-b border-slate-800 bg-[#1e293b] flex items-center px-4 justify-between shrink-0">
+        <div className="flex items-center gap-4">
+          <button onClick={onBack} className="text-slate-400 hover:text-white transition-colors">
+            <ArrowLeft size={20} />
+          </button>
+          <div className="h-4 w-px bg-slate-700"></div>
+          <span className="font-semibold flex items-center gap-2">
+            <TerminalSquare size={18} className="text-blue-400" />
+            Problem {currentIndex + 1} <span className="text-slate-500 font-normal">/ {questions.length}</span>
+          </span>
+        </div>
         
-        {/* Timer */}
-        <div className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold text-xl border shadow-lg ${
-          timeLeft <= 10 
-            ? 'bg-red-500/20 text-red-400 border-red-500/50 animate-pulse' 
-            : 'bg-slate-800 text-white border-slate-700'
-        }`}>
-          <Timer size={24} className={timeLeft <= 10 ? 'text-red-400' : 'text-blue-400'} />
-          {timeLeft}s
+        {/* Progress Dots */}
+        <div className="flex gap-2">
+          {questions.map((_, idx) => (
+            <div key={idx} className={`w-2 h-2 rounded-full ${idx === currentIndex ? 'bg-blue-500' : idx < currentIndex ? 'bg-green-500' : 'bg-slate-700'}`} />
+          ))}
         </div>
       </div>
 
-      {/* Progress Bar */}
-      <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden border border-slate-700 mb-8">
-        <div 
-          className="h-full bg-blue-500 transition-all duration-500"
-          style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
-        />
-      </div>
+      {/* Main Split Layout */}
+      <div className="flex-1 flex overflow-hidden">
+        
+        {/* LEFT PANE: Description */}
+        <div className="w-1/2 border-r border-slate-800 bg-[#1e293b] flex flex-col overflow-y-auto">
+          
+          <div className="p-6 border-b border-slate-800 flex items-center gap-3 bg-slate-800/20">
+            <BookOpen size={20} className="text-slate-400" />
+            <h2 className="text-xl font-bold text-white">Description</h2>
+          </div>
 
-      <div className="w-full relative overflow-hidden bg-slate-800 border-2 border-slate-700 rounded-2xl shadow-2xl min-h-[400px]">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentQ.id}
-            initial={{ x: 300, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -300, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-            className="w-full flex flex-col p-8"
-          >
-            <h3 className="text-2xl text-white mb-8 font-semibold">{currentQ.question}</h3>
+          <div className="p-8 flex-1">
+            <h1 className="text-2xl font-bold text-white mb-4">{currentIndex + 1}. {currentQ.question}</h1>
+            
+            <div className="flex items-center gap-3 mb-8">
+              <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getDifficultyColor(currentQ.difficulty)}`}>
+                {currentQ.difficulty || 'Medium'}
+              </span>
+              
+              {currentQ.topicTags?.map(tag => (
+                <span key={tag} className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-slate-800 text-slate-300 border border-slate-700">
+                  <Tag size={12} /> {tag}
+                </span>
+              ))}
+            </div>
 
+            <div className="prose prose-invert max-w-none text-slate-300 leading-relaxed">
+              <p>{currentQ.description || currentQ.question}</p>
+            </div>
+
+            {/* Explanation Section (Revealed on Success) */}
+            {showExplanation && (
+              <div className="mt-12 p-6 bg-blue-500/10 border border-blue-500/30 rounded-xl">
+                <h3 className="text-blue-400 font-bold mb-2 flex items-center gap-2">
+                  <CheckCircle2 size={18} /> Official Solution Explanation
+                </h3>
+                <p className="text-slate-300 leading-relaxed text-sm">
+                  {currentQ.explanation || 'No detailed explanation provided for this problem.'}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* RIGHT PANE: Editor / Interaction */}
+        <div className="w-1/2 flex flex-col bg-[#0f172a]">
+          
+          <div className="p-4 border-b border-slate-800 flex items-center gap-3 bg-[#1e293b]">
+            <Code2 size={18} className="text-slate-400" />
+            <span className="font-semibold text-sm text-slate-300">
+              {currentQ.type === 'code-editor' ? 'Code Editor (JavaScript)' : 'Multiple Choice Selection'}
+            </span>
+          </div>
+
+          <div className="flex-1 p-6 overflow-y-auto">
             {currentQ.type === 'multiple-choice' && (
-              <div className="flex flex-col gap-4 flex-1">
+              <div className="flex flex-col gap-4 max-w-lg mx-auto mt-8">
                 {currentQ.options.map((opt, idx) => (
                   <button
                     key={idx}
+                    disabled={showExplanation}
                     onClick={() => setSelectedOption(idx)}
-                    className={`p-5 rounded-xl text-left font-medium transition-all border-2 text-lg ${
+                    className={`p-4 rounded-xl text-left font-medium transition-all border ${
                       selectedOption === idx 
-                        ? 'bg-blue-500/20 border-blue-500 text-blue-300 transform scale-[1.02]' 
-                        : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500'
-                    }`}
+                        ? 'bg-blue-500/10 border-blue-500 text-blue-400' 
+                        : 'bg-[#1e293b] border-slate-700 text-slate-300 hover:border-slate-500'
+                    } ${showExplanation ? 'opacity-75 cursor-default' : ''}`}
                   >
+                    <span className="inline-block w-8 text-slate-500 font-mono">{String.fromCharCode(65 + idx)}.</span>
                     {opt}
                   </button>
                 ))}
@@ -181,52 +190,62 @@ export default function QuizRunner({ subject, levelId, levelTitle, onBack, onLev
             )}
 
             {currentQ.type === 'code-editor' && (
-              <div className="w-full h-[350px] rounded-xl overflow-hidden border-2 border-slate-700 mb-6 shadow-inner">
+              <div className="w-full h-full rounded-xl overflow-hidden border border-slate-700 shadow-inner">
                 <Editor
                   height="100%"
                   defaultLanguage="javascript"
                   theme="vs-dark"
                   value={codeValue}
-                  onChange={(val) => setCodeValue(val)}
+                  onChange={(val) => !showExplanation && setCodeValue(val)}
                   options={{
                     minimap: { enabled: false },
-                    fontSize: 16,
+                    fontSize: 14,
+                    fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
                     scrollBeyondLastLine: false,
-                    padding: { top: 24 }
+                    padding: { top: 24 },
+                    readOnly: showExplanation
                   }}
                 />
               </div>
             )}
+          </div>
 
-            {/* Footer / Submission */}
-            <div className="mt-auto pt-6 border-t border-slate-700 flex items-center justify-between">
-              <div className="flex-1">
-                {feedback && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }} 
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`font-bold flex items-center gap-2 text-lg ${feedback.success ? 'text-green-400' : 'text-red-400'}`}
-                  >
-                    {feedback.success && <CheckCircle2 size={24} />}
-                    {feedback.text}
-                  </motion.div>
-                )}
-              </div>
-              
-              <button 
-                onClick={handleSubmit}
-                disabled={feedback?.success || (currentQ.type === 'multiple-choice' && selectedOption === null)}
-                className="px-8 py-4 rounded-xl font-bold bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors shadow-[0_0_20px_rgba(59,130,246,0.3)] flex items-center gap-3 text-lg"
-              >
-                {currentQ.type === 'code-editor' ? (<>Run Code <Play size={20} fill="currentColor" /></>) : (<>Submit Answer <CheckCircle2 size={20} /></>)}
-              </button>
+          {/* Bottom Action Bar */}
+          <div className="h-16 border-t border-slate-800 bg-[#1e293b] flex items-center justify-between px-6 shrink-0">
+            
+            {/* Feedback Result */}
+            <div className="flex items-center">
+              {feedback && (
+                <div className={`font-semibold flex items-center gap-2 ${feedback.success ? 'text-green-400' : 'text-red-400'}`}>
+                  {feedback.success ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+                  {feedback.text}
+                </div>
+              )}
             </div>
+            
+            {/* Action Buttons */}
+            <div className="flex items-center gap-4">
+              {showExplanation ? (
+                <button 
+                  onClick={nextQuestion}
+                  className="px-6 py-2 rounded-lg font-semibold bg-green-600 hover:bg-green-500 text-white transition-colors flex items-center gap-2 text-sm"
+                >
+                  Next Challenge <ArrowLeft size={16} className="rotate-180" />
+                </button>
+              ) : (
+                <button 
+                  onClick={handleSubmit}
+                  disabled={currentQ.type === 'multiple-choice' && selectedOption === null}
+                  className="px-6 py-2 rounded-lg font-semibold bg-slate-200 hover:bg-white text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 text-sm"
+                >
+                  <Play size={16} fill="currentColor" /> Submit Solution
+                </button>
+              )}
+            </div>
+          </div>
 
-          </motion.div>
-        </AnimatePresence>
+        </div>
       </div>
-
     </div>
   );
 }
-

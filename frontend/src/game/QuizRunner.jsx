@@ -6,6 +6,7 @@ import useAppStore from "../store/useAppStore.js"
 export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }) {
   const addXP = useAppStore(state => state.addXP);
   const unlockNextLevel = useAppStore(state => state.unlockNextLevel);
+  const addCompletedLevel = useAppStore(state => state.addCompletedLevel);
   const [questions, setQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -138,6 +139,7 @@ export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }
       // Level Complete!
       addXP(earnedXP); // Dispatch to global store
       unlockNextLevel(subject);
+      addCompletedLevel({ subject, levelId, title: `${subject.toUpperCase()} Lvl ${levelId}`, date: new Date().toLocaleDateString() });
       setIsLevelComplete(true);
     }
   };
@@ -371,3 +373,4 @@ export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }
     </div>
   );
 }
+

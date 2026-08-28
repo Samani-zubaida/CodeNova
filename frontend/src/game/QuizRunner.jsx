@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Play, CheckCircle2, AlertCircle, TerminalSquare, BookOpen, Tag } from 'lucide-react';
+import { ArrowLeft, Play, CheckCircle2, AlertCircle, TerminalSquare, BookOpen, Tag, Code2 } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 
 export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }) {
@@ -249,3 +249,4 @@ export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }
     </div>
   );
 }
+

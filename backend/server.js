@@ -15,18 +15,22 @@ app.use(express.json());
 
 // MongoDB connection
 console.log("MongoDB URI exists:", !!process.env.MONGODB_URI);
-console.log("Starting MongoDB connection...");
 
-mongoose.connect(process.env.MONGODB_URI, {
-  serverSelectionTimeoutMS: 10000
-})
-.then(() => {
-  console.log("Connected to MongoDB");
-})
-.catch((err) => {
-  console.error("MongoDB connection error:");
-  console.error(err);
-});
+if (process.env.MONGODB_URI) {
+  console.log("Starting MongoDB connection...");
+  mongoose.connect(process.env.MONGODB_URI, {
+    serverSelectionTimeoutMS: 10000
+  })
+  .then(() => {
+    console.log("Connected to MongoDB");
+  })
+  .catch((err) => {
+    console.error("MongoDB connection error:");
+    console.error(err);
+  });
+} else {
+  console.warn("WARNING: MONGODB_URI is undefined. Skipping database connection. Some features may not work.");
+}
 
 // Routes
 app.use('/api/auth', authRoutes);

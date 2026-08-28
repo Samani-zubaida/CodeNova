@@ -8,6 +8,7 @@ const sandboxRoutes = require('./routes/sandbox');
 const progressRoutes = require('./routes/progress');
 const levelsRoutes = require('./routes/levels');
 const dashboardRoutes = require('./routes/dashboard');
+const competitionsRoutes = require('./routes/competitions');
 
 const app = express();
 
@@ -39,6 +40,7 @@ app.use('/api/sandbox', sandboxRoutes);
 app.use('/api/progress', progressRoutes);
 app.use('/api/levels', levelsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/competitions', competitionsRoutes);
 
 app.get('/', (req, res) => {
   res.send('Code Nova API is running');
@@ -48,4 +50,5 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
 

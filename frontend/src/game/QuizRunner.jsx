@@ -3,7 +3,7 @@ import { ArrowLeft, Play, CheckCircle2, AlertCircle, TerminalSquare, BookOpen, T
 import Editor from '@monaco-editor/react';
 import useAppStore from "../store/useAppStore.js"
 
-export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }) {
+export default function QuizRunner({ subject, levelId, competitionData, onBack, onLevelComplete }) {
   const addXP = useAppStore(state => state.addXP);
   const unlockNextLevel = useAppStore(state => state.unlockNextLevel);
   const addCompletedLevel = useAppStore(state => state.addCompletedLevel);
@@ -24,23 +24,38 @@ export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }
   const [hasAttempted, setHasAttempted] = useState(false); // track if they failed a question already
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/levels/${subject}/${levelId}`)
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to fetch level data');
-        return res.json();
-      })
-      .then(data => {
-        setQuestions(data);
-        if (data[0]?.type === 'code-editor') {
-          setCodeValue(data[0].initialCode || '');
-        }
-        setLoading(false);
-      })
-      .catch(err => {
-        setError(err.message);
-        setLoading(false);
-      });
-  }, [subject, levelId]);
+    if (competitionData) {
+      // Map competition questions to the QuizRunner format
+      const mappedQs = competitionData.questions.map(q => ({
+        ...q,
+        type: 'code-editor',
+        question: q.title,
+        explanation: q.description
+      }));
+      setQuestions(mappedQs);
+      if (mappedQs.length > 0) {
+        setCodeValue(mappedQs[0].initialCode || '');
+      }
+      setLoading(false);
+    } else {
+      fetch(`http://localhost:5000/api/levels/${subject}/${levelId}`)
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to fetch level data');
+          return res.json();
+        })
+        .then(data => {
+          setQuestions(data);
+          if (data[0]?.type === 'code-editor') {
+            setCodeValue(data[0].initialCode || '');
+          }
+          setLoading(false);
+        })
+        .catch(err => {
+          setError(err.message);
+          setLoading(false);
+        });
+    }
+  }, [subject, levelId, competitionData]);
 
   const currentQ = questions[currentIndex];
 
@@ -131,6 +146,7 @@ export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }
     
     if (currentIndex < questions.length - 1) {
       const nextQ = questions[currentIndex + 1];
+      if (competitionData) nextQ.type = 'code-editor';
       if (nextQ.type === 'code-editor') {
         setCodeValue(nextQ.initialCode || '');
       }
@@ -138,9 +154,16 @@ export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }
     } else {
       // Level Complete!
       addXP(earnedXP); // Dispatch to global store
-      unlockNextLevel(subject);
-      addCompletedLevel({ subject, levelId, title: `${subject.toUpperCase()} Lvl ${levelId}`, date: new Date().toLocaleDateString() });
+      if (!competitionData) unlockNextLevel(subject);
+      if (!competitionData) addCompletedLevel({ subject, levelId, title: `${subject.toUpperCase()} Lvl ${levelId}`, date: new Date().toLocaleDateString() });
       setIsLevelComplete(true);
+      if (competitionData) {
+        fetch(`http://localhost:5000/api/competitions/${competitionData._id}/submit-score`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: 'Player1', score: earnedXP })
+        });
+      }
     }
   };
 

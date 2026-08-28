@@ -4,6 +4,7 @@ import Navbar from './components/layout/Navbar';
 import VisualizerDashboard from './pages/VisualizerDashboard';
 import Sandbox from './pages/Sandbox';
 import GameWorld from './game/GameWorld';
+import HostDashboard from './game/HostDashboard';
 
 // Data Structures
 import ArrayVisualizer from './visualizers/ds/ArrayVisualizer';
@@ -79,6 +80,7 @@ function App() {
             <Route path="/visualizer/dh" element={<div className="p-8"><DHVisualizer /></div>} />
 
             <Route path="/game" element={<GameWorld />} />
+            <Route path="/host" element={<HostDashboard />} />
 
             {/* Sandbox */}
             <Route path="/sandbox" element={<Sandbox />} />
@@ -90,3 +92,4 @@ function App() {
 }
 
 export default App;
+

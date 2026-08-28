@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Code2, Database, Shield, BookOpen, Star, Clock, Trophy, FileText, BarChart2, Medal, User } from 'lucide-react';
 import QuizRunner from './QuizRunner';
+import CompetitionModal from './CompetitionModal';
 import useAppStore from "../store/useAppStore.js"
 
 export default function GameWorld() {
@@ -10,6 +11,7 @@ export default function GameWorld() {
   const unlockedLevels = useAppStore(state => state.unlockedLevels);
   const completedLevels = useAppStore(state => state.completedLevels);
   const [activeQuiz, setActiveQuiz] = useState(null);
+  const [selectedComp, setSelectedComp] = useState(null);
   
   const [subjects, setSubjects] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
@@ -43,6 +45,7 @@ export default function GameWorld() {
         <QuizRunner 
           subject={activeQuiz.subject}
           levelId={activeQuiz.level}
+          competitionData={activeQuiz.type === "competition" ? activeQuiz.data : null}
           onBack={() => setActiveQuiz(null)}
           onLevelComplete={() => setActiveQuiz(null)}
         />
@@ -218,9 +221,9 @@ export default function GameWorld() {
                       
                       <div className="flex justify-between items-center mt-3 pt-3 border-t border-[#333]">
                         {comp.type === 'Global' ? (
-                           <button className="bg-[#AB526B] hover:bg-[#8e4257] text-white text-xs font-bold py-1.5 px-3 rounded transition-colors w-full">REGISTER NOW</button>
+                           <button onClick={() => setSelectedComp(comp)} className="bg-[#AB526B] hover:bg-[#8e4257] text-white text-xs font-bold py-1.5 px-3 rounded transition-colors w-full">View Competition</button>
                         ) : (
-                           <button className="border border-[#BCA297] text-[#BCA297] hover:bg-[#BCA297]/10 text-xs font-bold py-1.5 px-3 rounded transition-colors w-full">Details</button>
+                           <button onClick={() => setSelectedComp(comp)} className="border border-[#BCA297] text-[#BCA297] hover:bg-[#BCA297]/10 text-xs font-bold py-1.5 px-3 rounded transition-colors w-full">Details</button>
                         )}
                       </div>
                     </div>
@@ -263,7 +266,24 @@ export default function GameWorld() {
           </div>
         </div>
       </main>
+      {selectedComp && (
+        <CompetitionModal 
+          comp={selectedComp} 
+          onClose={() => setSelectedComp(null)} 
+          onEnter={(comp) => {
+             setSelectedComp(null);
+             // For now, launch it in QuizRunner as a special subject.
+             // Normally we'd have a CompetitionRunner, but QuizRunner can handle dynamic questions if we adapt it.
+             // Let's pass the competition ID to activeQuiz
+             setActiveQuiz({ type: 'competition', data: comp });
+          }} 
+        />
+      )}
     </div>
   );
 }
+
+
+
+
 

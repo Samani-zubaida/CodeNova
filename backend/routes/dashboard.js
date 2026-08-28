@@ -77,3 +77,4 @@ router.get('/competitions', async (req, res) => {
 });
 
 module.exports = router;
+

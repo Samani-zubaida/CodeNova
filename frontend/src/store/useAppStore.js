@@ -5,11 +5,13 @@ const useAppStore = create((set) => ({
   theme: 'light',
   currentCodeOutput: '',
   isPlayingVisualizer: false,
+  totalXP: 0,
   
   setUser: (user) => set({ user }),
   toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
   setExecutionOutput: (output) => set({ currentCodeOutput: output }),
-  setPlayingVisualizer: (isPlaying) => set({ isPlayingVisualizer: isPlaying })
+  setPlayingVisualizer: (isPlaying) => set({ isPlayingVisualizer: isPlaying }),
+  addXP: (amount) => set((state) => ({ totalXP: state.totalXP + amount }))
 }));
 
 export default useAppStore;

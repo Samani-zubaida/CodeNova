@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Code2, Database, Shield, ChevronRight, Lock, BookOpen } from 'lucide-react';
+import { ArrowLeft, Code2, Database, Shield, ChevronRight, Lock, BookOpen, Star } from 'lucide-react';
 import QuizRunner from './QuizRunner';
+import useAppStore from '../../store/useAppStore';
 
 export default function GameWorld() {
   const navigate = useNavigate();
+  const totalXP = useAppStore(state => state.totalXP);
   const [activeQuiz, setActiveQuiz] = useState(null);
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,7 +28,8 @@ export default function GameWorld() {
     switch(id) {
       case 'ds': return <Database size={24} className="text-blue-400" />;
       case 'algo': return <Code2 size={24} className="text-orange-400" />;
-      default: return <BookOpen size={24} className="text-purple-400" />;
+      case 'oop': return <Shield size={24} className="text-purple-400" />;
+      default: return <BookOpen size={24} className="text-slate-400" />;
     }
   };
 
@@ -34,7 +37,8 @@ export default function GameWorld() {
     switch(id) {
       case 'ds': return 'bg-blue-500/10 border-blue-500/20';
       case 'algo': return 'bg-orange-500/10 border-orange-500/20';
-      default: return 'bg-purple-500/10 border-purple-500/20';
+      case 'oop': return 'bg-purple-500/10 border-purple-500/20';
+      default: return 'bg-slate-500/10 border-slate-500/20';
     }
   };
 
@@ -59,21 +63,32 @@ export default function GameWorld() {
     <div className="w-full min-h-screen bg-[#0f172a] font-sans text-slate-100 p-8 flex flex-col items-center">
       
       {/* Header */}
-      <div className="w-full max-w-6xl flex items-center mb-12">
-        <button 
-          onClick={() => navigate('/')}
-          className="bg-slate-800 p-3 rounded-xl hover:bg-slate-700 transition-colors border border-slate-700 mr-6"
-        >
-          <ArrowLeft size={24} className="text-slate-300" />
-        </button>
-        <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Challenge Academy</h1>
-          <p className="text-slate-400 mt-1">Master computer science concepts through interactive problem solving.</p>
+      <div className="w-full max-w-6xl flex justify-between items-center mb-12">
+        <div className="flex items-center">
+          <button 
+            onClick={() => navigate('/')}
+            className="bg-slate-800 p-3 rounded-xl hover:bg-slate-700 transition-colors border border-slate-700 mr-6"
+          >
+            <ArrowLeft size={24} className="text-slate-300" />
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold text-white tracking-tight">Challenge Academy</h1>
+            <p className="text-slate-400 mt-1">Master computer science concepts through interactive problem solving.</p>
+          </div>
+        </div>
+
+        {/* Global XP Counter */}
+        <div className="flex items-center gap-3 bg-slate-800/80 px-6 py-3 rounded-2xl border border-slate-700 shadow-xl backdrop-blur-md">
+          <Star className="text-yellow-400 fill-yellow-400" size={24} />
+          <div className="flex flex-col">
+            <span className="text-xs text-slate-400 font-bold uppercase tracking-wider leading-none">Total XP</span>
+            <span className="text-xl font-black text-white leading-tight">{totalXP.toLocaleString()}</span>
+          </div>
         </div>
       </div>
 
       {/* Main Grid */}
-      <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
         
         {subjects.map(subject => (
           <div key={subject.id} className="bg-[#1e293b] border border-slate-700 rounded-2xl overflow-hidden shadow-xl flex flex-col">
@@ -95,7 +110,7 @@ export default function GameWorld() {
                   className={`w-full p-4 rounded-xl flex items-center justify-between border transition-all ${
                     level.locked 
                       ? 'bg-slate-800/30 border-transparent opacity-50 cursor-not-allowed' 
-                      : 'bg-slate-800 border-slate-600 hover:border-slate-400 cursor-pointer group'
+                      : 'bg-slate-800 border-slate-600 hover:border-slate-400 cursor-pointer group hover:-translate-y-0.5 hover:shadow-lg'
                   }`}
                 >
                   <div className="flex items-center gap-4">

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Play, CheckCircle2, AlertCircle, TerminalSquare, BookOpen, Tag, Code2, XCircle } from 'lucide-react';
+import { ArrowLeft, Play, CheckCircle2, AlertCircle, TerminalSquare, BookOpen, Tag, Code2, XCircle, Star, Trophy } from 'lucide-react';
 import Editor from '@monaco-editor/react';
+import useAppStore from '../../store/useAppStore';
 
 export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }) {
+  const addXP = useAppStore(state => state.addXP);
   const [questions, setQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -13,6 +15,11 @@ export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }
   const [feedback, setFeedback] = useState(null);
   const [testResults, setTestResults] = useState([]);
   const [showExplanation, setShowExplanation] = useState(false);
+  
+  // Gamification State
+  const [earnedXP, setEarnedXP] = useState(0);
+  const [isLevelComplete, setIsLevelComplete] = useState(false);
+  const [hasAttempted, setHasAttempted] = useState(false); // track if they failed a question already
 
   useEffect(() => {
     fetch(`http://localhost:5000/api/levels/${subject}/${levelId}`)
@@ -40,17 +47,18 @@ export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }
       if (selectedOption === currentQ.answer) {
         setFeedback({ success: true, text: 'Accepted' });
         setShowExplanation(true);
+        if (!hasAttempted) {
+          setEarnedXP(prev => prev + 10);
+        }
       } else {
         setFeedback({ success: false, text: 'Wrong Answer' });
+        setHasAttempted(true);
       }
     } else if (currentQ.type === 'code-editor') {
-      // LEETCODE-STYLE EXECUTION ENGINE
       let allPassed = true;
       const results = [];
 
       try {
-        // Extract the function body and name implicitly, or just evaluate the whole block
-        // The safest basic way in a browser is to wrap it and return the evaluated function
         const wrappedCode = `
           ${codeValue}
           return typeof ${codeValue.match(/function\s+([a-zA-Z_$][0-9a-zA-Z_$]*)/)?.[1] || 'solution'} === 'function' 
@@ -66,11 +74,8 @@ export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }
 
         currentQ.testCases.forEach((tc, idx) => {
           try {
-            // Deep clone args to prevent user mutation affecting expected output logging
             const argsClone = JSON.parse(JSON.stringify(tc.args));
             const actual = userFunc(...argsClone);
-            
-            // Simple deep equality check for arrays/objects
             const passed = JSON.stringify(actual) === JSON.stringify(tc.expected);
             
             results.push({
@@ -99,13 +104,18 @@ export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }
         if (allPassed) {
           setFeedback({ success: true, text: 'Accepted! All test cases passed.' });
           setShowExplanation(true);
+          if (!hasAttempted) {
+            setEarnedXP(prev => prev + 50);
+          }
         } else {
           setFeedback({ success: false, text: 'Wrong Answer. Some test cases failed.' });
+          setHasAttempted(true);
         }
 
       } catch (err) {
         setFeedback({ success: false, text: `Syntax/Compilation Error: ${err.message}` });
         setTestResults([]);
+        setHasAttempted(true);
       }
     }
   };
@@ -115,6 +125,7 @@ export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }
     setSelectedOption(null);
     setShowExplanation(false);
     setTestResults([]);
+    setHasAttempted(false);
     
     if (currentIndex < questions.length - 1) {
       const nextQ = questions[currentIndex + 1];
@@ -123,7 +134,9 @@ export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }
       }
       setCurrentIndex(prev => prev + 1);
     } else {
-      onLevelComplete();
+      // Level Complete!
+      addXP(earnedXP); // Dispatch to global store
+      setIsLevelComplete(true);
     }
   };
 
@@ -137,6 +150,35 @@ export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }
 
   if (error || !currentQ) {
     return <div className="text-red-400 p-8 bg-[#0f172a] h-screen">Error: {error}</div>;
+  }
+
+  if (isLevelComplete) {
+    return (
+      <div className="w-full min-h-screen bg-[#0f172a] flex items-center justify-center font-sans text-slate-100 p-8">
+        <div className="bg-[#1e293b] border border-slate-700 p-12 rounded-3xl shadow-2xl flex flex-col items-center max-w-lg w-full text-center">
+          <div className="w-24 h-24 bg-yellow-500/20 rounded-full flex items-center justify-center mb-6 border border-yellow-500/50">
+            <Trophy size={48} className="text-yellow-400" />
+          </div>
+          <h1 className="text-4xl font-black text-white mb-2">Level Complete!</h1>
+          <p className="text-slate-400 mb-8 text-lg">Outstanding work! You mastered these concepts.</p>
+          
+          <div className="bg-slate-800/50 w-full rounded-2xl p-6 border border-slate-700 flex flex-col items-center mb-8">
+            <span className="text-slate-400 font-semibold mb-2 uppercase tracking-widest text-sm">XP Earned</span>
+            <div className="flex items-center gap-3 text-5xl font-black text-yellow-400">
+              <Star size={40} className="fill-yellow-400" />
+              +{earnedXP}
+            </div>
+          </div>
+
+          <button 
+            onClick={onLevelComplete}
+            className="w-full py-4 rounded-xl font-bold bg-blue-600 hover:bg-blue-500 text-white transition-all text-lg shadow-[0_0_20px_rgba(37,99,235,0.4)]"
+          >
+            Return to Academy
+          </button>
+        </div>
+      </div>
+    );
   }
 
   const getDifficultyColor = (diff) => {
@@ -164,11 +206,9 @@ export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }
           </span>
         </div>
         
-        {/* Progress Dots */}
-        <div className="flex gap-2">
-          {questions.map((_, idx) => (
-            <div key={idx} className={`w-2 h-2 rounded-full ${idx === currentIndex ? 'bg-blue-500' : idx < currentIndex ? 'bg-green-500' : 'bg-slate-700'}`} />
-          ))}
+        {/* Session XP */}
+        <div className="flex items-center gap-2 text-yellow-400 font-bold bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
+          <Star size={16} className="fill-yellow-400" /> +{earnedXP} XP
         </div>
       </div>
 
@@ -310,7 +350,7 @@ export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }
                   onClick={nextQuestion}
                   className="px-6 py-2 rounded-lg font-semibold bg-green-600 hover:bg-green-500 text-white transition-colors flex items-center gap-2 text-sm shadow-[0_0_15px_rgba(22,163,74,0.4)]"
                 >
-                  Next Challenge <ArrowLeft size={16} className="rotate-180" />
+                  {currentIndex < questions.length - 1 ? 'Next Challenge' : 'Complete Level'} <ArrowLeft size={16} className="rotate-180" />
                 </button>
               ) : (
                 <button 
@@ -318,7 +358,7 @@ export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }
                   disabled={currentQ.type === 'multiple-choice' && selectedOption === null}
                   className="px-6 py-2 rounded-lg font-semibold bg-slate-200 hover:bg-white text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 text-sm shadow-[0_0_15px_rgba(255,255,255,0.1)]"
                 >
-                  <Play size={16} fill="currentColor" /> Run Code & Submit
+                  <Play size={16} fill="currentColor" /> {currentQ.type === 'code-editor' ? 'Run Code & Submit' : 'Submit Answer'}
                 </button>
               )}
             </div>
@@ -329,4 +369,3 @@ export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }
     </div>
   );
 }
-// Force HMR update

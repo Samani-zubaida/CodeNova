@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Code2, Database, Shield, ChevronRight, Lock, BookOpen, Star } from 'lucide-react';
 import QuizRunner from './QuizRunner';
-import useAppStore from '../../store/useAppStore';
+import useAppStore from "../store/useAppStore.js"
 
 export default function GameWorld() {
   const navigate = useNavigate();
   const totalXP = useAppStore(state => state.totalXP);
+  const unlockedLevels = useAppStore(state => state.unlockedLevels);
   const [activeQuiz, setActiveQuiz] = useState(null);
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -103,12 +104,14 @@ export default function GameWorld() {
 
             {/* Level List */}
             <div className="flex-1 p-4 flex flex-col gap-2">
-              {subject.levels.map((level, idx) => (
+              {subject.levels.map((level, idx) => {
+                const isLocked = level.id > (unlockedLevels[subject.id] || 1);
+                return (
                 <div 
                   key={level.id}
-                  onClick={() => !level.locked && setActiveQuiz({ subject: subject.id, level: level.id })}
+                  onClick={() => !isLocked && setActiveQuiz({ subject: subject.id, level: level.id })}
                   className={`w-full p-4 rounded-xl flex items-center justify-between border transition-all ${
-                    level.locked 
+                    isLocked 
                       ? 'bg-slate-800/30 border-transparent opacity-50 cursor-not-allowed' 
                       : 'bg-slate-800 border-slate-600 hover:border-slate-400 cursor-pointer group hover:-translate-y-0.5 hover:shadow-lg'
                   }`}
@@ -118,7 +121,7 @@ export default function GameWorld() {
                     <span className="font-semibold text-slate-200">{level.title}</span>
                   </div>
                   
-                  {level.locked ? (
+                  {isLocked ? (
                     <Lock size={18} className="text-slate-500" />
                   ) : (
                     <ChevronRight size={20} className="text-slate-400 group-hover:text-white transition-colors" />
@@ -134,3 +137,4 @@ export default function GameWorld() {
     </div>
   );
 }
+

@@ -6,12 +6,19 @@ const useAppStore = create((set) => ({
   currentCodeOutput: '',
   isPlayingVisualizer: false,
   totalXP: 0,
+  unlockedLevels: { ds: 1, algo: 1, oop: 1 },
   
   setUser: (user) => set({ user }),
   toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
   setExecutionOutput: (output) => set({ currentCodeOutput: output }),
   setPlayingVisualizer: (isPlaying) => set({ isPlayingVisualizer: isPlaying }),
-  addXP: (amount) => set((state) => ({ totalXP: state.totalXP + amount }))
+  addXP: (amount) => set((state) => ({ totalXP: state.totalXP + amount })),
+  unlockNextLevel: (subject) => set((state) => ({
+    unlockedLevels: {
+      ...state.unlockedLevels,
+      [subject]: (state.unlockedLevels[subject] || 1) + 1
+    }
+  }))
 }));
 
 export default useAppStore;

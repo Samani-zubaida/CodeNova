@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Play, CheckCircle2, AlertCircle, TerminalSquare, BookOpen, Tag, Code2, XCircle, Star, Trophy } from 'lucide-react';
 import Editor from '@monaco-editor/react';
-import useAppStore from '../../store/useAppStore';
+import useAppStore from "../store/useAppStore.js"
 
 export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }) {
   const addXP = useAppStore(state => state.addXP);
+  const unlockNextLevel = useAppStore(state => state.unlockNextLevel);
   const [questions, setQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -136,6 +137,7 @@ export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }
     } else {
       // Level Complete!
       addXP(earnedXP); // Dispatch to global store
+      unlockNextLevel(subject);
       setIsLevelComplete(true);
     }
   };

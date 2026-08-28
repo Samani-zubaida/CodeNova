@@ -9,55 +9,68 @@ const levelData = {
         id: 'ds1-q1',
         type: 'multiple-choice',
         difficulty: 'Easy',
-        topicTags: ['Arrays', 'Time Complexity'],
-        question: 'What is the time complexity of accessing an element in an array by index?',
-        description: 'Consider an array allocated in contiguous memory. If you know the base address and the index, how long does it take to retrieve the element?',
-        options: ['O(1)', 'O(n)', 'O(log n)', 'O(n^2)'],
-        answer: 0,
-        explanation: 'Arrays allocate memory in a contiguous block. The memory address of any element can be calculated instantly using the formula: Base Address + (Index * Size of Element). Thus, access is O(1).'
+        topicTags: ['Arrays', 'Memory Management'],
+        question: 'What is the primary advantage of arrays over linked lists?',
+        description: 'Think about how elements are stored in memory and how that affects element retrieval time.',
+        options: [
+          'Dynamic resizing is faster',
+          'O(1) random access time',
+          'Insertion in the middle is faster',
+          'They take up less overall memory'
+        ],
+        answer: 1,
+        explanation: 'Because arrays allocate a contiguous block of memory, the system can instantly calculate the exact memory address of any element via a simple offset. This provides O(1) random access, which linked lists lack since they require sequential traversal.'
       },
       {
         id: 'ds1-q2',
         type: 'code-editor',
         difficulty: 'Medium',
         topicTags: ['Arrays', 'Implementation'],
-        question: 'Implement getFirstElement(arr)',
-        description: 'Write a robust function named `getFirstElement` that takes an array and returns its first element. If the array is empty, it should return `null`.',
-        initialCode: 'function getFirstElement(arr) {\n  // Write your code here\n}',
-        validationRegex: 'return\\s+(arr\\[0\\]|null)',
-        successMessage: 'Excellent implementation.',
-        explanation: 'Returning arr[0] is O(1) time complexity. Adding the null check ensures robust error handling.'
+        question: 'Two Sum Problem',
+        description: 'Write a function named `twoSum(nums, target)` that takes an array of integers `nums` and an integer `target`, and returns the indices of the two numbers such that they add up to `target`.\n\nYou may assume that each input would have exactly one solution, and you may not use the same element twice. You can return the answer in any order.',
+        initialCode: 'function twoSum(nums, target) {\n  // Write your solution here\n}',
+        testCases: [
+          { args: [[2, 7, 11, 15], 9], expected: [0, 1] },
+          { args: [[3, 2, 4], 6], expected: [1, 2] },
+          { args: [[3, 3], 6], expected: [0, 1] }
+        ],
+        explanation: 'The brute force approach takes O(n^2) time. However, using a Hash Map to store the value and index as you iterate allows you to check if `target - current_value` exists in O(1) time, reducing the total complexity to O(n).'
       }
-    ]
-  },
-  oop: {
-    1: [
+    ],
+    2: [
       {
-        id: 'oop1-q1',
+        id: 'ds2-q1',
         type: 'code-editor',
         difficulty: 'Medium',
-        topicTags: ['Classes', 'Constructors'],
-        question: 'Design an Animal Class',
-        description: 'Create a class named `Animal`. It must contain a constructor that accepts a `name` parameter and assigns it to `this.name`.',
-        initialCode: '// Write your class here\n',
-        validationRegex: 'class\\s+Animal\\s*\\{[^]*constructor\\s*\\(\\s*name\\s*\\)\\s*\\{[^]*this\\.name\\s*=\\s*name',
-        successMessage: 'Class structure is completely valid.',
-        explanation: 'Classes in JavaScript are syntactic sugar over prototypal inheritance. The constructor method is a special method for creating and initializing an object created with a class.'
+        topicTags: ['Linked Lists', 'Two Pointers'],
+        question: 'Find Middle Node (Simulated)',
+        description: 'Write a function named `findMiddle(arr)` that simulates finding the middle of a linked list using the "slow and fast pointer" technique. For simplicity in this test, you are given an array `arr` instead of a linked list. Return the value of the element at the middle index.\n\nIf there are two middle nodes, return the second middle node.',
+        initialCode: 'function findMiddle(arr) {\n  let slow = 0;\n  let fast = 0;\n  // Complete the fast/slow pointer logic\n  \n}',
+        testCases: [
+          { args: [[1, 2, 3, 4, 5]], expected: 3 },
+          { args: [[1, 2, 3, 4, 5, 6]], expected: 4 },
+          { args: [[1]], expected: 1 }
+        ],
+        explanation: 'By advancing a "fast" pointer by 2 steps and a "slow" pointer by 1 step, the slow pointer will naturally reach the middle by the time the fast pointer reaches the end.'
       }
     ]
   },
-  crypto: {
+  algo: {
     1: [
       {
-        id: 'cry1-q1',
-        type: 'multiple-choice',
-        difficulty: 'Hard',
-        topicTags: ['RSA', 'Prime Factorization'],
-        question: 'RSA relies on the mathematical difficulty of factoring which of the following?',
-        description: 'RSA is an asymmetric cryptographic algorithm widely used for secure data transmission. Its security relies on a specific mathematical problem.',
-        options: ['Large prime numbers', 'Large composite numbers', 'Matrices', 'Polynomials'],
-        answer: 1,
-        explanation: 'RSA relies on the difficulty of prime factorization. It multiplies two large prime numbers to create a massive composite number. While multiplying them is easy, factoring the massive composite number back into the original primes is computationally infeasible for modern computers.'
+        id: 'algo1-q1',
+        type: 'code-editor',
+        difficulty: 'Easy',
+        topicTags: ['Algorithms', 'Binary Search'],
+        question: 'Binary Search Implementation',
+        description: 'Write a function named `binarySearch(nums, target)` that searches for `target` in a sorted array `nums`. If it exists, return its index; otherwise, return `-1`.',
+        initialCode: 'function binarySearch(nums, target) {\n  // Write your binary search here\n}',
+        testCases: [
+          { args: [[-1, 0, 3, 5, 9, 12], 9], expected: 4 },
+          { args: [[-1, 0, 3, 5, 9, 12], 2], expected: -1 },
+          { args: [[5], 5], expected: 0 }
+        ],
+        explanation: 'Binary Search continually splits the search interval in half. This reduces the search space logarithmically, yielding an impressive O(log n) time complexity.'
       }
     ]
   }
@@ -71,6 +84,29 @@ router.get('/:subject/:levelId', (req, res) => {
   } else {
     res.status(404).json({ error: 'Level not found' });
   }
+});
+
+router.get('/meta/subjects', (req, res) => {
+  // Returns high-level metadata for the dashboard
+  res.json([
+    {
+      id: 'ds',
+      title: 'Data Structures',
+      levels: [
+        { id: 1, title: 'Arrays & Hashing', locked: false },
+        { id: 2, title: 'Linked Lists & Pointers', locked: false },
+        { id: 3, title: 'Trees & Graphs', locked: true }
+      ]
+    },
+    {
+      id: 'algo',
+      title: 'Algorithms',
+      levels: [
+        { id: 1, title: 'Binary Search', locked: false },
+        { id: 2, title: 'Dynamic Programming', locked: true }
+      ]
+    }
+  ]);
 });
 
 module.exports = router;

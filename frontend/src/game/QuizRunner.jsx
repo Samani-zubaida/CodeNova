@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Play, CheckCircle2, AlertCircle, TerminalSquare, BookOpen, Tag, Code2 } from 'lucide-react';
+import { ArrowLeft, Play, CheckCircle2, AlertCircle, TerminalSquare, BookOpen, Tag, Code2, XCircle } from 'lucide-react';
 import Editor from '@monaco-editor/react';
 
 export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }) {
@@ -11,6 +11,7 @@ export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }
   const [selectedOption, setSelectedOption] = useState(null);
   const [codeValue, setCodeValue] = useState('');
   const [feedback, setFeedback] = useState(null);
+  const [testResults, setTestResults] = useState([]);
   const [showExplanation, setShowExplanation] = useState(false);
 
   useEffect(() => {
@@ -43,12 +44,68 @@ export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }
         setFeedback({ success: false, text: 'Wrong Answer' });
       }
     } else if (currentQ.type === 'code-editor') {
-      const regex = new RegExp(currentQ.validationRegex);
-      if (regex.test(codeValue)) {
-        setFeedback({ success: true, text: 'Accepted' });
-        setShowExplanation(true);
-      } else {
-        setFeedback({ success: false, text: 'Compilation Error / Wrong Output' });
+      // LEETCODE-STYLE EXECUTION ENGINE
+      let allPassed = true;
+      const results = [];
+
+      try {
+        // Extract the function body and name implicitly, or just evaluate the whole block
+        // The safest basic way in a browser is to wrap it and return the evaluated function
+        const wrappedCode = `
+          ${codeValue}
+          return typeof ${codeValue.match(/function\s+([a-zA-Z_$][0-9a-zA-Z_$]*)/)?.[1] || 'solution'} === 'function' 
+            ? ${codeValue.match(/function\s+([a-zA-Z_$][0-9a-zA-Z_$]*)/)?.[1] || 'solution'} 
+            : null;
+        `;
+        
+        const userFunc = new Function(wrappedCode)();
+
+        if (typeof userFunc !== 'function') {
+          throw new Error('Could not parse a valid function from your code.');
+        }
+
+        currentQ.testCases.forEach((tc, idx) => {
+          try {
+            // Deep clone args to prevent user mutation affecting expected output logging
+            const argsClone = JSON.parse(JSON.stringify(tc.args));
+            const actual = userFunc(...argsClone);
+            
+            // Simple deep equality check for arrays/objects
+            const passed = JSON.stringify(actual) === JSON.stringify(tc.expected);
+            
+            results.push({
+              caseNum: idx + 1,
+              passed,
+              input: JSON.stringify(tc.args),
+              expected: JSON.stringify(tc.expected),
+              actual: actual !== undefined ? JSON.stringify(actual) : 'undefined'
+            });
+
+            if (!passed) allPassed = false;
+          } catch (e) {
+            allPassed = false;
+            results.push({
+              caseNum: idx + 1,
+              passed: false,
+              input: JSON.stringify(tc.args),
+              expected: JSON.stringify(tc.expected),
+              actual: `Runtime Error: ${e.message}`
+            });
+          }
+        });
+
+        setTestResults(results);
+
+        if (allPassed) {
+          setFeedback({ success: true, text: 'Accepted! All test cases passed.' });
+          setShowExplanation(true);
+        } else {
+          setFeedback({ success: false, text: 'Wrong Answer. Some test cases failed.' });
+        }
+
+      } catch (err) {
+        setFeedback({ success: false, text: `Syntax/Compilation Error: ${err.message}` });
+        setTestResults([]);
       }
     }
   };
@@ -57,6 +114,7 @@ export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }
     setFeedback(null);
     setSelectedOption(null);
     setShowExplanation(false);
+    setTestResults([]);
     
     if (currentIndex < questions.length - 1) {
       const nextQ = questions[currentIndex + 1];
@@ -117,7 +175,7 @@ export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }
       {/* Main Split Layout */}
       <div className="flex-1 flex overflow-hidden">
         
-        {/* LEFT PANE: Description */}
+        {/* LEFT PANE: Description & Test Results */}
         <div className="w-1/2 border-r border-slate-800 bg-[#1e293b] flex flex-col overflow-y-auto">
           
           <div className="p-6 border-b border-slate-800 flex items-center gap-3 bg-slate-800/20">
@@ -140,13 +198,35 @@ export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }
               ))}
             </div>
 
-            <div className="prose prose-invert max-w-none text-slate-300 leading-relaxed">
+            <div className="prose prose-invert max-w-none text-slate-300 leading-relaxed whitespace-pre-wrap">
               <p>{currentQ.description || currentQ.question}</p>
             </div>
 
+            {/* Test Results Section (LeetCode Style) */}
+            {testResults.length > 0 && (
+              <div className="mt-12">
+                <h3 className="text-lg font-bold text-white mb-4">Test Cases</h3>
+                <div className="flex flex-col gap-4">
+                  {testResults.map((res, idx) => (
+                    <div key={idx} className={`p-4 rounded-xl border ${res.passed ? 'bg-green-500/10 border-green-500/30' : 'bg-red-500/10 border-red-500/30'}`}>
+                      <div className="flex items-center gap-2 font-bold mb-3">
+                        {res.passed ? <CheckCircle2 size={18} className="text-green-400" /> : <XCircle size={18} className="text-red-400" />}
+                        <span className={res.passed ? 'text-green-400' : 'text-red-400'}>Test Case {res.caseNum}</span>
+                      </div>
+                      <div className="space-y-2 text-sm font-mono">
+                        <div className="flex"><span className="w-24 text-slate-500">Input:</span><span className="text-slate-300">{res.input}</span></div>
+                        <div className="flex"><span className="w-24 text-slate-500">Expected:</span><span className="text-slate-300">{res.expected}</span></div>
+                        <div className="flex"><span className="w-24 text-slate-500">Output:</span><span className={res.passed ? 'text-green-400' : 'text-red-400'}>{res.actual}</span></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Explanation Section (Revealed on Success) */}
             {showExplanation && (
-              <div className="mt-12 p-6 bg-blue-500/10 border border-blue-500/30 rounded-xl">
+              <div className="mt-12 p-6 bg-blue-500/10 border border-blue-500/30 rounded-xl mb-12">
                 <h3 className="text-blue-400 font-bold mb-2 flex items-center gap-2">
                   <CheckCircle2 size={18} /> Official Solution Explanation
                 </h3>
@@ -190,7 +270,7 @@ export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }
             )}
 
             {currentQ.type === 'code-editor' && (
-              <div className="w-full h-full rounded-xl overflow-hidden border border-slate-700 shadow-inner">
+              <div className="w-full h-full rounded-xl overflow-hidden border border-slate-700 shadow-inner relative group">
                 <Editor
                   height="100%"
                   defaultLanguage="javascript"
@@ -228,7 +308,7 @@ export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }
               {showExplanation ? (
                 <button 
                   onClick={nextQuestion}
-                  className="px-6 py-2 rounded-lg font-semibold bg-green-600 hover:bg-green-500 text-white transition-colors flex items-center gap-2 text-sm"
+                  className="px-6 py-2 rounded-lg font-semibold bg-green-600 hover:bg-green-500 text-white transition-colors flex items-center gap-2 text-sm shadow-[0_0_15px_rgba(22,163,74,0.4)]"
                 >
                   Next Challenge <ArrowLeft size={16} className="rotate-180" />
                 </button>
@@ -236,9 +316,9 @@ export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }
                 <button 
                   onClick={handleSubmit}
                   disabled={currentQ.type === 'multiple-choice' && selectedOption === null}
-                  className="px-6 py-2 rounded-lg font-semibold bg-slate-200 hover:bg-white text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 text-sm"
+                  className="px-6 py-2 rounded-lg font-semibold bg-slate-200 hover:bg-white text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 text-sm shadow-[0_0_15px_rgba(255,255,255,0.1)]"
                 >
-                  <Play size={16} fill="currentColor" /> Submit Solution
+                  <Play size={16} fill="currentColor" /> Run Code & Submit
                 </button>
               )}
             </div>
@@ -249,4 +329,4 @@ export default function QuizRunner({ subject, levelId, onBack, onLevelComplete }
     </div>
   );
 }
-
+// Force HMR update

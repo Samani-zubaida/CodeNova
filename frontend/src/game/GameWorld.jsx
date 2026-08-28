@@ -1,45 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Code2, Database, Shield, ChevronRight, Lock } from 'lucide-react';
+import { ArrowLeft, Code2, Database, Shield, ChevronRight, Lock, BookOpen } from 'lucide-react';
 import QuizRunner from './QuizRunner';
 
 export default function GameWorld() {
   const navigate = useNavigate();
-  const [activeQuiz, setActiveQuiz] = useState(null); // { subject, level }
+  const [activeQuiz, setActiveQuiz] = useState(null);
+  const [subjects, setSubjects] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // We hardcode the available subjects and levels for the dashboard
-  const subjects = [
-    {
-      id: 'ds',
-      title: 'Data Structures',
-      icon: <Database size={24} />,
-      color: 'blue',
-      levels: [
-        { id: 1, title: 'Arrays & Memory', locked: false },
-        { id: 2, title: 'Linked Lists', locked: true },
-        { id: 3, title: 'Binary Trees', locked: true }
-      ]
-    },
-    {
-      id: 'oop',
-      title: 'Object-Oriented Design',
-      icon: <Code2 size={24} />,
-      color: 'green',
-      levels: [
-        { id: 1, title: 'Classes & Objects', locked: false },
-        { id: 2, title: 'Inheritance', locked: true }
-      ]
-    },
-    {
-      id: 'crypto',
-      title: 'Cryptography',
-      icon: <Shield size={24} />,
-      color: 'purple',
-      levels: [
-        { id: 1, title: 'Prime Factorization (RSA)', locked: false }
-      ]
+  useEffect(() => {
+    fetch('http://localhost:5000/api/levels/meta/subjects')
+      .then(res => res.json())
+      .then(data => {
+        setSubjects(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Failed to load subjects:", err);
+        setLoading(false);
+      });
+  }, []);
+
+  const getIcon = (id) => {
+    switch(id) {
+      case 'ds': return <Database size={24} className="text-blue-400" />;
+      case 'algo': return <Code2 size={24} className="text-orange-400" />;
+      default: return <BookOpen size={24} className="text-purple-400" />;
     }
-  ];
+  };
+
+  const getColor = (id) => {
+    switch(id) {
+      case 'ds': return 'bg-blue-500/10 border-blue-500/20';
+      case 'algo': return 'bg-orange-500/10 border-orange-500/20';
+      default: return 'bg-purple-500/10 border-purple-500/20';
+    }
+  };
 
   if (activeQuiz) {
     return (
@@ -52,6 +49,10 @@ export default function GameWorld() {
         />
       </div>
     );
+  }
+
+  if (loading) {
+    return <div className="w-full min-h-screen bg-[#0f172a] flex items-center justify-center text-white">Loading Challenges...</div>;
   }
 
   return (
@@ -72,15 +73,15 @@ export default function GameWorld() {
       </div>
 
       {/* Main Grid */}
-      <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8">
         
         {subjects.map(subject => (
           <div key={subject.id} className="bg-[#1e293b] border border-slate-700 rounded-2xl overflow-hidden shadow-xl flex flex-col">
             
             {/* Card Header */}
             <div className="p-6 border-b border-slate-700 flex items-center gap-4 bg-slate-800/50">
-              <div className={`p-3 rounded-lg bg-${subject.color}-500/20 text-${subject.color}-400`}>
-                {subject.icon}
+              <div className={`p-3 rounded-lg border ${getColor(subject.id)}`}>
+                {getIcon(subject.id)}
               </div>
               <h2 className="text-xl font-bold text-white">{subject.title}</h2>
             </div>

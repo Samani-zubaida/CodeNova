@@ -63,16 +63,32 @@ router.post('/generate-tests', (req, res) => {
   }, 1500);
 });
 
+// POST /api/competitions/:id/enroll
+router.post('/:id/enroll', async (req, res) => {
+  try {
+    const comp = await Competition.findById(req.params.id);
+    if (!comp) return res.status(404).json({ error: 'Competition not found' });
+    
+    comp.enrollmentCount = (comp.enrollmentCount || 0) + 1;
+    await comp.save();
+    res.json({ success: true, enrollmentCount: comp.enrollmentCount });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to enroll in competition' });
+  }
+});
+
 // POST /api/competitions/:id/submit-score
 router.post('/:id/submit-score', async (req, res) => {
   try {
-    const { username, score } = req.body;
+    const { username, score, timeTakenMs } = req.body;
     const comp = await Competition.findById(req.params.id);
     if (!comp) return res.status(404).json({ error: 'Competition not found' });
 
     comp.participants.push({
       username,
       score,
+      timeTakenMs,
       submissionTime: new Date()
     });
 
@@ -90,13 +106,18 @@ router.get('/:id/leaderboard', async (req, res) => {
     const comp = await Competition.findById(req.params.id);
     if (!comp) return res.status(404).json({ error: 'Competition not found' });
 
-    // Sort participants by score descending, then submissionTime ascending
+    // Sort participants by score descending, then timeTakenMs ascending (faster is better), then submissionTime ascending
     const sortedParticipants = comp.participants.sort((a, b) => {
       if (b.score !== a.score) return b.score - a.score;
+      if (a.timeTakenMs && b.timeTakenMs && a.timeTakenMs !== b.timeTakenMs) return a.timeTakenMs - b.timeTakenMs;
       return new Date(a.submissionTime) - new Date(b.submissionTime);
     });
 
-    res.json(sortedParticipants);
+    res.json({
+      title: comp.title,
+      enrollmentCount: comp.enrollmentCount || 0,
+      participants: sortedParticipants
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to fetch leaderboard' });

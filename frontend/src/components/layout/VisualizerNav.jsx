@@ -10,6 +10,7 @@ const ALL_MODULES = [
   { path: '/visualizer/queue', name: 'Queue', tab: 'ds' },
   { path: '/visualizer/linkedlist', name: 'Linked List', tab: 'ds' },
   { path: '/visualizer/tree', name: 'Tree', tab: 'ds' },
+  { path: '/visualizer/graph', name: 'Graph (15 Algos)', tab: 'ds' },
   { path: '/visualizer/heap', name: 'Heap', tab: 'ds' },
   { path: '/visualizer/map', name: 'Hash Map', tab: 'ds' },
   // OOP

@@ -10,6 +10,7 @@ const competitionSchema = new mongoose.Schema({
   difficulty: { type: String },
   status: { type: String, enum: ['Active', 'Upcoming', 'Completed'], default: 'Upcoming' },
   type: { type: String, enum: ['Global', 'Challenge', 'Series', 'Hosted'], default: 'Challenge' },
+  enrollmentCount: { type: Number, default: 0 },
   
   // Organization Hosted Specifics
   questions: [{
@@ -24,7 +25,8 @@ const competitionSchema = new mongoose.Schema({
   participants: [{
     username: String,
     score: Number,
-    submissionTime: Date
+    submissionTime: Date,
+    timeTakenMs: Number // Exact ms taken to complete for tie-breakers
   }]
 }, { timestamps: true });
 

@@ -1,200 +1,471 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Terminal, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { 
+  Play, Pause, SkipForward, SkipBack, RotateCcw, Volume2, VolumeX,
+  Plus, Trash2, Eye, Compass, Layers, CheckCircle, AlertCircle, ArrowDown
+} from 'lucide-react';
+import ResponsiveVisualizerShell from '../../components/visualizer/ResponsiveVisualizerShell';
+import ComplexityBadge from '../../components/visualizer/ComplexityBadge';
+import CodeInspector from '../../components/visualizer/CodeInspector';
+import VisualizerPlaybackBar from '../../components/visualizer/VisualizerPlaybackBar';
+
+const playSynthTone = (type = 'push', isMuted = false) => {
+  if (isMuted || typeof window === 'undefined') return;
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    const now = ctx.currentTime;
+
+    if (type === 'push') {
+      osc.frequency.setValueAtTime(260, now);
+      osc.frequency.exponentialRampToValueAtTime(520, now + 0.12);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+      osc.start(now);
+      osc.stop(now + 0.13);
+    } else if (type === 'pop') {
+      osc.frequency.setValueAtTime(520, now);
+      osc.frequency.exponentialRampToValueAtTime(260, now + 0.12);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+      osc.start(now);
+      osc.stop(now + 0.13);
+    } else if (type === 'peek') {
+      osc.frequency.setValueAtTime(440, now);
+      gain.gain.setValueAtTime(0.1, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+      osc.start(now);
+      osc.stop(now + 0.11);
+    }
+  } catch (e) {}
+};
+
+const CODE_SNIPPETS = {
+  javascript: `// Stack Implementation (LIFO)
+class Stack {
+  constructor() {
+    this.items = [];
+  }
+  
+  // Push O(1)
+  push(element) {
+    this.items.push(element);
+  }
+  
+  // Pop O(1)
+  pop() {
+    if (this.isEmpty()) return "Underflow";
+    return this.items.pop();
+  }
+  
+  // Peek O(1)
+  peek() {
+    return this.items[this.items.length - 1];
+  }
+  
+  isEmpty() {
+    return this.items.length === 0;
+  }
+}`,
+  python: `# Stack in Python (LIFO)
+class Stack:
+    def __init__(self):
+        self.items = []
+        
+    def push(self, item):
+        self.items.append(item)
+        
+    def pop(self):
+        if not self.items:
+            raise IndexError("pop from empty stack")
+        return self.items.pop()
+        
+    def peek(self):
+        return self.items[-1] if self.items else None`,
+  cpp: `// C++ std::stack
+#include <stack>
+
+std::stack<int> s;
+s.push(10);     // Push O(1)
+int top = s.top(); // Peek O(1)
+s.pop();        // Pop O(1)`,
+  java: `// Java Stack
+import java.util.Stack;
+
+Stack<Integer> stack = new Stack<>();
+stack.push(10);
+int top = stack.peek();
+stack.pop();`
+};
 
 export default function StackVisualizer() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [stack, setStack] = useState([10, 20, 30]);
-  const [inputValue, setInputValue] = useState('');
-  
-  // Console Output State
-  const [outputLines, setOutputLines] = useState(["> Stack Initialized"]);
-  const [highlightedIndex, setHighlightedIndex] = useState(null);
-  const [isPulsingAll, setIsPulsingAll] = useState(false);
-  const [isConsoleOpen, setIsConsoleOpen] = useState(true);
+  const [stack, setStack] = useState([15, 30, 45, 60]);
+  const [inputValue, setInputValue] = useState('75');
+  const [maxCapacity] = useState(8);
+  const [highlightIdx, setHighlightIdx] = useState(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const [logs, setLogs] = useState(['> Stack initialized with 4 items.']);
 
-  const logOutput = (msg) => {
-    setOutputLines(prev => [...prev, msg].slice(-8));
-  };
+  // ELI5 state
+  const [currentExplanation, setCurrentExplanation] = useState({
+    action: "Stack Ready (LIFO: Last-In, First-Out)",
+    intuition: "Items are pushed onto and popped from the TOP only. The most recently added item is always accessed first.",
+    next: "Type a value and click 'Push', or click 'Pop' to remove the top item."
+  });
+  const [phase, setPhase] = useState('IDLE');
+  const [activeLine, setActiveLine] = useState(-1);
 
+  const addLog = (msg) => setLogs(prev => [...prev.slice(-15), msg]);
+
+  // Dynamic Push
   const handlePush = () => {
-    if (!inputValue) return;
-    setStack([...stack, Number(inputValue)]);
-    logOutput(`> stack.push(${inputValue})`);
-    logOutput(`  Pushed to top of stack.`);
-    setInputValue('');
+    const val = Number(inputValue);
+    if (isNaN(val)) return;
+
+    if (stack.length >= maxCapacity) {
+      setCurrentExplanation({
+        action: `Stack Overflow: Cannot push [${val}]!`,
+        intuition: `Stack has reached its maximum allocated capacity of ${maxCapacity} elements.`,
+        next: "Pop elements to free memory."
+      });
+      setPhase('OVERFLOW');
+      playSynthTone('pop', isMuted);
+      addLog(`> ERROR: Stack Overflow! (Max: ${maxCapacity})`);
+      return;
+    }
+
+    const newStack = [...stack, val];
+    setStack(newStack);
+    setHighlightIdx(newStack.length - 1);
+    setCurrentExplanation({
+      action: `Pushed [${val}] onto TOP of stack (Index ${newStack.length - 1})`,
+      intuition: "In LIFO data structures, new elements are placed directly on top in constant O(1) time.",
+      next: `Top pointer updated to [${val}]. Stack size is now ${newStack.length}.`
+    });
+    setPhase('PUSHED');
+    setActiveLine(8);
+    playSynthTone('push', isMuted);
+    addLog(`> push(${val}): Top item is now ${val}.`);
+
+    setTimeout(() => setHighlightIdx(null), 1200);
   };
 
+  // Dynamic Pop
   const handlePop = () => {
     if (stack.length === 0) {
-      logOutput(`> stack.pop()`);
-      logOutput(`  Error: Stack Underflow (Empty)`);
+      setCurrentExplanation({
+        action: "Stack Underflow: Cannot pop from an empty stack!",
+        intuition: "Stack contains 0 elements. Popping from an empty collection is undefined.",
+        next: "Push elements before attempting to pop."
+      });
+      setPhase('UNDERFLOW');
+      addLog(`> ERROR: Stack Underflow!`);
       return;
     }
-    const val = stack[stack.length - 1];
-    setStack(stack.slice(0, -1));
-    logOutput(`> stack.pop()`);
-    logOutput(`  Returned: ${val}`);
+
+    const poppedVal = stack[stack.length - 1];
+    setHighlightIdx(stack.length - 1);
+    setPhase('POPPING');
+    playSynthTone('pop', isMuted);
+
+    setTimeout(() => {
+      const newStack = stack.slice(0, -1);
+      setStack(newStack);
+      setHighlightIdx(null);
+      setCurrentExplanation({
+        action: `Popped [${poppedVal}] from TOP of stack!`,
+        intuition: `LIFO principle: The last element pushed was the first one removed. Takes O(1) time.`,
+        next: newStack.length > 0 ? `New top element is [${newStack[newStack.length - 1]}].` : "Stack is now empty."
+      });
+      setPhase('POPPED');
+      setActiveLine(14);
+      addLog(`> pop(): Removed ${poppedVal}.`);
+    }, 400);
   };
 
-  const handlePeek = async () => {
-    if (stack.length === 0) {
-      logOutput(`> stack.peek()`);
-      logOutput(`  Returned: null (Empty)`);
-      return;
+  // Peek
+  const handlePeek = () => {
+    if (stack.length === 0) return;
+    const topVal = stack[stack.length - 1];
+    setHighlightIdx(stack.length - 1);
+    setCurrentExplanation({
+      action: `Peek: Current TOP element is [${topVal}]`,
+      intuition: "Peek inspects the element at the top of the stack without removing it (O(1) time).",
+      next: "Stack state remains unchanged."
+    });
+    setPhase('PEEK');
+    setActiveLine(19);
+    playSynthTone('peek', isMuted);
+    addLog(`> peek(): Returned top element ${topVal}.`);
+    setTimeout(() => setHighlightIdx(null), 1200);
+  };
+
+  // Application: Balanced Parentheses Demo
+  const handleBalancedParentheses = async () => {
+    const expr = "{[()]}";
+    addLog(`> Testing Balanced Parentheses: "${expr}"`);
+    setCurrentExplanation({
+      action: `Evaluating string "${expr}" for balanced brackets`,
+      intuition: "An opening bracket is pushed onto the stack. A closing bracket must match the top of the stack.",
+      next: "Simulating step-by-step bracket matching."
+    });
+    setPhase('EVALUATING');
+
+    const tempStack = [];
+    const pairs = { '}': '{', ']': '[', ')': '(' };
+
+    for (let i = 0; i < expr.length; i++) {
+      const ch = expr[i];
+      if (['{', '[', '('].includes(ch)) {
+        tempStack.push(ch);
+        playSynthTone('push', isMuted);
+      } else {
+        const top = tempStack.pop();
+        if (top !== pairs[ch]) {
+          addLog(`> Unbalanced at index ${i}: '${ch}' does not match '${top}'`);
+          return;
+        }
+        playSynthTone('pop', isMuted);
+      }
+      await new Promise(r => setTimeout(r, 400));
     }
-    const val = stack[stack.length - 1];
-    logOutput(`> stack.peek()`);
-    logOutput(`  Returned: ${val}`);
-    
-    setHighlightedIndex(stack.length - 1);
-    setTimeout(() => setHighlightedIndex(null), 1000);
+    addLog(`> Result: Valid & Balanced expression!`);
+    setCurrentExplanation({
+      action: "Expression is 100% BALANCED!",
+      intuition: "All opening brackets were matched and popped in exact reverse order.",
+      next: "Stack cleared."
+    });
+    setPhase('BALANCED');
   };
 
-  const handleIsEmpty = async () => {
-    const empty = stack.length === 0;
-    logOutput(`> stack.isEmpty()`);
-    logOutput(`  Returned: ${empty}`);
-    
-    setIsPulsingAll(true);
-    setTimeout(() => setIsPulsingAll(false), 1000);
+  // Reset
+  const handleReset = () => {
+    setStack([15, 30, 45, 60]);
+    setHighlightIdx(null);
+    setPhase('IDLE');
+    setCurrentExplanation({
+      action: "Stack reset to default 4 elements.",
+      intuition: "Items ready for LIFO operations.",
+      next: "Click Push or Pop."
+    });
+    addLog(`> Stack reset.`);
   };
 
-  const handleSize = async () => {
-    logOutput(`> stack.size()`);
-    logOutput(`  Returned: ${stack.length}`);
-    
-    setIsPulsingAll(true);
-    setTimeout(() => setIsPulsingAll(false), 1000);
-  };
+  const controlsSlot = (
+    <div className="flex flex-col gap-4">
+      {/* Push Section */}
+      <div className="flex flex-col gap-2 p-3 rounded-xl bg-teal-500/5 border border-teal-500/20">
+        <span className="text-xs font-black text-teal-600 dark:text-teal-400 flex items-center gap-1.5">
+          <Plus size={14} /> Push Element (O(1))
+        </span>
+        <div className="flex gap-2">
+          <input
+            type="number"
+            value={inputValue}
+            onChange={e => setInputValue(e.target.value)}
+            className="flex-1 bg-white dark:bg-black/60 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold"
+            placeholder="Value"
+          />
+          <button
+            onClick={handlePush}
+            className="py-1.5 px-4 bg-teal-600 hover:bg-teal-500 text-white rounded-lg text-xs font-bold transition-all shadow-xs"
+          >
+            Push Top
+          </button>
+        </div>
+      </div>
+
+      {/* Pop & Peek */}
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          onClick={handlePop}
+          className="py-2 px-3 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs"
+        >
+          <Trash2 size={13} /> Pop Top (O(1))
+        </button>
+        <button
+          onClick={handlePeek}
+          className="py-2 px-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs"
+        >
+          <Eye size={13} /> Peek (O(1))
+        </button>
+      </div>
+
+      {/* Practical Applications */}
+      <div className="flex flex-col gap-2">
+        <label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Applications</label>
+        <button
+          onClick={handleBalancedParentheses}
+          className="py-2 px-3 bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-xs font-bold hover:border-teal-500 transition-all text-left flex items-center justify-between"
+        >
+          <span>Balanced Parentheses ("{`{[()]}`}")</span>
+          <CheckCircle size={13} className="text-teal-500" />
+        </button>
+      </div>
+
+      {/* Sound & Reset */}
+      <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-white/10">
+        <button
+          onClick={() => setIsMuted(!isMuted)}
+          className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
+        >
+          {isMuted ? <VolumeX size={14} className="text-rose-400" /> : <Volume2 size={14} className="text-teal-400" />}
+          <span>{isMuted ? 'Muted' : 'Sound Active'}</span>
+        </button>
+        <button
+          onClick={handleReset}
+          className="text-xs text-gray-400 hover:text-rose-400 flex items-center gap-1 transition-colors"
+        >
+          <RotateCcw size={12} /> Reset Stack
+        </button>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="fixed top-[64px] bottom-0 left-0 right-0 bg-gray-50 dark:bg-[#09090b] flex flex-col lg:flex-row overflow-hidden">
-
-      {/* Left Sidebar: Controls & Output */}
-      <div className={`w-full lg:w-[350px] xl:w-[400px] h-1/2 lg:h-full bg-white/80 dark:bg-black/40 backdrop-blur-xl border-r border-b lg:border-b-0 border-gray-200 dark:border-white/10 shadow-2xl flex flex-col z-10 shrink-0 overflow-y-auto transition-all duration-300 ${isSidebarOpen ? "ml-0" : "-ml-[100%] lg:-ml-[400px]"}`}>
-        <div className="p-4 lg:p-6 flex flex-col gap-6 lg:gap-8 h-full">
-          
-          {/* In-flow Back Button */}
-          <Link to="/visualizer" className="text-gray-500 hover:text-orange-500 transition-colors flex items-center gap-2 font-semibold w-fit bg-black/5 dark:bg-white/5 px-3 py-1.5 rounded-full text-sm border border-gray-200 dark:border-white/10">
-            <ArrowLeft size={14} /> Back to Dashboard
-          </Link>
-
-          <div>
-            <h1 className="text-2xl lg:text-3xl font-black text-orange-500 tracking-tight mb-2">Stack</h1>
-            <p className="text-xs lg:text-sm text-gray-500 font-medium">LIFO (Last In, First Out) data structure.</p>
-          </div>
-
-          {/* Core Operations */}
-          <div className="flex flex-col gap-4">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-200 dark:border-white/10 pb-2">Modify</h3>
-            
-            <div className="flex flex-col gap-2 bg-black/5 dark:bg-white/5 p-3 rounded-lg border border-gray-200 dark:border-white/5">
-              <input 
-                type="number" 
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                className="bg-white dark:bg-black border border-gray-300 dark:border-gray-800 rounded px-3 py-1.5 text-sm w-full"
-                placeholder="Value to push"
-              />
-              <div className="flex gap-2">
-                <button onClick={handlePush} className="flex-1 bg-orange-500 text-white py-1.5 rounded text-sm font-bold shadow-sm hover:brightness-110">Push</button>
-                <button onClick={handlePop} className="flex-1 border border-orange-500 text-orange-500 py-1.5 rounded text-sm font-bold hover:bg-orange-500 hover:text-white">Pop</button>
-              </div>
-            </div>
-          </div>
-
-          {/* Built-in Methods */}
-          <div className="flex flex-col gap-4">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-200 dark:border-white/10 pb-2">Methods</h3>
-            <div className="grid grid-cols-2 gap-2">
-              <button onClick={handlePeek} className="bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10 py-2 rounded text-sm font-bold hover:bg-black/10 dark:hover:bg-white/10">peek()</button>
-              <button onClick={handleSize} className="bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10 py-2 rounded text-sm font-bold hover:bg-black/10 dark:hover:bg-white/10">size()</button>
-              <button onClick={handleIsEmpty} className="bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10 py-2 rounded text-sm font-bold hover:bg-black/10 dark:hover:bg-white/10 col-span-2">isEmpty()</button>
-            </div>
-          </div>
-
-          <div className="mt-auto pt-8"></div>
-        </div>
-      </div>
-
-      {/* Right Canvas: Visualization & Console */}
-      <div className="w-full lg:flex-1 h-1/2 lg:h-full flex flex-col relative overflow-hidden">
-        {/* Sidebar Toggle Button */}
-        <button 
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="absolute top-4 left-4 z-50 p-2 bg-white/80 dark:bg-black/40 backdrop-blur border border-gray-200 dark:border-white/10 rounded shadow-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-        >
-          {isSidebarOpen ? <ChevronLeft size={20} className="text-gray-600 dark:text-gray-300" /> : <ChevronRight size={20} className="text-gray-600 dark:text-gray-300" />}
-        </button>
-
-        
-        {/* Main Visualization Area */}
-        <div className="flex-1 flex items-end justify-center p-8 lg:p-12 overflow-y-auto relative pb-12">
-          
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-orange-500 opacity-5 blur-[100px] rounded-full pointer-events-none"></div>
-
-          {/* Container representing the physical stack bounds */}
-          <div className="w-48 sm:w-64 border-x-4 border-b-4 border-orange-500/50 rounded-b-xl flex flex-col-reverse items-center justify-start p-4 min-h-[300px] bg-black/5 dark:bg-white/5 relative z-10">
-            <AnimatePresence>
-              {stack.map((val, idx) => (
-                <motion.div 
-                  key={`${idx}-${val}`}
-                  layout
-                  initial={{ opacity: 0, y: -100, scale: 0.8 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -100, scale: 0.8 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                  className={`w-full ${highlightedIndex === idx || isPulsingAll ? 'bg-orange-100 dark:bg-orange-900/40 shadow-[0_0_20px_rgba(249,115,22,0.4)] border-orange-400' : 'bg-white dark:bg-[#1a1a1a] border-orange-500'} border-2 text-black dark:text-white font-bold text-xl py-3 rounded mb-2 shadow-md flex items-center justify-between px-4 relative transition-colors duration-300`}
-                >
-                  <span className="text-xs text-gray-400 font-mono">[{idx}]</span>
-                  <span>{val}</span>
-                  {idx === stack.length - 1 && (
-                    <span className="absolute -right-16 text-orange-500 text-sm font-mono font-bold animate-pulse">&larr; TOP</span>
-                  )}
-                </motion.div>
-              ))}
-            </AnimatePresence>
-            {stack.length === 0 && (
-              <div className="text-gray-400 font-mono italic h-full flex items-center text-sm absolute top-1/2 -translate-y-1/2">
-                Stack is empty
-              </div>
-            )}
-          </div>
-          
-        </div>
-
-        {/* Output Console Panel */}
-        <div className={`w-full bg-[#0d1117] border-t border-white/10 flex flex-col shrink-0 font-mono shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-20 transition-all duration-300 ${isConsoleOpen ? 'h-48 lg:h-56' : 'h-10'}`}>
-          <div 
-            onClick={() => setIsConsoleOpen(!isConsoleOpen)}
-            className="flex items-center justify-between px-4 py-2 bg-[#161b22] border-b border-white/5 cursor-pointer hover:bg-[#1f2630] transition-colors"
-          >
+    <ResponsiveVisualizerShell
+      title="Stack"
+      subtitle="Last-In, First-Out (LIFO) linear data structure where all insertions and deletions occur at the top."
+      currentPath="/visualizer/stack"
+      category="ds"
+      controls={controlsSlot}
+      metrics={
+        <ComplexityBadge
+          timeComplexity={{
+            average: "Push: O(1) | Pop: O(1) | Peek: O(1)",
+            worst: "O(1) Constant Time"
+          }}
+          spaceComplexity={`O(n) - Current: ${stack.length}/${maxCapacity}`}
+          activeOperation={phase}
+          notes="Stack operations only touch the memory element at top."
+        />
+      }
+      codeInspector={
+        <CodeInspector
+          codeSnippets={CODE_SNIPPETS}
+          activeLine={activeLine}
+          variables={{ topIndex: stack.length - 1, size: stack.length }}
+          title="Stack Source Logic"
+        />
+      }
+      consoleOutput={logs}
+    >
+      <div className="flex-1 flex flex-col p-4 lg:p-6 overflow-y-auto w-full max-w-4xl mx-auto gap-4">
+        {/* ELI5 Intuition Card */}
+        <div className="bg-white/90 dark:bg-[#121214]/90 backdrop-blur-md border border-teal-500/20 rounded-2xl p-4 shadow-lg flex flex-col gap-3">
+          <div className="flex items-center justify-between border-b border-gray-200 dark:border-white/5 pb-2">
             <div className="flex items-center gap-2">
-              <Terminal size={14} className="text-gray-400" />
-              <span className="text-xs text-gray-400 font-bold tracking-wider">CONSOLE OUTPUT</span>
+              <Compass size={18} className="text-teal-500" />
+              <span className="text-xs font-black uppercase tracking-wider text-gray-800 dark:text-gray-200">
+                ELI5 Intuition: Stack Container
+              </span>
             </div>
-            {isConsoleOpen ? <ChevronDown size={14} className="text-gray-400" /> : <ChevronUp size={14} className="text-gray-400" />}
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wide bg-teal-500/10 text-teal-500 border border-teal-500/30">
+              PHASE: {phase}
+            </span>
           </div>
-          <div className="p-4 overflow-y-auto flex-1 flex flex-col gap-1 text-sm">
-            <AnimatePresence initial={false}>
-              {outputLines.map((line, i) => (
-                <motion.div 
-                  key={`${i}-${line}`}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className={`${line.startsWith('>') ? 'text-[#7ee787]' : 'text-[#c9d1d9] ml-4 opacity-80'}`}
-                >
-                  {line}
-                </motion.div>
-              ))}
-            </AnimatePresence>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="p-2.5 rounded-xl bg-teal-500/5 border border-teal-500/10">
+              <span className="text-[10px] font-bold text-teal-600 dark:text-teal-400 uppercase tracking-wider block mb-1">
+                🎯 What's Happening
+              </span>
+              <p className="text-xs text-gray-700 dark:text-gray-300 font-medium">
+                {currentExplanation.action}
+              </p>
+            </div>
+            <div className="p-2.5 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
+              <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block mb-1">
+                💡 Why It Happens
+              </span>
+              <p className="text-xs text-gray-700 dark:text-gray-300 font-medium">
+                {currentExplanation.intuition}
+              </p>
+            </div>
+            <div className="p-2.5 rounded-xl bg-cyan-500/5 border border-cyan-500/10">
+              <span className="text-[10px] font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-wider block mb-1">
+                🔮 What Happens Next
+              </span>
+              <p className="text-xs text-gray-700 dark:text-gray-300 font-medium">
+                {currentExplanation.next}
+              </p>
+            </div>
           </div>
         </div>
 
-      </div>
+        {/* Visual Stack Bucket Canvas */}
+        <div className="flex-1 min-h-[360px] bg-white/50 dark:bg-[#0c0c0e]/80 backdrop-blur-sm border border-gray-200 dark:border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center relative shadow-inner">
+          <div className="flex flex-col items-center">
+            {/* Top Pointer Badge */}
+            <div className="flex items-center gap-1.5 text-teal-500 text-xs font-black mb-2 animate-bounce">
+              <ArrowDown size={18} />
+              <span>TOP OF STACK</span>
+            </div>
 
-    </div>
+            {/* Vertical Stack Chamber */}
+            <div className="w-56 min-h-[260px] border-b-4 border-l-4 border-r-4 border-teal-500/50 rounded-b-2xl p-3 flex flex-col-reverse gap-2.5 bg-black/5 dark:bg-black/40 relative">
+              <AnimatePresence>
+                {stack.map((val, idx) => {
+                  const isTop = idx === stack.length - 1;
+                  const isHighlighted = highlightIdx === idx;
+
+                  return (
+                    <motion.div
+                      key={idx}
+                      layout
+                      initial={{ y: -60, opacity: 0, scale: 0.8 }}
+                      animate={{ 
+                        y: 0, 
+                        opacity: 1, 
+                        scale: isHighlighted ? 1.06 : 1,
+                        transition: { type: 'spring', stiffness: 350, damping: 25 }
+                      }}
+                      exit={{ y: -60, opacity: 0, scale: 0.8 }}
+                      className={`h-11 rounded-xl flex items-center justify-between px-4 font-black text-sm border shadow-md transition-all ${
+                        isHighlighted
+                          ? 'bg-amber-500 text-black border-amber-400 shadow-amber-500/40 ring-2 ring-amber-400'
+                          : isTop
+                            ? 'bg-teal-500 text-black border-teal-300 shadow-teal-500/30'
+                            : 'bg-white/90 dark:bg-[#1f1f23] text-gray-900 dark:text-white border-gray-300 dark:border-white/10'
+                      }`}
+                    >
+                      <span className="text-xs font-mono opacity-60">[{idx}]</span>
+                      <span className="text-base">{val}</span>
+                      {isTop && (
+                        <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-black/20 text-black">
+                          TOP
+                        </span>
+                      )}
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+
+              {stack.length === 0 && (
+                <div className="flex-1 flex items-center justify-center text-gray-400 text-xs font-bold italic py-8">
+                  Stack is Empty (Underflow)
+                </div>
+              )}
+            </div>
+
+            {/* Capacity gauge */}
+            <div className="mt-3 text-xs font-bold text-gray-400 flex items-center gap-2">
+              <span>Capacity: {stack.length} / {maxCapacity}</span>
+              <div className="w-24 h-2 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-teal-500 transition-all duration-300"
+                  style={{ width: `${(stack.length / maxCapacity) * 100}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ResponsiveVisualizerShell>
   );
 }

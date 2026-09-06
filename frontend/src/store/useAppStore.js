@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 
 const useAppStore = create((set) => ({
-  user: null,
+  user: JSON.parse(localStorage.getItem('nova_user')) || null,
+  token: localStorage.getItem('nova_token') || null,
   theme: 'light',
   currentCodeOutput: '',
   isPlayingVisualizer: false,
@@ -9,7 +10,22 @@ const useAppStore = create((set) => ({
   unlockedLevels: { ds: 1, algo: 1, oop: 1 },
   completedLevels: [],
   
-  setUser: (user) => set({ user }),
+  login: (user, token) => {
+    localStorage.setItem('nova_user', JSON.stringify(user));
+    localStorage.setItem('nova_token', token);
+    set({ user, token });
+  },
+  
+  logout: () => {
+    localStorage.removeItem('nova_user');
+    localStorage.removeItem('nova_token');
+    set({ user: null, token: null });
+  },
+
+  setUser: (user) => {
+    localStorage.setItem('nova_user', JSON.stringify(user));
+    set({ user });
+  },
   toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
   setExecutionOutput: (output) => set({ currentCodeOutput: output }),
   setPlayingVisualizer: (isPlaying) => set({ isPlayingVisualizer: isPlaying }),

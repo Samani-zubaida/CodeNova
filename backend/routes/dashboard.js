@@ -53,6 +53,22 @@ const seedDatabase = async () => {
   }
 };
 
+
+// Simulate real-time leaderboard activity
+setInterval(async () => {
+  try {
+    const users = await User.find({});
+    for (const user of users) {
+      if (Math.random() > 0.6) {
+        user.xp += Math.floor(Math.random() * 50);
+        await user.save();
+      }
+    }
+  } catch (err) {
+    console.error("Leaderboard simulation error:", err);
+  }
+}, 5000);
+
 // Fire the seed async (doesn't block)
 seedDatabase();
 

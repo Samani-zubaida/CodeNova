@@ -76,7 +76,7 @@ export default function QuizModal({ quiz, onPass, onClose }) {
               Challenge: {quiz.title}
             </h2>
           </div>
-          <button onClick={onClose} className="p-2 bg-white rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 shadow-sm transition-all">
+          <button onClick={onClose} className="p-2 bg-white rounded-full text-gray-500 dark:text-gray-400 hover:text-slate-700 hover:bg-slate-100 shadow-sm transition-all">
             <X size={20} strokeWidth={3} />
           </button>
         </div>
@@ -85,7 +85,7 @@ export default function QuizModal({ quiz, onPass, onClose }) {
           {!quizFinished ? (
             <>
               <div className="flex justify-between items-center mb-6">
-                <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">
+                <span className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
                   Question {currentQuestionIndex + 1} of {questions.length}
                 </span>
                 <div className="flex gap-2">
@@ -114,7 +114,7 @@ export default function QuizModal({ quiz, onPass, onClose }) {
                     } else if (isSelected && !isCorrect) {
                       btnClass += "bg-rose-50 border-rose-500 text-rose-800 shadow-md";
                     } else {
-                      btnClass += "bg-slate-50 border-slate-200 text-slate-400 opacity-60";
+                      btnClass += "bg-slate-50 border-slate-200 text-gray-500 dark:text-gray-400 opacity-60";
                     }
                   }
 

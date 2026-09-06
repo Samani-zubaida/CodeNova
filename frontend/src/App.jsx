@@ -4,14 +4,21 @@ import Navbar from './components/layout/Navbar';
 import VisualizerDashboard from './pages/VisualizerDashboard';
 import Sandbox from './pages/Sandbox';
 import GameWorld from './game/GameWorld';
+import HostDashboard from './game/HostDashboard';
 
 // Data Structures
-import ArrayVisualizer from './visualizers/ds/ArrayVisualizer';
+import ArrayHub from './visualizers/ds/ArrayHub';
+import Array3DVisualizer from './visualizers/ds/Array3DVisualizer';
+import StringHub from './visualizers/ds/StringHub';
 import StringVisualizer from './visualizers/ds/StringVisualizer';
 import StackVisualizer from './visualizers/ds/StackVisualizer';
 import QueueVisualizer from './visualizers/ds/QueueVisualizer';
+import LinkedListHub from './visualizers/ds/LinkedListHub';
 import LinkedListVisualizer from './visualizers/ds/LinkedListVisualizer';
+import TreeHub from './visualizers/ds/TreeHub';
 import TreeGraphVisualizer from './visualizers/ds/TreeGraphVisualizer';
+import GraphHub from './visualizers/ds/GraphHub';
+import GraphVisualizer from './visualizers/ds/GraphVisualizer';
 import HeapVisualizer from './visualizers/ds/HeapVisualizer';
 import MapVisualizer from './visualizers/ds/MapVisualizer';
 
@@ -28,13 +35,24 @@ import PlayfairCipherVisualizer from './visualizers/crypto/PlayfairCipherVisuali
 import RailFenceVisualizer from './visualizers/crypto/RailFenceVisualizer';
 import ColumnarVisualizer from './visualizers/crypto/ColumnarVisualizer';
 import AESVisualizer from './visualizers/crypto/AESVisualizer';
-import RSAVIsualizer from './visualizers/crypto/RSAVIsualizer';
+import RSAVIsualizer from "./visualizers/crypto/RSAVIsualizer";
 import SHA256Visualizer from './visualizers/crypto/SHA256Visualizer';
 import DigitalSignatureVisualizer from './visualizers/crypto/DigitalSignatureVisualizer';
 import SteganographyVisualizer from './visualizers/crypto/SteganographyVisualizer';
 import EnigmaVisualizer from './visualizers/crypto/EnigmaVisualizer';
 import HackerModeVisualizer from './visualizers/crypto/HackerModeVisualizer';
 import DHVisualizer from './visualizers/crypto/DHVisualizer';
+
+import Auth from './pages/Auth';
+import useAppStore from './store/useAppStore';
+
+const PrivateRoute = ({ children }) => {
+  const user = useAppStore(state => state.user);
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+  return children;
+};
 
 function App() {
   return (
@@ -45,15 +63,32 @@ function App() {
         <main className="pt-16 min-h-screen">
           <Routes>
             <Route path="/" element={<Navigate to="/visualizer" replace />} />
+            <Route path="/auth" element={<Auth />} />
             <Route path="/visualizer" element={<VisualizerDashboard />} />
             
             {/* DS Routes */}
-            <Route path="/visualizer/array" element={<ArrayVisualizer />} />
-            <Route path="/visualizer/string" element={<StringVisualizer />} />
+            {/* Array Suite: 16-Option Catalog Hub & Dedicated 3D Model Visualizer */}
+            <Route path="/visualizer/array" element={<ArrayHub />} />
+            <Route path="/visualizer/array/:algoId" element={<Array3DVisualizer />} />
+            
+            {/* Graph Suite: 16-Option Catalog Hub & Dedicated Visualizer */}
+            <Route path="/visualizer/graph" element={<GraphHub />} />
+            <Route path="/visualizer/graph/:algoId" element={<GraphVisualizer />} />
+            
+            {/* Linked List Suite: 12-Option Catalog Hub & Dedicated Visualizer */}
+            <Route path="/visualizer/linkedlist" element={<LinkedListHub />} />
+            <Route path="/visualizer/linkedlist/:algoId" element={<LinkedListVisualizer />} />
+
+            {/* String Suite: 12-Option Catalog Hub & Dedicated Visualizer */}
+            <Route path="/visualizer/string" element={<StringHub />} />
+            <Route path="/visualizer/string/:algoId" element={<StringVisualizer />} />
+
+            {/* Tree Suite: 12-Option Catalog Hub & Dedicated Visualizer */}
+            <Route path="/visualizer/tree" element={<TreeHub />} />
+            <Route path="/visualizer/tree/:algoId" element={<TreeGraphVisualizer />} />
+
             <Route path="/visualizer/stack" element={<StackVisualizer />} />
             <Route path="/visualizer/queue" element={<QueueVisualizer />} />
-            <Route path="/visualizer/linkedlist" element={<LinkedListVisualizer />} />
-            <Route path="/visualizer/tree" element={<TreeGraphVisualizer />} />
             <Route path="/visualizer/heap" element={<HeapVisualizer />} />
             <Route path="/visualizer/map" element={<MapVisualizer />} />
 
@@ -78,10 +113,11 @@ function App() {
             <Route path="/visualizer/hacker" element={<div className="p-8"><HackerModeVisualizer /></div>} />
             <Route path="/visualizer/dh" element={<div className="p-8"><DHVisualizer /></div>} />
 
-            <Route path="/game" element={<GameWorld />} />
+            <Route path="/game" element={<PrivateRoute><GameWorld /></PrivateRoute>} />
+            <Route path="/host" element={<PrivateRoute><HostDashboard /></PrivateRoute>} />
 
             {/* Sandbox */}
-            <Route path="/sandbox" element={<Sandbox />} />
+            <Route path="/sandbox" element={<PrivateRoute><Sandbox /></PrivateRoute>} />
           </Routes>
         </main>
       </div>

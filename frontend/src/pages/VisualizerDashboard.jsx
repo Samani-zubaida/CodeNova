@@ -1,338 +1,446 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link, useLocation } from 'react-router-dom';
-import { GitMerge, Crosshair, Settings, Database, Binary, KeyRound, Layers, Hash, Network, Type, Lock, Shield, ListTree, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Database, Binary, KeyRound, ArrowRight } from 'lucide-react';
 
-const splashIcons = {
-  ds: (color) => (
-    <motion.svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <motion.ellipse cx="12" cy="5" rx="9" ry="3" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.5, ease: "easeInOut" }} />
-      <motion.path d="M3 5V19A9 3 0 0 0 21 19V5" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.5, ease: "easeInOut", delay: 0.2 }} />
-      <motion.path d="M3 12A9 3 0 0 0 21 12" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.5, ease: "easeInOut", delay: 0.4 }} />
-    </motion.svg>
-  ),
-  oop: (color) => (
-    <motion.svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <motion.rect x="14" y="14" width="4" height="6" rx="2" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.5 }} />
-      <motion.rect x="6" y="4" width="4" height="6" rx="2" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.5, delay: 0.2 }} />
-      <motion.path d="M6 20h4" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1 }} />
-      <motion.path d="M14 10h4" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1, delay: 0.2 }} />
-      <motion.path d="M6 14h2v6" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1, delay: 0.4 }} />
-      <motion.path d="M14 4h2v6" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1, delay: 0.6 }} />
-    </motion.svg>
-  ),
-  crypto: (color) => (
-    <motion.svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <motion.path d="M2 18v3c0 .6.4 1 1 1h4v-3h3v-3h2l1.4-1.4a6.5 6.5 0 1 0-4-4Z" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 2, ease: "easeInOut" }} />
-      <motion.circle cx="16.5" cy="7.5" r="1.5" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ duration: 0.5, delay: 1.5 }} fill="currentColor" />
-    </motion.svg>
-  )
-};
+const GraphGraphic = () => (
+  <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" rx="16" fill="#D3DFC8"/>
+    <g stroke="#333" strokeWidth="1.5">
+      <line x1="25" y1="35" x2="55" y2="25"/>
+      <line x1="25" y1="35" x2="40" y2="70"/>
+      <line x1="55" y1="25" x2="75" y2="50"/>
+      <line x1="40" y1="70" x2="75" y2="50"/>
+      <line x1="55" y1="25" x2="40" y2="70"/>
+    </g>
+    <circle cx="25" cy="35" r="7" fill="#BC4A54" stroke="#333" strokeWidth="1"/>
+    <circle cx="55" cy="25" r="6" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+    <circle cx="40" cy="70" r="6" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+    <circle cx="75" cy="50" r="7" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+  </svg>
+);
 
-const TypewriterText = ({ text, color }) => {
-  return (
-    <motion.h1 
-      className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tighter text-center mt-8"
-      style={{ color }}
-    >
-      {text.split('').map((char, index) => {
-        // Stable random delay per character position
-        const randomDelay = ((index * 13) % 10) * 0.05 + Math.random() * 0.2;
-        
-        return (
-          <motion.span
-            key={`${char}-${index}`}
-            initial={{ opacity: 0, filter: 'brightness(2)' }}
-            animate={{ 
-              opacity: [0, 0.8, 0.3, 1],
-              filter: ['brightness(2)', 'brightness(1.5)', 'brightness(1)', 'brightness(1)']
-            }}
-            transition={{ 
-              duration: 0.8, 
-              delay: randomDelay,
-              times: [0, 0.4, 0.7, 1],
-              ease: "easeInOut"
-            }}
-            style={{ whiteSpace: 'pre', display: 'inline-block' }}
-          >
-            {char}
-          </motion.span>
-        );
-      })}
-    </motion.h1>
-  );
-};
+const ArrayGraphic = () => (
+  <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" rx="16" fill="#F4E9D4"/>
+    <g transform="translate(10, 35)">
+      <rect x="0" y="0" width="18" height="24" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+      <text x="9" y="16" fontSize="12" fill="#333" textAnchor="middle" fontFamily="monospace">0</text>
+      
+      <rect x="20" y="0" width="18" height="24" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+      <text x="29" y="16" fontSize="12" fill="#333" textAnchor="middle" fontFamily="monospace">1</text>
+      
+      <rect x="40" y="0" width="18" height="24" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+      <text x="49" y="16" fontSize="12" fill="#333" textAnchor="middle" fontFamily="monospace">2</text>
+      
+      <rect x="60" y="0" width="18" height="24" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+      <text x="69" y="16" fontSize="12" fill="#333" textAnchor="middle" fontFamily="monospace">3</text>
+    </g>
+    <circle cx="35" cy="70" r="1.5" fill="#333"/>
+    <circle cx="45" cy="70" r="1.5" fill="#333"/>
+    <circle cx="55" cy="70" r="1.5" fill="#333"/>
+  </svg>
+);
+
+const StringGraphic = () => (
+  <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" rx="16" fill="#D3DFC8"/>
+    <text x="15" y="45" fontSize="32" fill="#333" fontFamily="serif">“</text>
+    <text x="75" y="45" fontSize="32" fill="#333" fontFamily="serif">”</text>
+    <g transform="translate(15, 60)" stroke="#333" strokeWidth="2">
+      <line x1="0" y1="0" x2="15" y2="0"/>
+      <line x1="20" y1="0" x2="35" y2="0"/>
+      <line x1="40" y1="0" x2="55" y2="0"/>
+      <line x1="60" y1="0" x2="75" y2="0"/>
+    </g>
+  </svg>
+);
+
+const StackGraphic = () => (
+  <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" rx="16" fill="#E8D1CB"/>
+    <g transform="translate(25, 20)">
+      <rect x="0" y="0" width="30" height="15" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+      <rect x="0" y="15" width="30" height="15" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+      <rect x="0" y="30" width="30" height="15" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+      <rect x="0" y="45" width="30" height="10" fill="#BC4A54" stroke="#333" strokeWidth="1"/>
+    </g>
+    <g transform="translate(70, 20)" stroke="#333" strokeWidth="1.5">
+      <line x1="0" y1="50" x2="0" y2="5"/>
+      <path d="M-4 9 L0 5 L4 9"/>
+    </g>
+  </svg>
+);
+
+const QueueGraphic = () => (
+  <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" rx="16" fill="#F4E9D4"/>
+    <g transform="translate(20, 35)">
+      <rect x="0" y="0" width="15" height="20" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+      <rect x="15" y="0" width="30" height="20" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+      <rect x="45" y="0" width="15" height="20" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+    </g>
+    <g transform="translate(10, 45)" stroke="#333" strokeWidth="1.5">
+      <line x1="-5" y1="0" x2="5" y2="0"/>
+      <path d="M1 -3 L5 0 L1 3"/>
+    </g>
+    <g transform="translate(80, 45)" stroke="#333" strokeWidth="1.5">
+      <line x1="0" y1="0" x2="10" y2="0"/>
+      <path d="M6 -3 L10 0 L6 3"/>
+    </g>
+    <circle cx="45" cy="70" r="1.5" fill="#333"/>
+    <circle cx="50" cy="70" r="1.5" fill="#333"/>
+    <circle cx="55" cy="70" r="1.5" fill="#333"/>
+  </svg>
+);
+
+const LinkedListGraphic = () => (
+  <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" rx="16" fill="#D3DFC8"/>
+    <g transform="translate(10, 40)">
+      <rect x="0" y="0" width="20" height="15" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+      <path d="M20 7.5 L30 7.5" stroke="#333" strokeWidth="1"/>
+      <path d="M28 5.5 L30 7.5 L28 9.5" stroke="#333" fill="none"/>
+      
+      <rect x="35" y="0" width="20" height="15" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+      <path d="M55 7.5 L65 7.5" stroke="#333" strokeWidth="1" strokeDasharray="2 2"/>
+      <path d="M63 5.5 L65 7.5 L63 9.5" stroke="#333" fill="none"/>
+      
+      <rect x="70" y="0" width="15" height="15" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+    </g>
+  </svg>
+);
+
+const TreeGraphic = () => (
+  <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" rx="16" fill="#F4E9D4"/>
+    <g stroke="#333" strokeWidth="1">
+      <line x1="50" y1="20" x2="30" y2="45"/>
+      <line x1="50" y1="20" x2="70" y2="45"/>
+      
+      <line x1="30" y1="45" x2="20" y2="70"/>
+      <line x1="30" y1="45" x2="40" y2="70"/>
+      
+      <line x1="70" y1="45" x2="60" y2="70"/>
+      <line x1="70" y1="45" x2="80" y2="70"/>
+    </g>
+    <circle cx="50" cy="20" r="6" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+    
+    <circle cx="30" cy="45" r="5" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+    <circle cx="70" cy="45" r="5" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+    
+    <circle cx="20" cy="70" r="4" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+    <circle cx="40" cy="70" r="4" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+    <circle cx="60" cy="70" r="4" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+    <circle cx="80" cy="70" r="4" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+  </svg>
+);
+
+const HeapGraphic = () => (
+  <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" rx="16" fill="#E8D1CB"/>
+    <g stroke="#333" strokeWidth="1">
+      <line x1="50" y1="25" x2="35" y2="50"/>
+      <line x1="50" y1="25" x2="65" y2="50"/>
+      <line x1="35" y1="50" x2="25" y2="75"/>
+      <line x1="35" y1="50" x2="45" y2="75"/>
+      <line x1="65" y1="50" x2="55" y2="75"/>
+      <line x1="65" y1="50" x2="75" y2="75"/>
+    </g>
+    <circle cx="50" cy="25" r="5" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+    <circle cx="35" cy="50" r="4" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+    <circle cx="65" cy="50" r="4" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+    <circle cx="25" cy="75" r="3" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+    <circle cx="45" cy="75" r="3" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+    <circle cx="55" cy="75" r="3" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+    <circle cx="75" cy="75" r="3" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+  </svg>
+);
+
+const HashMapGraphic = () => (
+  <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" rx="16" fill="#D3DFC8"/>
+    <g transform="translate(15, 20)">
+      <rect x="0" y="0" width="15" height="60" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+      <line x1="0" y1="15" x2="15" y2="15" stroke="#333" strokeWidth="1"/>
+      <line x1="0" y1="30" x2="15" y2="30" stroke="#333" strokeWidth="1"/>
+      <line x1="0" y1="45" x2="15" y2="45" stroke="#333" strokeWidth="1"/>
+      <text x="7" y="11" fontSize="8" fill="#333" textAnchor="middle">0</text>
+      <text x="7" y="26" fontSize="8" fill="#333" textAnchor="middle">1</text>
+      <text x="7" y="41" fontSize="8" fill="#333" textAnchor="middle">2</text>
+      <text x="7" y="55" fontSize="10" fill="#333" textAnchor="middle">..</text>
+    </g>
+    <g stroke="#333" strokeWidth="1">
+      <path d="M30 27.5 L45 27.5" />
+      <path d="M43 25.5 L45 27.5 L43 29.5" fill="none"/>
+      
+      <path d="M30 42.5 L45 50" />
+      <path d="M42 48.5 L45 50 L44 47" fill="none"/>
+      
+      <path d="M30 57.5 L45 70" />
+      <path d="M42 68.5 L45 70 L44 67" fill="none"/>
+    </g>
+    <g transform="translate(50, 20)">
+      <rect x="0" y="0" width="20" height="15" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+      <rect x="0" y="20" width="20" height="15" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+      <rect x="0" y="40" width="20" height="15" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
+    </g>
+  </svg>
+);
+
+const GenericGraphic = ({ color = "#F4E9D4" }) => (
+  <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" rx="16" fill={color}/>
+    <circle cx="50" cy="50" r="20" fill="#FDFBF7" opacity="0.5"/>
+  </svg>
+);
 
 const categories = [
   {
     id: 'ds',
-    title: 'Data Structures & Algorithms',
-    shortTitle: 'DS',
-    description: 'Master memory allocation, pointers, and algorithmic efficiency with interactive visualizers.',
-    color: 'var(--color-nova-red)',
-    bgGlow: 'from-[var(--color-nova-red)] to-transparent',
-    dialIcon: <Database size={28} />,
+    title: 'Data Structures',
+    icon: <Database size={24} className="text-white" />,
     items: [
-      { name: 'Array', path: '/visualizer/array', icon: <Layers size={28}/>, desc: 'Contiguous memory blocks', color: 'text-blue-400', border: 'hover:border-blue-400/50', shadow: 'hover:shadow-blue-400/20' },
-      { name: 'String', path: '/visualizer/string', icon: <Type size={28}/>, desc: 'Immutable vs Mutable', color: 'text-purple-400', border: 'hover:border-purple-400/50', shadow: 'hover:shadow-purple-400/20' },
-      { name: 'Stack', path: '/visualizer/stack', icon: <Layers size={28}/>, desc: 'LIFO principle', color: 'text-orange-400', border: 'hover:border-orange-400/50', shadow: 'hover:shadow-orange-400/20' },
-      { name: 'Queue', path: '/visualizer/queue', icon: <ListTree size={28}/>, desc: 'FIFO principle', color: 'text-green-400', border: 'hover:border-green-400/50', shadow: 'hover:shadow-green-400/20' },
-      { name: 'Linked List', path: '/visualizer/linkedlist', icon: <Network size={28}/>, desc: 'Nodes and pointers', color: 'text-teal-400', border: 'hover:border-teal-400/50', shadow: 'hover:shadow-teal-400/20' },
-      { name: 'Tree', path: '/visualizer/tree', icon: <ListTree size={28}/>, desc: 'Hierarchical nodes', color: 'text-emerald-400', border: 'hover:border-emerald-400/50', shadow: 'hover:shadow-emerald-400/20' },
-      { name: 'Heap', path: '/visualizer/heap', icon: <Layers size={28}/>, desc: 'Priority queues', color: 'text-yellow-400', border: 'hover:border-yellow-400/50', shadow: 'hover:shadow-yellow-400/20' },
-      { name: 'Hash Map', path: '/visualizer/map', icon: <Hash size={28}/>, desc: 'O(1) lookups', color: 'text-pink-400', border: 'hover:border-pink-400/50', shadow: 'hover:shadow-pink-400/20' },
+      { 
+        name: 'Array Suite', 
+        path: '/visualizer/array', 
+        desc: '16 Types & Algos • Dedicated 3D Spatial Simulator', 
+        graphic: <ArrayGraphic />,
+        totalCount: 16,
+        algorithms: [
+          { id: 'binary_search', name: 'Binary Search', tag: 'O(log n)' },
+          { id: 'quicksort', name: 'Quick Sort', tag: 'O(n log n)' },
+          { id: 'mergesort', name: 'Merge Sort', tag: 'O(n log n)' },
+          { id: 'bubblesort', name: 'Bubble Sort', tag: 'O(n²)' },
+          { id: 'two_sum', name: 'Two Pointers', tag: 'O(n)' },
+          { id: 'sliding_window', name: 'Sliding Window', tag: 'O(n)' }
+        ]
+      },
+      { 
+        name: 'Graph Suite', 
+        path: '/visualizer/graph', 
+        desc: 'Network traversals, paths & structural analysis', 
+        graphic: <GraphGraphic />,
+        totalCount: 15,
+        algorithms: [
+          { id: 'bfs', name: 'BFS Traversal', tag: 'O(V+E)' },
+          { id: 'dfs', name: 'DFS Traversal', tag: 'O(V+E)' },
+          { id: 'dijkstra', name: "Dijkstra's Path", tag: 'O((V+E)log V)' },
+          { id: 'astar', name: 'A* Heuristic', tag: 'Heuristic' },
+          { id: 'toposort', name: 'Topological Sort', tag: 'O(V+E)' },
+          { id: 'cycle', name: 'Cycle Detection', tag: '3-Color' }
+        ]
+      },
+      { name: 'String', path: '/visualizer/string', desc: 'Immutable vs Mutable', graphic: <StringGraphic /> },
+      { name: 'Stack', path: '/visualizer/stack', desc: 'LIFO principle', graphic: <StackGraphic /> },
+      { name: 'Queue', path: '/visualizer/queue', desc: 'FIFO principle', graphic: <QueueGraphic /> },
+      { name: 'Linked List', path: '/visualizer/linkedlist', desc: 'Nodes and pointers', graphic: <LinkedListGraphic /> },
+      { name: 'Tree', path: '/visualizer/tree', desc: 'Hierarchical nodes', graphic: <TreeGraphic /> },
+      { name: 'Heap', path: '/visualizer/heap', desc: 'Priority queues', graphic: <HeapGraphic /> },
+      { name: 'Hash Map', path: '/visualizer/map', desc: 'O(1) lookups', graphic: <HashMapGraphic /> },
     ]
   },
   {
     id: 'oop',
-    title: 'Object-Oriented Programming',
-    shortTitle: 'OOP',
-    description: 'Visualize the four foundational pillars of Object-Oriented Programming architecture.',
-    color: 'var(--color-nova-brown)',
-    bgGlow: 'from-[var(--color-nova-brown)] to-transparent',
-    dialIcon: <Binary size={28} />,
+    title: 'Object-Oriented',
+    icon: <Binary size={20} className="text-gray-600" />,
     items: [
-      { name: 'Encapsulation', path: '/visualizer/encapsulation', icon: <Lock size={28}/>, desc: 'Protecting internal state', color: 'text-indigo-400', border: 'hover:border-indigo-400/50', shadow: 'hover:shadow-indigo-400/20' },
-      { name: 'Abstraction', path: '/visualizer/abstraction', icon: <Shield size={28}/>, desc: 'Hiding complexity', color: 'text-rose-400', border: 'hover:border-rose-400/50', shadow: 'hover:shadow-rose-400/20' },
-      { name: 'Inheritance', path: '/visualizer/inheritance', icon: <Network size={28}/>, desc: 'Hierarchy and code reuse', color: 'text-amber-400', border: 'hover:border-amber-400/50', shadow: 'hover:shadow-amber-400/20' },
-      { name: 'Polymorphism', path: '/visualizer/polymorphism', icon: <Layers size={28}/>, desc: 'Many forms, one interface', color: 'text-cyan-400', border: 'hover:border-cyan-400/50', shadow: 'hover:shadow-cyan-400/20' },
+      { name: 'Encapsulation', path: '/visualizer/encapsulation', desc: 'Protecting internal state', graphic: <GenericGraphic color="#D3DFC8" /> },
+      { name: 'Abstraction', path: '/visualizer/abstraction', desc: 'Hiding complexity', graphic: <GenericGraphic color="#F4E9D4" /> },
+      { name: 'Inheritance', path: '/visualizer/inheritance', desc: 'Hierarchy and code reuse', graphic: <GenericGraphic color="#E8D1CB" /> },
+      { name: 'Polymorphism', path: '/visualizer/polymorphism', desc: 'Many forms, one interface', graphic: <GenericGraphic color="#D3DFC8" /> },
     ]
   },
   {
     id: 'crypto',
     title: 'Cryptography',
-    shortTitle: 'Crypto',
-    description: 'Interactive ciphers demonstrating historic data transformations and encryption.',
-    color: 'var(--color-nova-green)',
-    bgGlow: 'from-[var(--color-nova-green)] to-transparent',
-    dialIcon: <KeyRound size={28} />,
+    icon: <KeyRound size={20} className="text-gray-600" />,
     items: [
-      { name: 'Caesar Cipher', path: '/visualizer/caesar', icon: <Lock size={28}/>, desc: 'Shift substitution', color: 'text-emerald-400', border: 'hover:border-emerald-400/50', shadow: 'hover:shadow-emerald-400/20' },
-      { name: 'Vigenère Cipher', path: '/visualizer/vigenere', icon: <Layers size={28}/>, desc: 'Polyalphabetic substitution', color: 'text-emerald-500', border: 'hover:border-emerald-500/50', shadow: 'hover:shadow-emerald-500/20' },
-      { name: 'Playfair Cipher', path: '/visualizer/playfair', icon: <Network size={28}/>, desc: '5x5 grid substitution', color: 'text-emerald-600', border: 'hover:border-emerald-600/50', shadow: 'hover:shadow-emerald-600/20' },
-      { name: 'Rail Fence', path: '/visualizer/railfence', icon: <Network size={28}/>, desc: 'Zig-zag transposition', color: 'text-teal-400', border: 'hover:border-teal-400/50', shadow: 'hover:shadow-teal-400/20' },
-      { name: 'Columnar', path: '/visualizer/columnar', icon: <Hash size={28}/>, desc: 'Grid transposition', color: 'text-teal-500', border: 'hover:border-teal-500/50', shadow: 'hover:shadow-teal-500/20' },
-      { name: 'AES-256', path: '/visualizer/aes', icon: <Shield size={28}/>, desc: 'Advanced Encryption Standard', color: 'text-cyan-400', border: 'hover:border-cyan-400/50', shadow: 'hover:shadow-cyan-400/20' },
-      { name: 'RSA Key Gen', path: '/visualizer/rsa', icon: <KeyRound size={28}/>, desc: 'Asymmetric cryptography', color: 'text-blue-400', border: 'hover:border-blue-400/50', shadow: 'hover:shadow-blue-400/20' },
-      { name: 'SHA-256', path: '/visualizer/hash', icon: <Hash size={28}/>, desc: 'Cryptographic hashing', color: 'text-pink-400', border: 'hover:border-pink-400/50', shadow: 'hover:shadow-pink-400/20' },
-      { name: 'Digital Signatures', path: '/visualizer/signature', icon: <Lock size={28}/>, desc: 'Authentication & Integrity', color: 'text-indigo-400', border: 'hover:border-indigo-400/50', shadow: 'hover:shadow-indigo-400/20' },
-      { name: 'Steganography', path: '/visualizer/steg', icon: <Layers size={28}/>, desc: 'Data obfuscation (LSB)', color: 'text-purple-400', border: 'hover:border-purple-400/50', shadow: 'hover:shadow-purple-400/20' },
-      { name: 'Enigma Machine', path: '/visualizer/enigma', icon: <Settings size={28}/>, desc: 'WWII rotor cipher', color: 'text-amber-400', border: 'hover:border-amber-400/50', shadow: 'hover:shadow-amber-400/20' },
-      { name: 'Hacker Mode', path: '/visualizer/hacker', icon: <Crosshair size={28}/>, desc: 'Cryptanalysis tools', color: 'text-rose-400', border: 'hover:border-rose-400/50', shadow: 'hover:shadow-rose-400/20' },
-      { name: 'Diffie-Hellman', path: '/visualizer/dh', icon: <GitMerge size={28}/>, desc: 'Key Exchange Protocol', color: 'text-emerald-400', border: 'hover:border-emerald-400/50', shadow: 'hover:shadow-emerald-400/20' }
+      { name: 'Caesar Cipher', path: '/visualizer/caesar', desc: 'Shift substitution', graphic: <GenericGraphic color="#D3DFC8" /> },
+      { name: 'Vigenère Cipher', path: '/visualizer/vigenere', desc: 'Polyalphabetic substitution', graphic: <GenericGraphic color="#E8D1CB" /> },
+      { name: 'Playfair Cipher', path: '/visualizer/playfair', desc: '5x5 grid substitution', graphic: <GenericGraphic color="#F4E9D4" /> },
+      { name: 'AES-256', path: '/visualizer/aes', desc: 'Advanced Encryption Standard', graphic: <GenericGraphic color="#D3DFC8" /> },
+      { name: 'RSA Key Gen', path: '/visualizer/rsa', desc: 'Asymmetric cryptography', graphic: <GenericGraphic color="#E8D1CB" /> },
+      { name: 'SHA-256', path: '/visualizer/hash', desc: 'Cryptographic hashing', graphic: <GenericGraphic color="#F4E9D4" /> },
     ]
   }
 ];
 
-const variants = {
-  enter: (direction) => ({
-    y: direction > 0 ? 50 : -50,
-    opacity: 0,
-  }),
-  center: {
-    y: 0,
-    opacity: 1,
-  },
-  exit: (direction) => ({
-    y: direction < 0 ? 50 : -50,
-    opacity: 0,
-  })
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, x: 30, scale: 0.95 },
-  show: i => ({
-    opacity: 1,
-    x: 0,
-    scale: 1,
-    transition: {
-      delay: i * 0.05,
-      type: "spring",
-      stiffness: 300,
-      damping: 20
-    }
-  })
-};
-
 export default function VisualizerDashboard() {
-  const location = useLocation();
-  const initialPage = location.state?.activeTab === 'crypto' ? 2 : (location.state?.activeTab === 'oop' ? 1 : 0);
-  
-  const [rotationIndex, setRotationIndex] = useState(initialPage);
-  const [direction, setDirection] = useState(0);
-  const [splashCategory, setSplashCategory] = useState(null);
+  const [activeCategory, setActiveCategory] = useState('ds');
 
-  const page = ((rotationIndex % 3) + 3) % 3;
-  const currentCategory = categories[page];
-
-  const currentDialRotation = -rotationIndex * 35; // Dial rotates opposite to bring selected item to equator
-
-  const handleCategoryChange = (clickedIndex, category) => {
-    if (clickedIndex !== rotationIndex) {
-      setDirection(clickedIndex > rotationIndex ? 1 : -1);
-      setRotationIndex(clickedIndex);
-      setSplashCategory(category);
-      setTimeout(() => {
-        setSplashCategory(null);
-      }, 2500);
+  const getArcStyles = (catId) => {
+    // DS is active -> large red button in center left
+    // Others are smaller greenish/beige buttons
+    if (activeCategory === catId) {
+      return "w-20 h-20 bg-[#BC4A54] rounded-full border-[6px] border-white dark:border-[#121212] flex items-center justify-center shadow-lg transform scale-110 z-10 transition-all duration-300 cursor-default";
     }
+    return "w-12 h-12 bg-[#D3DFC8] dark:bg-[#2A3324] rounded-full border-[4px] border-white dark:border-[#121212] flex items-center justify-center shadow-md cursor-pointer hover:bg-[#c1d1b4] hover:scale-105 transition-all duration-300 z-10 text-xs font-bold";
   };
 
-  const dialItems = [-2, -1, 0, 1, 2].map(offset => {
-    const itemIndex = rotationIndex + offset;
-    const catIndex = ((itemIndex % 3) + 3) % 3;
-    return {
-      index: itemIndex,
-      category: categories[catIndex]
-    };
-  });
+  const getArcPosition = (catId) => {
+    const isActive = activeCategory === catId;
+    if (catId === 'crypto') return isActive ? 'top-[120px] -translate-y-1/2 left-[48px]' : 'top-[120px] -translate-y-1/2 left-[16px]';
+    if (catId === 'ds') return isActive ? 'top-[300px] -translate-y-1/2 left-[48px]' : 'top-[300px] -translate-y-1/2 left-[36px]';
+    if (catId === 'oop') return isActive ? 'top-[480px] -translate-y-1/2 left-[48px]' : 'top-[480px] -translate-y-1/2 left-[16px]';
+    return '';
+  };
+
+  const getActiveArcPath = () => {
+    if (activeCategory === 'crypto') return "M60,50 A 100,100 0 0,1 60,190";
+    if (activeCategory === 'ds') return "M60,230 A 100,100 0 0,1 60,370";
+    if (activeCategory === 'oop') return "M60,410 A 100,100 0 0,1 60,550";
+    return "";
+  };
+
+  const getLabelPosition = (catId) => {
+    if (activeCategory === catId) return "absolute -right-12 top-1/2 -translate-y-1/2 text-[#BC4A54] font-bold text-lg pointer-events-none";
+    return "absolute -bottom-6 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase pointer-events-none";
+  };
+
+  const currentData = categories.find(c => c.id === activeCategory);
 
   return (
-    <div className="fixed top-[64px] bottom-0 left-0 right-0 overflow-hidden bg-gray-50 dark:bg-[#09090b] flex">
+    <div className="min-h-[calc(100vh-76px)] bg-[#FDFBF7] dark:bg-[#121212] relative overflow-hidden flex transition-colors duration-300">
       
-      {/* Decorative Background Blob tied to current category */}
-      <motion.div 
-        key={page}
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 0.4, scale: 1 }}
-        exit={{ opacity: 0, scale: 1.2 }}
-        transition={{ duration: 1 }}
-        className={`absolute top-0 right-0 w-[60vw] h-[60vw] rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[120px] pointer-events-none -z-10 bg-gradient-to-tr ${currentCategory.bgGlow}`}
-        style={{ transform: 'translate(20%, -20%)' }}
-      />
+      {/* Background Gradients */}
+      <div className="absolute top-0 right-0 w-[60vw] h-[60vw] bg-[#BC4A54]/10 rounded-full blur-[120px] pointer-events-none -translate-y-1/4 translate-x-1/4"></div>
+      <div className="absolute bottom-0 right-0 w-[40vw] h-[40vw] bg-[#D3DFC8]/30 rounded-full blur-[100px] pointer-events-none translate-y-1/4 translate-x-1/4"></div>
 
-      {/* Radial Menu Dial */}
-      <div className="absolute top-0 bottom-0 left-0 w-16 sm:w-24 md:w-32 z-40 pointer-events-none flex items-center shadow-[10px_0_40px_rgba(0,0,0,0.05)] dark:shadow-[10px_0_40px_rgba(0,0,0,0.4)]">
-        <motion.div
-          className="absolute pointer-events-auto rounded-full border border-gray-200 dark:border-white/10 bg-white/70 dark:bg-black/70 backdrop-blur-3xl flex items-center justify-center shadow-[inset_-10px_0_30px_rgba(0,0,0,0.05)] dark:shadow-[inset_-10px_0_30px_rgba(255,255,255,0.02)]"
-          style={{
-            width: '600px',
-            height: '600px',
-            left: '-480px', // Leaves 120px exposed on the screen (dial edge)
-            transformOrigin: 'center center'
-          }}
-          animate={{ rotate: currentDialRotation }}
-          transition={{ type: "spring", stiffness: 200, damping: 25, mass: 1 }}
-        >
-          {dialItems.map((item) => {
-            const itemAngle = item.index * 35;
-            const isSelected = item.index === rotationIndex;
-            const absoluteRotation = currentDialRotation + itemAngle;
-            
-            return (
-              <div
-                key={item.index}
-                className="absolute top-1/2 left-1/2 w-0 h-0"
-                style={{
-                  transform: `rotate(${itemAngle}deg)`,
-                }}
-              >
-                <div 
-                  className="absolute"
-                  style={{ transform: 'translate(280px, -50%)' }} // Positioned near the right edge of the 300px radius
-                >
-                  <motion.button
-                    onClick={() => handleCategoryChange(item.index, item.category)}
-                    className={`flex flex-col items-center justify-center gap-1 group transition-colors px-4 py-2 ${isSelected ? '' : 'cursor-pointer'}`}
-                    animate={{ 
-                      rotate: -absoluteRotation, // Counter-rotate so it stays upright
-                      scale: isSelected ? 1.2 : 0.9,
-                    }}
-                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                    style={{
-                      transformOrigin: 'center center'
-                    }}
-                  >
-                    <div 
-                      className={`p-3 rounded-full transition-all duration-300 ${isSelected ? 'bg-black/5 dark:bg-white/10 shadow-lg' : 'group-hover:bg-black/5 dark:group-hover:bg-white/5 opacity-60 group-hover:opacity-100'}`}
-                      style={{ color: isSelected ? item.category.color : undefined }}
-                    >
-                      {item.category.dialIcon}
-                    </div>
-                    <span 
-                      className={`font-bold tracking-wider text-xs uppercase transition-all duration-300 ${isSelected ? 'opacity-100 drop-shadow-md' : 'opacity-40 group-hover:opacity-80 text-gray-500'}`}
-                      style={{ color: isSelected ? item.category.color : undefined }}
-                    >
-                      {item.category.shortTitle}
-                    </span>
-                  </motion.button>
-                </div>
-              </div>
-            );
-          })}
-        </motion.div>
+      {/* Mobile Category Navigation (Hidden on Desktop) */}
+      <div className="md:hidden flex overflow-x-auto gap-2 p-4 w-full items-center justify-start sticky top-0 z-20 bg-[#FDFBF7]/80 dark:bg-[#121212]/80 backdrop-blur-md border-b border-[#EBE0D3] dark:border-[#333]">
+        {categories.map(cat => (
+          <button 
+            key={cat.id}
+            onClick={() => setActiveCategory(cat.id)}
+            className={`whitespace-nowrap px-4 py-2 rounded-full font-bold text-xs transition-colors shadow-sm border ${
+              activeCategory === cat.id 
+                ? 'bg-[#BC4A54] text-white border-[#BC4A54]' 
+                : 'bg-white dark:bg-[#1A1A1A] text-gray-500 dark:text-gray-400 border-[#EBE0D3] dark:border-[#333]'
+            }`}
+          >
+            {cat.title}
+          </button>
+        ))}
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 ml-[120px] md:ml-[160px] pl-2 md:pl-8 pr-4 md:pr-12 lg:pr-16 pt-8 pb-12 overflow-y-auto overflow-x-hidden scrollbar-hide relative z-10 flex justify-center">
-        <AnimatePresence initial={false} custom={direction} mode="wait">
-          {!splashCategory && (
-            <motion.div
-              key={page}
-              custom={direction}
-              variants={variants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ type: "spring", stiffness: 300, damping: 30, opacity: { duration: 0.2 } }}
-              className="w-full max-w-screen-xl flex flex-col items-center pt-4 md:pt-12"
+      {/* Left Arc Navigation (Hidden on Mobile) */}
+      <div className="hidden md:flex w-64 h-[600px] fixed left-0 top-[40%] -translate-y-1/2 items-center">
+        {/* SVG Arcs */}
+        <svg className="absolute inset-0 w-full h-full pointer-events-none transition-all duration-300" viewBox="0 0 256 600" fill="none">
+          <path d="M10,50 A 1056,1056 0 0,1 10,550" className="stroke-[#EBE0D3] dark:stroke-[#333]" strokeWidth="1" strokeDasharray="4 4" />
+          <path d="M40,120 A 820,820 0 0,1 40,480" className="stroke-[#EBE0D3] dark:stroke-[#333]" strokeWidth="1" />
+          {/* Active indicator arc */}
+          <path d={getActiveArcPath()} stroke="#BC4A54" strokeWidth="4" className="transition-all duration-300" />
+        </svg>
+
+        {/* Nodes */}
+        {categories.map((cat) => (
+          <div key={cat.id} className={`absolute ${getArcPosition(cat.id)} flex flex-col items-center`}>
+            <div 
+              className={getArcStyles(cat.id)}
+              onClick={() => setActiveCategory(cat.id)}
             >
-              {/* Interactive Grid (Full Width) */}
-              <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 items-start content-start">
-                {currentCategory.items.map((item, i) => (
-                  <Link key={item.name} to={item.path} className="block w-full">
-                    <motion.div
-                      custom={i}
-                      variants={itemVariants}
-                      initial="hidden"
-                      animate="show"
-                      whileHover={{ scale: 1.02, y: -4 }}
-                      whileTap={{ scale: 0.98 }}
-                      className={`glass-card p-5 h-full flex flex-col justify-between cursor-pointer transition-all duration-300 border-2 border-transparent ${item.border} ${item.shadow} hover:shadow-2xl group`}
-                    >
-                      <div className="flex items-center gap-4 mb-3">
-                        <div className={`p-2.5 bg-gray-50 dark:bg-black/50 rounded-lg shadow-inner border border-gray-100 dark:border-gray-800 ${item.color} group-hover:scale-110 transition-transform duration-300`}>
-                          {item.icon}
-                        </div>
-                        <h3 className="text-xl font-bold group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
-                          {item.name}
-                        </h3>
-                      </div>
-                      
-                      <div className="flex items-end justify-between mt-2">
-                        <p className="text-gray-500 text-sm font-medium">
-                          {item.desc}
-                        </p>
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2 group-hover:translate-x-0 transform duration-300">
-                          <ArrowRight className={item.color} size={18} />
-                        </div>
-                      </div>
-                    </motion.div>
+              {cat.id === 'ds' && activeCategory === 'ds' ? (
+                <Database size={32} className="text-white" />
+              ) : cat.icon}
+            </div>
+            <span className={getLabelPosition(cat.id)}>{cat.id.toUpperCase()}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Right Content Area */}
+      <div className="flex-1 w-full md:ml-64 md:w-[calc(100%-16rem)] p-4 md:p-8 overflow-y-auto z-10 flex flex-col items-center">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeCategory}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+            className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 max-w-7xl mx-auto w-full"
+          >
+            {currentData.items.map((item, i) => (
+              <motion.div
+                key={item.name}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-4 md:p-5 shadow-sm border border-[#EBE0D3]/50 dark:border-[#333] hover:shadow-md transition-all duration-300 group flex flex-col h-full"
+              >
+                {/* Topic Header & Graphic */}
+                <Link to={item.path} className="block group/head">
+                  <div className="w-full h-24 md:h-28 mb-3 rounded-xl overflow-hidden bg-gray-50 dark:bg-[#252525] flex items-center justify-center transform group-hover/head:scale-[1.02] transition-transform duration-300">
+                    {item.graphic}
+                  </div>
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="text-base md:text-lg font-bold text-gray-900 dark:text-gray-100 leading-tight group-hover/head:text-[#BC4A54] transition-colors">
+                      {item.name}
+                    </h3>
+                    {item.totalCount && (
+                      <span className="text-[10px] font-mono font-bold bg-[#BC4A54]/10 text-[#BC4A54] px-2 py-0.5 rounded-full border border-[#BC4A54]/20 shrink-0">
+                        {item.totalCount} Algos
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-3 line-clamp-2">
+                    {item.desc}
+                  </p>
+                </Link>
+
+                {/* DISTINCT ALGORITHM CARDS INSIDE THE TOPIC CARD */}
+                {item.algorithms && item.algorithms.length > 0 ? (
+                  <div className="flex flex-col gap-1.5 pt-2 mb-2 border-t border-gray-100 dark:border-[#262626]">
+                    <div className="flex items-center justify-between text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                      <span>Algorithms Included</span>
+                      <span className="text-[#BC4A54]">{item.totalCount} Cards</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {item.algorithms.slice(0, 4).map((algo) => (
+                        <Link
+                          key={algo.id}
+                          to={item.path === '/visualizer/array' ? `${item.path}/${algo.id}` : `${item.path}?algo=${algo.id}`}
+                          className="p-1.5 rounded-lg bg-gray-50 dark:bg-[#222] border border-gray-200/80 dark:border-[#333] hover:border-[#BC4A54] dark:hover:border-[#BC4A54] hover:bg-[#BC4A54]/5 transition-all flex flex-col justify-between gap-0.5 group/algo shadow-2xs"
+                        >
+                          <span className="text-[10px] font-bold text-gray-800 dark:text-gray-200 truncate group-hover/algo:text-[#BC4A54]">
+                            {algo.name}
+                          </span>
+                          <span className="text-[8px] font-mono font-semibold text-gray-400">
+                            {algo.tag}
+                          </span>
+                        </Link>
+                      ))}
+                    </div>
+
+                    {item.totalCount > 4 && (
+                      <Link
+                        to={item.path}
+                        className="text-[10px] font-bold text-[#BC4A54] hover:underline flex items-center justify-end gap-1 pt-1"
+                      >
+                        <span>+{item.totalCount - 4} more algorithm cards</span>
+                        <ArrowRight size={11} />
+                      </Link>
+                    )}
+                  </div>
+                ) : null}
+
+                {/* Bottom Action Footer */}
+                <div className="flex justify-end mt-auto pt-2">
+                  <Link 
+                    to={item.path}
+                    className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white dark:bg-[#1A1A1A] border border-[#EBE0D3] dark:border-[#333] flex items-center justify-center text-[#BC4A54] hover:bg-[#BC4A54] hover:text-white transition-colors duration-300 shadow-xs"
+                  >
+                    <ArrowRight size={14} className="md:w-4 md:h-4" />
                   </Link>
-                ))}
-              </div>
-            </motion.div>
-          )}
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
         </AnimatePresence>
       </div>
 
-      {/* Fullscreen Splash Screen */}
-      <AnimatePresence>
-        {splashCategory && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
-            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gray-50/90 dark:bg-[#09090b]/90 backdrop-blur-2xl"
-          >
-            <div className="flex flex-col items-center gap-8">
-              {splashIcons[splashCategory.id](splashCategory.color)}
-              <TypewriterText text={splashCategory.title} color={splashCategory.color} />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

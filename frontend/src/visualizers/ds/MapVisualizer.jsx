@@ -1,300 +1,489 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Terminal, ChevronDown, ChevronUp, Search, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { 
+  Play, Pause, RotateCcw, Volume2, VolumeX,
+  Plus, Trash2, Search, Compass, Layers, Hash, CheckCircle
+} from 'lucide-react';
+import ResponsiveVisualizerShell from '../../components/visualizer/ResponsiveVisualizerShell';
+import ComplexityBadge from '../../components/visualizer/ComplexityBadge';
+import CodeInspector from '../../components/visualizer/CodeInspector';
+
+const playSynthTone = (type = 'hash', isMuted = false) => {
+  if (isMuted || typeof window === 'undefined') return;
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    const now = ctx.currentTime;
+
+    if (type === 'hash') {
+      osc.frequency.setValueAtTime(320, now);
+      osc.frequency.exponentialRampToValueAtTime(560, now + 0.1);
+      gain.gain.setValueAtTime(0.1, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+      osc.start(now);
+      osc.stop(now + 0.11);
+    } else if (type === 'found') {
+      osc.frequency.setValueAtTime(580, now);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+      osc.start(now);
+      osc.stop(now + 0.15);
+    }
+  } catch (e) {}
+};
+
+const CODE_SNIPPETS = {
+  javascript: `// Hash Map Implementation (Separate Chaining)
+class HashMap {
+  constructor(size = 8) {
+    this.buckets = Array(size).fill(null).map(() => []);
+    this.size = size;
+  }
+  
+  hash(key) {
+    let sum = 0;
+    for (let char of String(key)) sum += char.charCodeAt(0);
+    return sum % this.size;
+  }
+  
+  // Put O(1) avg
+  put(key, value) {
+    const idx = this.hash(key);
+    const bucket = this.buckets[idx];
+    const existing = bucket.find(item => item.key === key);
+    if (existing) existing.value = value;
+    else bucket.push({ key, value });
+  }
+  
+  // Get O(1) avg
+  get(key) {
+    const idx = this.hash(key);
+    const item = this.buckets[idx].find(i => i.key === key);
+    return item ? item.value : undefined;
+  }
+}`,
+  python: `# Hash Table with Chaining in Python
+class HashMap:
+    def __init__(self, size=8):
+        self.size = size
+        self.buckets = [[] for _ in range(size)]
+        
+    def _hash(self, key):
+        return sum(ord(c) for c in str(key)) % self.size
+        
+    def put(self, key, value):
+        idx = self._hash(key)
+        for item in self.buckets[idx]:
+            if item[0] == key:
+                item[1] = value
+                return
+        self.buckets[idx].append([key, value])`,
+  cpp: `// C++ Hash Map with std::vector buckets
+#include <vector>
+#include <string>
+
+struct Entry { std::string key; int val; };
+std::vector<std::vector<Entry>> buckets(8);
+
+int hashKey(const std::string& key) {
+    int sum = 0;
+    for (char c : key) sum += c;
+    return sum % 8;
+}`,
+  java: `// Java Hash Map Concept
+public class HashMap {
+    private LinkedList<Entry>[] buckets = new LinkedList[8];
+    
+    private int hash(String key) {
+        int sum = 0;
+        for (char c : key.toCharArray()) sum += c;
+        return sum % buckets.length;
+    }
+}`
+};
 
 export default function MapVisualizer() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [mapData, setMapData] = useState([
-    { key: "Alice", value: 95 },
-    { key: "Bob", value: 82 },
-    { key: "Charlie", value: 88 }
-  ]);
-  
-  const [inputKey, setInputKey] = useState('');
-  const [inputValue, setInputValue] = useState('');
-  
-  // Console Output State
-  const [outputLines, setOutputLines] = useState(["> HashMap Initialized"]);
-  const [isIterating, setIsIterating] = useState(false);
-  const [highlightedKey, setHighlightedKey] = useState(null);
-  const [isPulsingAll, setIsPulsingAll] = useState(false);
-  const [highlightColumn, setHighlightColumn] = useState(null); // 'keys', 'values', or null
-  const [isConsoleOpen, setIsConsoleOpen] = useState(true);
+  const [bucketCount] = useState(7);
+  // Buckets: array of arrays for separate chaining
+  const [buckets, setBuckets] = useState(() => {
+    const initial = Array(7).fill(null).map(() => []);
+    initial[1].push({ key: 'apple', val: '$1.50' });
+    initial[3].push({ key: 'banana', val: '$0.75' });
+    initial[3].push({ key: 'cherry', val: '$3.00' });
+    initial[5].push({ key: 'date', val: '$4.20' });
+    return initial;
+  });
 
-  const logOutput = (msg) => {
-    setOutputLines(prev => [...prev, msg].slice(-8));
-  };
+  const [inputKey, setInputKey] = useState('grape');
+  const [inputVal, setInputVal] = useState('$2.50');
+  const [searchKey, setSearchKey] = useState('cherry');
+  const [activeBucket, setActiveBucket] = useState(null);
+  const [hashFormula, setHashFormula] = useState('');
+  const [isMuted, setIsMuted] = useState(false);
+  const [logs, setLogs] = useState(['> Hash Map ready (Size: 7 buckets).']);
 
-  const simpleHash = (str) => {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      hash = (hash << 5) - hash + str.charCodeAt(i);
-      hash |= 0; 
+  const [currentExplanation, setCurrentExplanation] = useState({
+    action: "Hash Map / Hash Table Ready",
+    intuition: "Keys are transformed into array indices via hash(key) = sum(charCodes) % buckets, yielding O(1) average lookup.",
+    next: "Put a key-value pair or search by key."
+  });
+  const [phase, setPhase] = useState('IDLE');
+  const [activeLine, setActiveLine] = useState(-1);
+
+  const addLog = (msg) => setLogs(prev => [...prev.slice(-15), msg]);
+
+  // Hash calculation
+  const calculateHash = (key) => {
+    let sum = 0;
+    const chars = [];
+    for (let i = 0; i < String(key).length; i++) {
+      const code = String(key).charCodeAt(i);
+      sum += code;
+      chars.push(`'${key[i]}'(${code})`);
     }
-    return Math.abs(hash) % 1000; 
+    const idx = sum % bucketCount;
+    return { idx, formula: `(${chars.join(' + ')}) % ${bucketCount} = ${sum} % ${bucketCount} = Bucket [${idx}]` };
   };
 
+  // Put
   const handlePut = async () => {
-    if (!inputKey || !inputValue || isIterating) return;
-    setIsIterating(true);
-    
-    logOutput(`> map.put("${inputKey}", ${inputValue})`);
-    
-    const hash = simpleHash(inputKey);
-    logOutput(`  Hashing key "${inputKey}" -> ${hash}`);
-    
-    await new Promise(r => setTimeout(r, 600));
+    if (!inputKey) return;
+    const { idx, formula } = calculateHash(inputKey);
+    setHashFormula(formula);
+    setActiveBucket(idx);
+    setActiveLine(8);
 
-    const existingIndex = mapData.findIndex(item => item.key === inputKey);
-    if (existingIndex !== -1) {
-      logOutput(`  Key exists. Updating value O(1).`);
-      setHighlightedKey(inputKey);
-      await new Promise(r => setTimeout(r, 400));
-      const newData = [...mapData];
-      newData[existingIndex].value = inputValue;
-      setMapData(newData);
+    setCurrentExplanation({
+      action: `Computing Hash for key "${inputKey}" ➔ Bucket [${idx}]`,
+      intuition: `Hash Function transforms ASCII characters to numeric sum ${formula}.`,
+      next: `Placing { ${inputKey}: ${inputVal} } into Bucket ${idx}.`
+    });
+    setPhase('HASHING');
+    playSynthTone('hash', isMuted);
+
+    await new Promise(r => setTimeout(r, 700));
+
+    const newBuckets = buckets.map((b, i) => {
+      if (i !== idx) return b;
+      const existingIdx = b.findIndex(item => item.key === inputKey);
+      if (existingIdx !== -1) {
+        const updated = [...b];
+        updated[existingIdx] = { key: inputKey, val: inputVal };
+        return updated;
+      }
+      return [...b, { key: inputKey, val: inputVal }];
+    });
+
+    setBuckets(newBuckets);
+    setCurrentExplanation({
+      action: `Stored { ${inputKey}: "${inputVal}" } at Bucket [${idx}]!`,
+      intuition: "Separate Chaining handles collisions gracefully by appending entries into the bucket's linked list.",
+      next: "Operation complete in O(1) average time."
+    });
+    setPhase('STORED');
+    setActiveLine(15);
+    playSynthTone('found', isMuted);
+    addLog(`> put("${inputKey}", "${inputVal}"): Stored in Bucket ${idx}`);
+
+    setTimeout(() => {
+      setActiveBucket(null);
+    }, 1500);
+  };
+
+  // Get / Search
+  const handleGet = async () => {
+    if (!searchKey) return;
+    const { idx, formula } = calculateHash(searchKey);
+    setHashFormula(formula);
+    setActiveBucket(idx);
+    setActiveLine(21);
+
+    setCurrentExplanation({
+      action: `Searching for key "${searchKey}": Hashing to Bucket [${idx}]`,
+      intuition: `Direct indexing: Hash function points directly to Bucket ${idx} without scanning other buckets.`,
+      next: `Searching linked chain in Bucket ${idx}.`
+    });
+    setPhase('SEARCHING');
+    playSynthTone('hash', isMuted);
+
+    await new Promise(r => setTimeout(r, 700));
+
+    const bucket = buckets[idx];
+    const found = bucket.find(item => item.key === searchKey);
+
+    if (found) {
+      setCurrentExplanation({
+        action: `MATCH FOUND! Key "${searchKey}" has value: "${found.val}"`,
+        intuition: `Retrieved value in O(1) direct lookup from Bucket ${idx}.`,
+        next: "Search completed successfully."
+      });
+      setPhase('FOUND');
+      setActiveLine(23);
+      playSynthTone('found', isMuted);
+      addLog(`> get("${searchKey}"): Found value "${found.val}" in Bucket ${idx}`);
     } else {
-      logOutput(`  New key. Inserting O(1).`);
-      setMapData([...mapData, { key: inputKey, value: inputValue }]);
+      setCurrentExplanation({
+        action: `Key "${searchKey}" NOT FOUND in Bucket [${idx}]!`,
+        intuition: "Scanned all elements in bucket chain without finding key.",
+        next: "Returns undefined."
+      });
+      setPhase('NOT_FOUND');
+      addLog(`> get("${searchKey}"): Not present in hash map.`);
     }
-    
-    await new Promise(r => setTimeout(r, 400));
-    setHighlightedKey(null);
-    setInputKey('');
-    setInputValue('');
-    setIsIterating(false);
+
+    setTimeout(() => setActiveBucket(null), 1500);
   };
 
-  const handleDelete = async (keyToRemove) => {
-    if (isIterating) return;
-    setIsIterating(true);
-    logOutput(`> map.delete("${keyToRemove}")`);
-    
-    const hash = simpleHash(keyToRemove);
-    logOutput(`  Hashing key "${keyToRemove}" -> ${hash}`);
-    
-    setHighlightedKey(keyToRemove);
-    await new Promise(r => setTimeout(r, 600));
-    
-    setMapData(mapData.filter(item => item.key !== keyToRemove));
-    logOutput(`  Deleted entry.`);
-    
-    setHighlightedKey(null);
-    setIsIterating(false);
+  // Remove
+  const handleRemove = (keyToRemove) => {
+    const { idx } = calculateHash(keyToRemove);
+    const newBuckets = buckets.map((b, i) => {
+      if (i !== idx) return b;
+      return b.filter(item => item.key !== keyToRemove);
+    });
+    setBuckets(newBuckets);
+    addLog(`> remove("${keyToRemove}"): Removed from Bucket ${idx}`);
+    setCurrentExplanation({
+      action: `Removed key "${keyToRemove}" from Bucket [${idx}].`,
+      intuition: "Unlinked entry from bucket chain.",
+      next: "Hash map updated."
+    });
+    setPhase('REMOVED');
   };
 
-  const handleHas = async () => {
-    if (!inputKey || isIterating) return;
-    setIsIterating(true);
-    logOutput(`> map.has("${inputKey}")`);
-    
-    const hash = simpleHash(inputKey);
-    logOutput(`  Hashing key "${inputKey}" -> ${hash}`);
-    
-    await new Promise(r => setTimeout(r, 600));
-    
-    const exists = mapData.some(item => item.key === inputKey);
-    if (exists) {
-      setHighlightedKey(inputKey);
-      logOutput(`  Returned: true`);
-      await new Promise(r => setTimeout(r, 600));
-      setHighlightedKey(null);
-    } else {
-      logOutput(`  Returned: false`);
-    }
-    setIsIterating(false);
+  const handleReset = () => {
+    const initial = Array(7).fill(null).map(() => []);
+    initial[1].push({ key: 'apple', val: '$1.50' });
+    initial[3].push({ key: 'banana', val: '$0.75' });
+    initial[3].push({ key: 'cherry', val: '$3.00' });
+    initial[5].push({ key: 'date', val: '$4.20' });
+    setBuckets(initial);
+    setActiveBucket(null);
+    setHashFormula('');
+    setPhase('IDLE');
+    addLog(`> Hash Map reset to default items.`);
   };
 
-  const handleSize = () => {
-    logOutput(`> map.size`);
-    logOutput(`  Returned: ${mapData.length}`);
-    setIsPulsingAll(true);
-    setTimeout(() => setIsPulsingAll(false), 1000);
-  };
+  const controlsSlot = (
+    <div className="flex flex-col gap-4">
+      {/* Put Section */}
+      <div className="flex flex-col gap-2 p-3 rounded-xl bg-teal-500/5 border border-teal-500/20">
+        <span className="text-xs font-black text-teal-600 dark:text-teal-400 flex items-center gap-1.5">
+          <Plus size={14} /> Put(Key, Value) (O(1) Avg)
+        </span>
+        <div className="grid grid-cols-2 gap-2">
+          <input
+            type="text"
+            value={inputKey}
+            onChange={e => setInputKey(e.target.value)}
+            className="bg-white dark:bg-black/60 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold"
+            placeholder="Key (e.g. apple)"
+          />
+          <input
+            type="text"
+            value={inputVal}
+            onChange={e => setInputVal(e.target.value)}
+            className="bg-white dark:bg-black/60 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold"
+            placeholder="Value"
+          />
+        </div>
+        <button
+          onClick={handlePut}
+          className="py-1.5 bg-teal-600 hover:bg-teal-500 text-white rounded-lg text-xs font-bold transition-all shadow-xs"
+        >
+          Compute Hash & Put
+        </button>
+      </div>
 
-  const handleKeySet = () => {
-    logOutput(`> map.keys()`);
-    const keys = mapData.map(item => item.key);
-    logOutput(`  Returned: [${keys.join(', ')}]`);
-    setIsPulsingAll(true);
-    setHighlightColumn('keys');
-    setTimeout(() => { setIsPulsingAll(false); setHighlightColumn(null); }, 1000);
-  };
+      {/* Get / Search Section */}
+      <div className="flex flex-col gap-2 p-3 rounded-xl bg-indigo-500/5 border border-indigo-500/20">
+        <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
+          <Search size={14} /> Get(Key) Lookup
+        </span>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={searchKey}
+            onChange={e => setSearchKey(e.target.value)}
+            className="flex-1 bg-white dark:bg-black/60 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold"
+            placeholder="Search Key"
+          />
+          <button
+            onClick={handleGet}
+            className="py-1.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-all shadow-xs"
+          >
+            Lookup
+          </button>
+        </div>
+      </div>
 
-  const handleValues = () => {
-    logOutput(`> map.values()`);
-    const values = mapData.map(item => item.value);
-    logOutput(`  Returned: [${values.join(', ')}]`);
-    setIsPulsingAll(true);
-    setHighlightColumn('values');
-    setTimeout(() => { setIsPulsingAll(false); setHighlightColumn(null); }, 1000);
-  };
+      {/* Sound & Reset */}
+      <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-white/10">
+        <button
+          onClick={() => setIsMuted(!isMuted)}
+          className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
+        >
+          {isMuted ? <VolumeX size={14} className="text-rose-400" /> : <Volume2 size={14} className="text-teal-400" />}
+          <span>{isMuted ? 'Muted' : 'Sound Active'}</span>
+        </button>
+        <button
+          onClick={handleReset}
+          className="text-xs text-gray-400 hover:text-rose-400 flex items-center gap-1 transition-colors"
+        >
+          <RotateCcw size={12} /> Reset Map
+        </button>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="fixed top-[64px] bottom-0 left-0 right-0 bg-gray-50 dark:bg-[#09090b] flex flex-col lg:flex-row overflow-hidden">
-
-      {/* Left Sidebar: Controls & Output */}
-      <div className={`w-full lg:w-[350px] xl:w-[400px] h-1/2 lg:h-full bg-white/80 dark:bg-black/40 backdrop-blur-xl border-r border-b lg:border-b-0 border-gray-200 dark:border-white/10 shadow-2xl flex flex-col z-10 shrink-0 overflow-y-auto transition-all duration-300 ${isSidebarOpen ? "ml-0" : "-ml-[100%] lg:-ml-[400px]"}`}>
-        <div className="p-4 lg:p-6 flex flex-col gap-6 h-full">
-          
-          {/* In-flow Back Button */}
-          <Link to="/visualizer" className="text-gray-500 hover:text-pink-500 transition-colors flex items-center gap-2 font-semibold w-fit bg-black/5 dark:bg-white/5 px-3 py-1.5 rounded-full text-sm border border-gray-200 dark:border-white/10">
-            <ArrowLeft size={14} /> Back to Dashboard
-          </Link>
-
-          <div>
-            <h1 className="text-2xl lg:text-3xl font-black text-pink-500 tracking-tight mb-2">Hash Map</h1>
-            <p className="text-xs lg:text-sm text-gray-500 font-medium">Key-Value store utilizing a hash function for O(1) lookups.</p>
-          </div>
-
-          {/* Core Operations */}
-          <div className="flex flex-col gap-4">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-200 dark:border-white/10 pb-2">Modify</h3>
-            
-            <div className="flex flex-col gap-2 bg-black/5 dark:bg-white/5 p-3 rounded-lg border border-gray-200 dark:border-white/5">
-              <input 
-                type="text" 
-                value={inputKey}
-                onChange={(e) => setInputKey(e.target.value)}
-                className="bg-white dark:bg-black border border-gray-300 dark:border-gray-800 rounded px-3 py-1.5 text-sm w-full"
-                placeholder="Key (String)"
-              />
-              <input 
-                type="text" 
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                className="bg-white dark:bg-black border border-gray-300 dark:border-gray-800 rounded px-3 py-1.5 text-sm w-full"
-                placeholder="Value"
-              />
-              <button onClick={handlePut} disabled={isIterating} className="bg-pink-500 text-white py-1.5 rounded text-sm font-bold shadow-sm hover:brightness-110 disabled:opacity-50 mt-1">Put (Insert / Update)</button>
-            </div>
-            
-          </div>
-
-          {/* Built-in Methods */}
-          <div className="flex flex-col gap-4">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-200 dark:border-white/10 pb-2">Methods</h3>
-            <div className="grid grid-cols-2 gap-2">
-              <button onClick={handleHas} disabled={isIterating} className="bg-black/5 dark:bg-white/5 border border-pink-200 dark:border-pink-900/30 text-pink-600 dark:text-pink-400 py-2 rounded text-sm font-bold hover:bg-pink-50 dark:hover:bg-pink-900/20 disabled:opacity-50 flex items-center justify-center gap-1">
-                <Search size={14}/> has(key)
-              </button>
-              <button onClick={handleSize} disabled={isIterating} className="bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10 py-2 rounded text-sm font-bold hover:bg-black/10 dark:hover:bg-white/10 disabled:opacity-50">size()</button>
-              <button onClick={handleKeySet} disabled={isIterating} className="bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10 py-2 rounded text-sm font-bold hover:bg-black/10 dark:hover:bg-white/10 disabled:opacity-50">keys()</button>
-              <button onClick={handleValues} disabled={isIterating} className="bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10 py-2 rounded text-sm font-bold hover:bg-black/10 dark:hover:bg-white/10 disabled:opacity-50">values()</button>
-            </div>
-          </div>
-
-          <div className="mt-auto pt-8"></div>
-        </div>
-      </div>
-
-      {/* Right Canvas: Visualization & Console */}
-      <div className="w-full lg:flex-1 h-1/2 lg:h-full flex flex-col relative overflow-hidden">
-        {/* Sidebar Toggle Button */}
-        <button 
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="absolute top-4 left-4 z-50 p-2 bg-white/80 dark:bg-black/40 backdrop-blur border border-gray-200 dark:border-white/10 rounded shadow-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-        >
-          {isSidebarOpen ? <ChevronLeft size={20} className="text-gray-600 dark:text-gray-300" /> : <ChevronRight size={20} className="text-gray-600 dark:text-gray-300" />}
-        </button>
-
-        
-        {/* Main Visualization Area */}
-        <div className="flex-1 flex flex-col items-center justify-center p-4 lg:p-12 overflow-y-auto overflow-x-auto relative z-10">
-          
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-500 opacity-5 blur-[100px] rounded-full pointer-events-none"></div>
-
-          {/* Premium Table Map Visualization */}
-          <div className="w-full max-w-2xl bg-white/60 dark:bg-black/60  rounded-2xl shadow-2xl border border-gray-200 dark:border-white/10 overflow-hidden relative">
-            
-            {/* Table Header */}
-            <div className="grid grid-cols-[1fr_2fr_2fr_auto] gap-4 p-4 bg-gray-100/80 dark:bg-[#161b22] border-b border-gray-200 dark:border-white/10 text-xs font-bold text-gray-500 uppercase tracking-widest">
-              <div>Hash</div>
-              <div>Key</div>
-              <div>Value</div>
-              <div className="w-8"></div>
-            </div>
-
-            {/* Table Body */}
-            <div className="flex flex-col max-h-[400px] overflow-y-auto">
-              <AnimatePresence>
-                {mapData.map((item, idx) => {
-                  const isHighlighted = highlightedKey === item.key;
-                  return (
-                    <motion.div 
-                      key={item.key}
-                      layout
-                      initial={{ opacity: 0, x: -20, backgroundColor: 'rgba(236,72,153,0)' }}
-                      animate={{ 
-                        opacity: 1, 
-                        x: 0,
-                        backgroundColor: (isHighlighted || isPulsingAll) ? 'rgba(236,72,153,0.15)' : 'rgba(236,72,153,0)'
-                      }}
-                      exit={{ opacity: 0, x: 20 }}
-                      className={`grid grid-cols-[1fr_2fr_2fr_auto] gap-4 p-4 border-b border-gray-100 dark:border-white/5 items-center transition-colors ${(isHighlighted || isPulsingAll) && !highlightColumn ? 'border-pink-500/50 shadow-[inset_0_0_15px_rgba(236,72,153,0.2)]' : 'hover:bg-white/50 dark:hover:bg-white/5'}`}
-                    >
-                      <div className="font-mono text-gray-400 text-sm">
-                        #{simpleHash(item.key)}
-                      </div>
-                      <div className={`font-bold transition-all duration-300 rounded px-2 py-1 ${isPulsingAll && highlightColumn === 'keys' ? 'bg-pink-500/20 text-pink-600 shadow-[0_0_10px_rgba(236,72,153,0.3)]' : ''}`}>
-                        "{item.key}"
-                      </div>
-                      <div className={`font-mono text-gray-600 dark:text-gray-300 transition-all duration-300 rounded px-2 py-1 ${isPulsingAll && highlightColumn === 'values' ? 'bg-pink-500/20 text-pink-600 shadow-[0_0_10px_rgba(236,72,153,0.3)]' : ''}`}>
-                        {item.value}
-                      </div>
-                      <button 
-                        onClick={() => handleDelete(item.key)}
-                        disabled={isIterating}
-                        className="text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
-                        title="Delete Entry"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-                      </button>
-                    </motion.div>
-                  )
-                })}
-              </AnimatePresence>
-              {mapData.length === 0 && (
-                <div className="p-8 text-center text-gray-400 font-mono italic">
-                  Map is empty
-                </div>
-              )}
-            </div>
-          </div>
-          
-        </div>
-
-        {/* Output Console Panel */}
-        <div className={`w-full bg-[#0d1117] border-t border-white/10 flex flex-col shrink-0 font-mono shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-20 transition-all duration-300 ${isConsoleOpen ? 'h-48 lg:h-56' : 'h-10'}`}>
-          <div 
-            onClick={() => setIsConsoleOpen(!isConsoleOpen)}
-            className="flex items-center justify-between px-4 py-2 bg-[#161b22] border-b border-white/5 cursor-pointer hover:bg-[#1f2630] transition-colors"
-          >
+    <ResponsiveVisualizerShell
+      title="Hash Map / Hash Table"
+      subtitle="Key-value mapping providing average O(1) constant time insertion, search, and deletion via hash functions."
+      currentPath="/visualizer/map"
+      category="ds"
+      controls={controlsSlot}
+      metrics={
+        <ComplexityBadge
+          timeComplexity={{
+            average: "Put: O(1) | Get: O(1) | Delete: O(1)",
+            worst: "O(n) Extreme Collision"
+          }}
+          spaceComplexity={`O(n) - ${bucketCount} Buckets`}
+          activeOperation={phase}
+          notes="Separate chaining resolves collisions using linked list buckets."
+        />
+      }
+      codeInspector={
+        <CodeInspector
+          codeSnippets={CODE_SNIPPETS}
+          activeLine={activeLine}
+          variables={{ activeBucket: activeBucket ?? 'none', formula: hashFormula || 'none' }}
+          title="Hash Map Source Logic"
+        />
+      }
+      consoleOutput={logs}
+    >
+      <div className="flex-1 flex flex-col p-4 lg:p-6 overflow-y-auto w-full max-w-4xl mx-auto gap-4">
+        {/* ELI5 Intuition Card */}
+        <div className="bg-white/90 dark:bg-[#121214]/90 backdrop-blur-md border border-teal-500/20 rounded-2xl p-4 shadow-lg flex flex-col gap-3">
+          <div className="flex items-center justify-between border-b border-gray-200 dark:border-white/5 pb-2">
             <div className="flex items-center gap-2">
-              <Terminal size={14} className="text-gray-400" />
-              <span className="text-xs text-gray-400 font-bold tracking-wider">CONSOLE OUTPUT</span>
+              <Compass size={18} className="text-teal-500" />
+              <span className="text-xs font-black uppercase tracking-wider text-gray-800 dark:text-gray-200">
+                ELI5 Intuition: Hash Function & Buckets
+              </span>
             </div>
-            {isConsoleOpen ? <ChevronDown size={14} className="text-gray-400" /> : <ChevronUp size={14} className="text-gray-400" />}
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wide bg-teal-500/10 text-teal-500 border border-teal-500/30">
+              PHASE: {phase}
+            </span>
           </div>
-          <div className="p-4 overflow-y-auto flex-1 flex flex-col gap-1 text-sm">
-            <AnimatePresence initial={false}>
-              {outputLines.map((line, i) => (
-                <motion.div 
-                  key={`${i}-${line}`}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className={`${line.startsWith('>') ? 'text-[#7ee787]' : 'text-[#c9d1d9] ml-4 opacity-80'}`}
-                >
-                  {line}
-                </motion.div>
-              ))}
-            </AnimatePresence>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="p-2.5 rounded-xl bg-teal-500/5 border border-teal-500/10">
+              <span className="text-[10px] font-bold text-teal-600 dark:text-teal-400 uppercase tracking-wider block mb-1">
+                🎯 What's Happening
+              </span>
+              <p className="text-xs text-gray-700 dark:text-gray-300 font-medium">
+                {currentExplanation.action}
+              </p>
+            </div>
+            <div className="p-2.5 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
+              <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block mb-1">
+                💡 Why It Happens
+              </span>
+              <p className="text-xs text-gray-700 dark:text-gray-300 font-medium">
+                {currentExplanation.intuition}
+              </p>
+            </div>
+            <div className="p-2.5 rounded-xl bg-cyan-500/5 border border-cyan-500/10">
+              <span className="text-[10px] font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-wider block mb-1">
+                🔮 What Happens Next
+              </span>
+              <p className="text-xs text-gray-700 dark:text-gray-300 font-medium">
+                {currentExplanation.next}
+              </p>
+            </div>
           </div>
+
+          {/* Real-time Hash Formula Bar */}
+          {hashFormula && (
+            <div className="p-2 rounded-xl bg-black/5 dark:bg-black/40 border border-teal-500/20 text-xs font-mono text-teal-400 flex items-center gap-2 overflow-x-auto">
+              <Hash size={14} className="shrink-0 text-teal-500" />
+              <span><strong>Hash Math:</strong> {hashFormula}</span>
+            </div>
+          )}
         </div>
 
-      </div>
+        {/* Visual Buckets & Chaining Layout */}
+        <div className="flex-1 min-h-[360px] bg-white/50 dark:bg-[#0c0c0e]/80 backdrop-blur-sm border border-gray-200 dark:border-white/10 rounded-2xl p-6 flex flex-col gap-3 shadow-inner overflow-y-auto">
+          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+            Bucket Table (Separate Chaining)
+          </span>
 
-    </div>
+          <div className="flex flex-col gap-2.5">
+            {buckets.map((chain, bIdx) => {
+              const isActive = activeBucket === bIdx;
+
+              return (
+                <div
+                  key={bIdx}
+                  className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all ${
+                    isActive
+                      ? 'bg-teal-500/20 border-teal-400 shadow-teal-500/30 ring-2 ring-teal-400'
+                      : 'bg-white/80 dark:bg-[#141416] border-gray-200 dark:border-white/10'
+                  }`}
+                >
+                  {/* Bucket Index badge */}
+                  <div className={`w-20 h-10 rounded-lg flex flex-col items-center justify-center font-mono font-bold text-xs shrink-0 ${
+                    isActive ? 'bg-teal-500 text-black' : 'bg-black/10 dark:bg-black/40 text-gray-400'
+                  }`}>
+                    <span>Bucket</span>
+                    <span className="text-sm font-black">[{bIdx}]</span>
+                  </div>
+
+                  {/* Chained Linked List entries */}
+                  <div className="flex items-center gap-2 flex-wrap flex-1">
+                    {chain.length === 0 ? (
+                      <span className="text-xs font-mono text-gray-400 italic">empty (null)</span>
+                    ) : (
+                      chain.map((item, iIdx) => (
+                        <div key={item.key} className="flex items-center gap-2">
+                          <motion.div
+                            layout
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="px-3 py-1.5 rounded-lg bg-teal-500/15 border border-teal-500/30 text-xs font-mono flex items-center gap-2 shadow-xs group"
+                          >
+                            <span className="font-bold text-teal-400">{item.key}</span>
+                            <span className="text-gray-400">:</span>
+                            <span className="font-black text-white">{item.val}</span>
+                            <button
+                              onClick={() => handleRemove(item.key)}
+                              className="opacity-0 group-hover:opacity-100 text-rose-400 hover:text-rose-300 transition-opacity ml-1"
+                              title="Delete entry"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </motion.div>
+                          {iIdx < chain.length - 1 && (
+                            <span className="text-teal-500 text-xs font-mono">➔</span>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </ResponsiveVisualizerShell>
   );
 }

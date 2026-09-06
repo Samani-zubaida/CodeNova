@@ -1,420 +1,1234 @@
-import React, { useState, useCallback } from 'react';
-import {
-  ReactFlow,
-  MiniMap,
-  Controls,
-  Background,
-  useNodesState,
-  useEdgesState,
-  addEdge,
-} from '@xyflow/react';
-import '@xyflow/react/dist/style.css';
-import { ArrowLeft, Terminal, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Play, Pause, SkipForward, SkipBack, RotateCcw, Volume2, VolumeX,
+  Plus, Trash2, Search, RefreshCw, GitCommit, Layers,
+  Compass, Lightbulb, CheckCircle, AlertCircle, ArrowDown, Activity
+} from 'lucide-react';
+import ResponsiveVisualizerShell from '../../components/visualizer/ResponsiveVisualizerShell';
+import ComplexityBadge from '../../components/visualizer/ComplexityBadge';
+import CodeInspector from '../../components/visualizer/CodeInspector';
+import VisualizerPlaybackBar from '../../components/visualizer/VisualizerPlaybackBar';
+import { TREE_ALGORITHMS } from './TreeHub';
 
-const initialNodes = [
-  { id: '1', position: { x: 250, y: 50 }, data: { val: 10, label: '10' }, style: { background: 'var(--color-nova-red)', color: 'white', borderRadius: '8px', border: 'none', width: 60, textAlign: 'center', padding: '10px', fontWeight: 'bold' } },
-];
+// Web Audio API Synthesizer
+const playSynthTone = (type = 'visit', isMuted = false) => {
+  if (isMuted || typeof window === 'undefined') return;
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
 
-const initialEdges = [];
+    const now = ctx.currentTime;
+    if (type === 'compare') {
+      osc.frequency.setValueAtTime(440, now);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+      osc.start(now);
+      osc.stop(now + 0.09);
+    } else if (type === 'insert') {
+      osc.frequency.setValueAtTime(320, now);
+      osc.frequency.exponentialRampToValueAtTime(640, now + 0.15);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+      osc.start(now);
+      osc.stop(now + 0.16);
+    } else if (type === 'delete') {
+      osc.frequency.setValueAtTime(540, now);
+      osc.frequency.exponentialRampToValueAtTime(220, now + 0.18);
+      gain.gain.setValueAtTime(0.14, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+      osc.start(now);
+      osc.stop(now + 0.19);
+    } else if (type === 'rotate') {
+      osc.frequency.setValueAtTime(400, now);
+      osc.frequency.linearRampToValueAtTime(600, now + 0.12);
+      gain.gain.setValueAtTime(0.1, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+      osc.start(now);
+      osc.stop(now + 0.13);
+    } else if (type === 'found') {
+      [523.25, 659.25, 783.99].forEach((f, i) => {
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.connect(g);
+        g.connect(ctx.destination);
+        o.frequency.value = f;
+        g.gain.setValueAtTime(0.1, now + i * 0.06);
+        g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.06 + 0.12);
+        o.start(now + i * 0.06);
+        o.stop(now + i * 0.06 + 0.13);
+      });
+    }
+  } catch (e) {
+    // Audio Context handled safely
+  }
+};
+
+const CODE_SNIPPETS = {
+  javascript: `// Binary Search Tree (BST) Node
+class TreeNode {
+  constructor(val) {
+    this.val = val;
+    this.left = null;
+    this.right = null;
+  }
+}
+
+// Insert Node into BST (O(log n) avg)
+function insert(root, val) {
+  if (!root) return new TreeNode(val);
+  if (val < root.val) {
+    root.left = insert(root.left, val);
+  } else if (val > root.val) {
+    root.right = insert(root.right, val);
+  }
+  return root;
+}
+
+// Delete Node from BST (Handles 0, 1, 2 children)
+function deleteNode(root, key) {
+  if (!root) return null;
+  if (key < root.val) {
+    root.left = deleteNode(root.left, key);
+  } else if (key > root.val) {
+    root.right = deleteNode(root.right, key);
+  } else {
+    // Case 1 & 2: 0 or 1 child
+    if (!root.left) return root.right;
+    if (!root.right) return root.left;
+
+    // Case 3: 2 children -> Find In-Order Successor
+    let succ = findMin(root.right);
+    root.val = succ.val;
+    root.right = deleteNode(root.right, succ.val);
+  }
+  return root;
+}
+
+function findMin(node) {
+  while (node.left) node = node.left;
+  return node;
+}`,
+  python: `# Binary Search Tree in Python
+class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+def insert(root, val):
+    if not root:
+        return TreeNode(val)
+    if val < root.val:
+        root.left = insert(root.left, val)
+    elif val > root.val:
+        root.right = insert(root.right, val)
+    return root
+
+def delete_node(root, key):
+    if not root:
+        return None
+    if key < root.val:
+        root.left = delete_node(root.left, key)
+    elif key > root.val:
+        root.right = delete_node(root.right, key)
+    else:
+        # Case 1 & 2: 0 or 1 child
+        if not root.left:
+            return root.right
+        if not root.right:
+            return root.left
+        # Case 3: 2 children -> In-order successor
+        succ = root.right
+        while succ.left:
+            succ = succ.left
+        root.val = succ.val
+        root.right = delete_node(root.right, succ.val)
+    return root`,
+  cpp: `// C++ Binary Search Tree Implementation
+struct TreeNode {
+    int val;
+    TreeNode* left;
+    TreeNode* right;
+    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+};
+
+TreeNode* insert(TreeNode* root, int val) {
+    if (!root) return new TreeNode(val);
+    if (val < root->val) root->left = insert(root->left, val);
+    else if (val > root->val) root->right = insert(root->right, val);
+    return root;
+}
+
+TreeNode* deleteNode(TreeNode* root, int key) {
+    if (!root) return nullptr;
+    if (key < root->val) root->left = deleteNode(root->left, key);
+    else if (key > root->val) root->right = deleteNode(root->right, key);
+    else {
+        if (!root->left) return root->right;
+        if (!root->right) return root->left;
+        // In-order successor (min in right subtree)
+        TreeNode* succ = root->right;
+        while (succ->left) succ = succ->left;
+        root->val = succ->val;
+        root->right = deleteNode(root->right, succ->val);
+    }
+    return root;
+}`,
+  java: `// Java BST Implementation
+public class TreeNode {
+    int val;
+    TreeNode left, right;
+    TreeNode(int val) { this.val = val; }
+}
+
+public TreeNode insert(TreeNode root, int val) {
+    if (root == null) return new TreeNode(val);
+    if (val < root.val) root.left = insert(root.left, val);
+    else if (val > root.val) root.right = insert(root.right, val);
+    return root;
+}
+
+public TreeNode deleteNode(TreeNode root, int key) {
+    if (root == null) return null;
+    if (key < root.val) root.left = deleteNode(root.left, key);
+    else if (key > root.val) root.right = deleteNode(root.right, key);
+    else {
+        if (root.left == null) return root.right;
+        if (root.right == null) return root.left;
+        TreeNode succ = root.right;
+        while (succ.left != null) succ = succ.left;
+        root.val = succ.val;
+        root.right = deleteNode(root.right, succ.val);
+    }
+    return root;
+}`
+};
+
+// Tree Helper functions
+function createNode(val) {
+  return {
+    id: `node_${val}_${Date.now()}_${Math.floor(Math.random()*1000)}`,
+    val,
+    left: null,
+    right: null,
+    height: 1
+  };
+}
+
+function cloneTree(node) {
+  if (!node) return null;
+  return {
+    id: node.id,
+    val: node.val,
+    height: node.height || 1,
+    left: cloneTree(node.left),
+    right: cloneTree(node.right)
+  };
+}
+
+function getHeight(node) {
+  return node ? node.height : 0;
+}
+
+function updateHeight(node) {
+  if (!node) return 0;
+  return 1 + Math.max(getHeight(node.left), getHeight(node.right));
+}
+
+function getBalance(node) {
+  return node ? getHeight(node.left) - getHeight(node.right) : 0;
+}
+
+// Layout coordinate calculations for SVG
+function computeTreeLayout(root, width = 640, height = 360) {
+  if (!root) return { nodes: [], edges: [] };
+
+  const nodes = [];
+  const edges = [];
+
+  function layout(node, depth, leftBound, rightBound, parentPos = null) {
+    if (!node) return;
+    const x = (leftBound + rightBound) / 2;
+    const y = 45 + depth * 75;
+
+    const nodeItem = {
+      id: node.id,
+      val: node.val,
+      height: node.height,
+      bf: getBalance(node),
+      x,
+      y
+    };
+    nodes.push(nodeItem);
+
+    if (parentPos) {
+      edges.push({
+        id: `e_${parentPos.id}_${node.id}`,
+        x1: parentPos.x,
+        y1: parentPos.y,
+        x2: x,
+        y2: y
+      });
+    }
+
+    if (node.left) {
+      layout(node.left, depth + 1, leftBound, x, nodeItem);
+    }
+    if (node.right) {
+      layout(node.right, depth + 1, x, rightBound, nodeItem);
+    }
+  }
+
+  layout(root, 0, 20, width - 20);
+  return { nodes, edges };
+}
 
 export default function TreeGraphVisualizer() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  
-  const [nodeVal, setNodeVal] = useState('');
-  const [targetVal, setTargetVal] = useState('10');
-  const [targetNodeId, setTargetNodeId] = useState('1');
-  const [direction, setDirection] = useState('left');
-  
-  const [outputLines, setOutputLines] = useState(["> Tree Initialized with Root (10)"]);
-  const [isIterating, setIsIterating] = useState(false);
-  const [isPulsingAll, setIsPulsingAll] = useState(false);
-  const [isConsoleOpen, setIsConsoleOpen] = useState(true);
+  const { algoId } = useParams();
+  const navigate = useNavigate();
+  const currentAlgo = TREE_ALGORITHMS.find(a => a.id === algoId) || TREE_ALGORITHMS[0];
 
-  const logOutput = (msg) => {
-    setOutputLines(prev => [...prev, msg].slice(-8));
+  // Tree Mode: 'bst' | 'avl'
+  const [treeMode, setTreeMode] = useState(algoId === 'avl' ? 'avl' : 'bst');
+
+  // Initial balanced tree: 50 -> (25, 75) -> (15, 35, 60, 85)
+  const [treeRoot, setTreeRoot] = useState(() => {
+    const root = createNode(50);
+    root.left = createNode(25);
+    root.right = createNode(75);
+    root.left.left = createNode(15);
+    root.left.right = createNode(35);
+    root.right.left = createNode(60);
+    root.right.right = createNode(85);
+    return root;
+  });
+
+  // Inputs
+  const [inputVal, setInputVal] = useState('40');
+  const [deleteVal, setDeleteVal] = useState('25');
+  const [searchVal, setSearchVal] = useState('35');
+
+  // Playback & Animation states
+  const [steps, setSteps] = useState([]);
+  const [currentStepIdx, setCurrentStepIdx] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [speed, setSpeed] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
+  const [traversalOutput, setTraversalOutput] = useState([]);
+  const [logs, setLogs] = useState(['> Dynamic Binary Tree & BST visualizer loaded.']);
+
+  const addLog = (msg) => {
+    setLogs(prev => [...prev.slice(-15), msg]);
   };
 
-  const onConnect = useCallback(
-    (params) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges],
-  );
-
-  const handleAddNode = () => {
-    if (!nodeVal || !targetVal) {
-      logOutput(`> Error: Missing input values.`);
-      return;
-    }
-    
-    const parentNode = nodes.find(n => n.data.val === Number(targetVal));
-    if (!parentNode) {
-      logOutput(`> Error: Parent ${targetVal} not found.`);
-      return;
-    }
-
-    const isOccupied = edges.some(e => e.source === parentNode.id && e.data?.direction === direction);
-    if (isOccupied) {
-      logOutput(`> Error: Parent ${targetVal} already has a ${direction} child.`);
-      return;
-    }
-
-    const newNodeId = `node_${Date.now()}`;
-    const xOffset = direction === 'left' ? -100 : 100;
-    
-    const newNode = {
-      id: newNodeId,
-      position: { x: parentNode.position.x + xOffset, y: parentNode.position.y + 100 },
-      data: { val: Number(nodeVal), label: String(nodeVal) },
-      style: { background: 'var(--color-nova-green)', color: 'black', borderRadius: '8px', border: 'none', width: 60, textAlign: 'center', padding: '10px', fontWeight: 'bold' }
-    };
-
-    const newEdge = {
-      id: `e_${parentNode.id}-${newNodeId}`,
-      source: parentNode.id,
-      target: newNodeId,
-      data: { direction },
-      animated: true,
-      style: { stroke: 'var(--color-nova-brown)', strokeWidth: 2 }
-    };
-
-    setNodes([...nodes, newNode]);
-    setEdges([...edges, newEdge]);
-    setNodeVal('');
-    logOutput(`> Added node ${nodeVal} as ${direction} child of ${targetVal}.`);
+  const executeSteps = (newSteps) => {
+    setSteps(newSteps);
+    setCurrentStepIdx(0);
+    setIsPlaying(true);
   };
 
-  const handleClear = () => {
-    setNodes(initialNodes);
-    setEdges(initialEdges);
-    logOutput(`> Tree Reset to Root (10).`);
-  };
-
-  const getRoot = () => {
-    const targets = new Set(edges.map(e => e.target));
-    return nodes.find(n => !targets.has(n.id)) || nodes[0];
-  };
-
-  const getChildren = (nodeId) => {
-    const outEdges = edges.filter(e => e.source === nodeId);
-    const leftEdge = outEdges.find(e => e.data.direction === 'left');
-    const rightEdge = outEdges.find(e => e.data.direction === 'right');
-    return {
-      left: leftEdge ? nodes.find(n => n.id === leftEdge.target) : null,
-      right: rightEdge ? nodes.find(n => n.id === rightEdge.target) : null
-    };
-  };
-
-  const highlightNode = async (nodeId, color) => {
-    setNodes(nds => nds.map(n => {
-      if (n.id === nodeId) {
-        return { ...n, style: { ...n.style, background: color, color: 'white' } };
+  useEffect(() => {
+    let timer = null;
+    if (isPlaying) {
+      if (currentStepIdx < steps.length - 1) {
+        const step = steps[currentStepIdx];
+        if (step?.sound) playSynthTone(step.sound, isMuted);
+        if (step?.traversalItem !== undefined) {
+          setTraversalOutput(prev => [...prev, step.traversalItem]);
+        }
+        timer = setTimeout(() => {
+          setCurrentStepIdx(prev => prev + 1);
+        }, 1000 / speed);
+      } else {
+        const lastStep = steps[steps.length - 1];
+        if (lastStep?.sound) playSynthTone(lastStep.sound, isMuted);
+        if (lastStep?.traversalItem !== undefined) {
+          setTraversalOutput(prev => [...prev, lastStep.traversalItem]);
+        }
+        setIsPlaying(false);
       }
-      return n;
-    }));
-    await new Promise(r => setTimeout(r, 600));
+    }
+    return () => clearTimeout(timer);
+  }, [isPlaying, currentStepIdx, steps, speed, isMuted]);
+
+  // Current active step
+  const activeStep = steps[currentStepIdx] || {
+    treeSnapshot: treeRoot,
+    activeNodeVal: null,
+    comparingVal: null,
+    successorVal: null,
+    highlightPath: [],
+    explanation: {
+      action: "Tree ready for dynamic additions, deletions, or traversals",
+      intuition: "Binary Search Tree maintains the invariant: Left Subtree < Root < Right Subtree at every node.",
+      next: "Type a value and click 'Insert BST' or 'Delete Node' to watch step-by-step pointers."
+    },
+    phase: "IDLE",
+    activeLine: -1,
+    variables: {}
   };
 
-  const resetHighlight = () => {
-    setNodes(nds => nds.map(n => ({
-      ...n, 
-      style: { ...n.style, background: n.id === '1' ? 'var(--color-nova-red)' : 'var(--color-nova-green)', color: n.id === '1' ? 'white' : 'black' }
-    })));
+  // Compute SVG layout for current snapshot
+  const { nodes: svgNodes, edges: svgEdges } = computeTreeLayout(activeStep.treeSnapshot || treeRoot);
+
+  // DYNAMIC OPERATION: Insert Node (BST)
+  const handleInsert = () => {
+    const val = Number(inputVal);
+    if (isNaN(val)) return;
+
+    const newSteps = [];
+    const path = [];
+
+    function insertHelper(node, treeCopy) {
+      if (!node) {
+        const leaf = createNode(val);
+        newSteps.push({
+          treeSnapshot: treeCopy,
+          activeNodeVal: val,
+          highlightPath: [...path],
+          explanation: {
+            action: `Inserted new leaf node [${val}] into tree!`,
+            intuition: `Found the appropriate null leaf position honoring BST ordering. New node is attached.`,
+            next: "Tree state stabilized. Height updated."
+          },
+          phase: "INSERTED",
+          activeLine: 16,
+          variables: { insertedVal: val, path: path.join(' ➔ ') },
+          sound: 'insert'
+        });
+        return leaf;
+      }
+
+      path.push(node.val);
+      const isLess = val < node.val;
+      const isGreater = val > node.val;
+
+      newSteps.push({
+        treeSnapshot: treeCopy,
+        activeNodeVal: node.val,
+        comparingVal: val,
+        highlightPath: [...path],
+        explanation: {
+          action: `Comparing target [${val}] with current node [${node.val}]`,
+          intuition: isLess
+            ? `${val} < ${node.val}: By BST definition, all values smaller than root must reside in the LEFT subtree.`
+            : isGreater
+              ? `${val} > ${node.val}: By BST definition, all values greater than root must reside in the RIGHT subtree.`
+              : `Value ${val} already exists in BST. Duplicates typically ignored or handled by count.`,
+          next: isLess ? `Branch LEFT toward ${node.left ? node.left.val : 'NULL'}.` : `Branch RIGHT toward ${node.right ? node.right.val : 'NULL'}.`
+        },
+        phase: "COMPARING",
+        activeLine: isLess ? 12 : 14,
+        variables: { currNode: node.val, targetVal: val, direction: isLess ? 'LEFT' : 'RIGHT' },
+        sound: 'compare'
+      });
+
+      if (isLess) {
+        node.left = insertHelper(node.left, treeCopy);
+      } else if (isGreater) {
+        node.right = insertHelper(node.right, treeCopy);
+      }
+      node.height = updateHeight(node);
+      return node;
+    }
+
+    const workingRoot = cloneTree(treeRoot);
+    const updatedRoot = insertHelper(workingRoot, workingRoot);
+
+    newSteps.push({
+      treeSnapshot: updatedRoot,
+      activeNodeVal: val,
+      highlightPath: [],
+      explanation: {
+        action: `Node [${val}] successfully incorporated into BST in O(log n) time.`,
+        intuition: "BST allows binary division of the search space at each step, cutting remaining nodes in half.",
+        next: "Ready for subsequent operations."
+      },
+      phase: "COMPLETE",
+      activeLine: 17,
+      variables: { rootVal: updatedRoot.val },
+      sound: 'found'
+    });
+
+    setTreeRoot(updatedRoot);
+    addLog(`> insert(${val}): Node added to BST.`);
+    executeSteps(newSteps);
   };
 
-  const handleFind = async () => {
-    if (isIterating) return;
-    const target = prompt("Enter value to find:");
-    if (!target) return;
-    
-    setIsIterating(true);
-    resetHighlight();
-    logOutput(`> tree.find(${target})`);
-    
+  // DYNAMIC OPERATION: Delete Node (Handling 0, 1, 2 children)
+  const handleDelete = (targetVal = null) => {
+    const key = targetVal !== null ? targetVal : Number(deleteVal);
+    if (isNaN(key)) return;
+
+    const newSteps = [];
+    const path = [];
+
+    function findMinNode(node) {
+      let curr = node;
+      while (curr.left) curr = curr.left;
+      return curr;
+    }
+
+    function deleteHelper(node, treeCopy) {
+      if (!node) {
+        newSteps.push({
+          treeSnapshot: treeCopy,
+          activeNodeVal: null,
+          highlightPath: [...path],
+          explanation: {
+            action: `Key [${key}] was not found in the BST.`,
+            intuition: "Reached null leaf without finding target key. No structural changes needed.",
+            next: "Search terminated."
+          },
+          phase: "NOT_FOUND",
+          activeLine: 21,
+          variables: { key, result: 'null' },
+          sound: 'delete'
+        });
+        return null;
+      }
+
+      path.push(node.val);
+
+      if (key < node.val) {
+        newSteps.push({
+          treeSnapshot: treeCopy,
+          activeNodeVal: node.val,
+          comparingVal: key,
+          highlightPath: [...path],
+          explanation: {
+            action: `Searching for key [${key}]: ${key} < ${node.val} ➔ Travesing LEFT`,
+            intuition: "Target value is smaller than current node, so it can only exist in the left branch.",
+            next: `Move to left child (${node.left ? node.left.val : 'NULL'}).`
+          },
+          phase: "SEARCHING",
+          activeLine: 23,
+          variables: { curr: node.val, key, branch: 'LEFT' },
+          sound: 'compare'
+        });
+        node.left = deleteHelper(node.left, treeCopy);
+      } else if (key > node.val) {
+        newSteps.push({
+          treeSnapshot: treeCopy,
+          activeNodeVal: node.val,
+          comparingVal: key,
+          highlightPath: [...path],
+          explanation: {
+            action: `Searching for key [${key}]: ${key} > ${node.val} ➔ Traversing RIGHT`,
+            intuition: "Target value is greater than current node, so it can only exist in the right branch.",
+            next: `Move to right child (${node.right ? node.right.val : 'NULL'}).`
+          },
+          phase: "SEARCHING",
+          activeLine: 25,
+          variables: { curr: node.val, key, branch: 'RIGHT' },
+          sound: 'compare'
+        });
+        node.right = deleteHelper(node.right, treeCopy);
+      } else {
+        // MATCH FOUND! Check child count
+        const hasLeft = !!node.left;
+        const hasRight = !!node.right;
+
+        if (!hasLeft && !hasRight) {
+          // Case 1: Leaf node (0 children)
+          newSteps.push({
+            treeSnapshot: treeCopy,
+            activeNodeVal: node.val,
+            highlightPath: [...path],
+            explanation: {
+              action: `MATCH FOUND: Node [${node.val}] is a LEAF (0 children)`,
+              intuition: "Case 1: Leaf nodes have no subtree dependencies. Simply unbind parent's pointer to null.",
+              next: "Prune node from tree."
+            },
+            phase: "DELETE_LEAF",
+            activeLine: 28,
+            variables: { deletingNode: node.val, children: 0 },
+            sound: 'delete'
+          });
+          return null;
+        } else if (!hasLeft || !hasRight) {
+          // Case 2: 1 child
+          const child = node.left || node.right;
+          newSteps.push({
+            treeSnapshot: treeCopy,
+            activeNodeVal: node.val,
+            highlightPath: [...path],
+            explanation: {
+              action: `MATCH FOUND: Node [${node.val}] has 1 CHILD (Node [${child.val}])`,
+              intuition: "Case 2: Splice parent's pointer directly to this child, bypassing the deleted node.",
+              next: `Promote child [${child.val}] into position of [${node.val}].`
+            },
+            phase: "DELETE_1_CHILD",
+            activeLine: 29,
+            variables: { deletingNode: node.val, promotingChild: child.val },
+            sound: 'delete'
+          });
+          return child;
+        } else {
+          // Case 3: 2 children
+          const succ = findMinNode(node.right);
+          newSteps.push({
+            treeSnapshot: treeCopy,
+            activeNodeVal: node.val,
+            successorVal: succ.val,
+            highlightPath: [...path],
+            explanation: {
+              action: `MATCH FOUND: Node [${node.val}] has 2 CHILDREN. Finding In-Order Successor!`,
+              intuition: "Case 3: Cannot simply delete node with two children. We find the In-Order Successor (smallest value in right subtree) to take its place while preserving BST ordering.",
+              next: `Found successor [${succ.val}]. Swap values and delete successor node.`
+            },
+            phase: "SUCCESSOR_SEARCH",
+            activeLine: 33,
+            variables: { target: node.val, inOrderSuccessor: succ.val },
+            sound: 'found'
+          });
+
+          // Swap value
+          node.val = succ.val;
+          newSteps.push({
+            treeSnapshot: treeCopy,
+            activeNodeVal: succ.val,
+            successorVal: null,
+            highlightPath: [...path],
+            explanation: {
+              action: `Copied successor value [${succ.val}] into target node!`,
+              intuition: "Now we delete the original successor node from the right subtree (which is guaranteed to have at most 1 child).",
+              next: `Delete duplicate leaf node [${succ.val}] from right subtree.`
+            },
+            phase: "SWAPPED_SUCCESSOR",
+            activeLine: 34,
+            variables: { nodeVal: node.val, rightSubtree: node.right.val },
+            sound: 'rotate'
+          });
+
+          node.right = deleteHelper(node.right, treeCopy);
+        }
+      }
+
+      node.height = updateHeight(node);
+      return node;
+    }
+
+    const workingRoot = cloneTree(treeRoot);
+    const updatedRoot = deleteHelper(workingRoot, workingRoot);
+
+    newSteps.push({
+      treeSnapshot: updatedRoot,
+      activeNodeVal: null,
+      highlightPath: [],
+      explanation: {
+        action: `Deletion of [${key}] completed successfully!`,
+        intuition: "BST invariant (Left < Root < Right) is strictly preserved across all branches.",
+        next: "Tree is balanced and ready."
+      },
+      phase: "COMPLETE",
+      activeLine: 37,
+      variables: { deletedKey: key },
+      sound: 'delete'
+    });
+
+    setTreeRoot(updatedRoot);
+    addLog(`> deleteNode(${key}): Node removed from BST.`);
+    executeSteps(newSteps);
+  };
+
+  // DYNAMIC OPERATION: Search BST
+  const handleSearch = () => {
+    const target = Number(searchVal);
+    if (isNaN(target)) return;
+
+    const newSteps = [];
+    const path = [];
+    let curr = treeRoot;
     let found = false;
-    for (let i = 0; i < nodes.length; i++) {
-      logOutput(`  Checking node ${nodes[i].data.val}...`);
-      await highlightNode(nodes[i].id, 'orange');
-      if (nodes[i].data.val === Number(target)) {
-        logOutput(`  Found node ${target}!`);
-        await highlightNode(nodes[i].id, '#3b82f6');
+
+    while (curr) {
+      path.push(curr.val);
+      const isMatch = curr.val === target;
+      const isLess = target < curr.val;
+
+      newSteps.push({
+        treeSnapshot: treeRoot,
+        activeNodeVal: curr.val,
+        comparingVal: target,
+        highlightPath: [...path],
+        explanation: {
+          action: isMatch 
+            ? `TARGET FOUND: Value [${target}] located!` 
+            : `Comparing target [${target}] with Node [${curr.val}]: ${target} ${isLess ? '<' : '>'} ${curr.val}`,
+          intuition: isMatch
+            ? `Found key in ${path.length} comparisons! BST lookup is O(h) = O(log n).`
+            : isLess 
+              ? `${target} is smaller than ${curr.val} ➔ Following LEFT branch.`
+              : `${target} is greater than ${curr.val} ➔ Following RIGHT branch.`,
+          next: isMatch ? "Search complete." : `Inspect child node.`
+        },
+        phase: isMatch ? "FOUND" : "SEARCHING",
+        activeLine: isMatch ? 20 : (isLess ? 23 : 25),
+        variables: { current: curr.val, target, stepCount: path.length },
+        sound: isMatch ? 'found' : 'compare'
+      });
+
+      if (isMatch) {
         found = true;
         break;
       }
+      curr = isLess ? curr.left : curr.right;
     }
-    
+
     if (!found) {
-      logOutput(`  Returned: null (Not found)`);
-      resetHighlight();
-    }
-    setIsIterating(false);
-  };
-
-  const handleBFS = async () => {
-    if (isIterating || nodes.length === 0) return;
-    setIsIterating(true);
-    resetHighlight();
-    logOutput(`> tree.bfs()`);
-    
-    const queue = [getRoot()];
-    const result = [];
-    
-    while(queue.length > 0) {
-      const current = queue.shift();
-      if (!current) continue;
-      
-      logOutput(`  Visiting: ${current.data.val}`);
-      await highlightNode(current.id, 'orange');
-      result.push(current.data.val);
-      
-      const { left, right } = getChildren(current.id);
-      if (left) queue.push(left);
-      if (right) queue.push(right);
-    }
-    
-    logOutput(`  BFS Order: ${result.join(', ')}`);
-    resetHighlight();
-    setIsIterating(false);
-  };
-
-  const handleDFS = async () => {
-    if (isIterating) return;
-    setIsIterating(true);
-    resetHighlight();
-    logOutput(`> tree.dfs(preorder)`);
-
-    const stack = [];
-    const root = getRoot();
-    if(root) stack.push(root.id);
-
-    const visitedOrder = [];
-
-    while(stack.length > 0) {
-      const currentId = stack.pop();
-      highlightNode(currentId, 'orange');
-      logOutput(`  Visited ${currentId}`);
-      visitedOrder.push(currentId);
-      await new Promise(r => setTimeout(r, 600));
-      highlightNode(currentId, 'green');
-
-      const { left, right } = getChildren(currentId);
-      if(right) stack.push(right.id);
-      if(left) stack.push(left.id);
+      newSteps.push({
+        treeSnapshot: treeRoot,
+        activeNodeVal: null,
+        highlightPath: [...path],
+        explanation: {
+          action: `Target [${target}] was not found in the BST.`,
+          intuition: "Hit null leaf pointer without finding target.",
+          next: "Search terminated."
+        },
+        phase: "NOT_FOUND",
+        activeLine: 21,
+        variables: { target, result: 'NOT_FOUND' },
+        sound: 'delete'
+      });
     }
 
-    logOutput(`  DFS Traversal: [${visitedOrder.join(', ')}]`);
-    setIsIterating(false);
+    addLog(`> search(${target}): ${found ? 'Found in BST' : 'Not found'}.`);
+    executeSteps(newSteps);
   };
 
-  const handleHeight = async () => {
-    const calculateHeight = (nodeId) => {
-      if (!nodeId) return 0;
-      const { left, right } = getChildren(nodeId);
-      const leftH = left ? calculateHeight(left.id) : 0;
-      const rightH = right ? calculateHeight(right.id) : 0;
-      return Math.max(leftH, rightH) + 1;
-    };
-    
-    const root = getRoot();
-    const h = calculateHeight(root.id);
-    logOutput(`> tree.height()`);
-    logOutput(`  Returned: ${h}`);
-    
-    setIsPulsingAll(true);
-    setNodes(nds => nds.map(n => ({
-      ...n, 
-      style: { ...n.style, background: 'var(--color-nova-brown)', color: 'white' }
-    })));
-    setTimeout(() => {
-      setIsPulsingAll(false);
-      resetHighlight();
-    }, 1500);
-  };
+  // DYNAMIC OPERATION: Traversals (Inorder, Preorder, Postorder, Level-order)
+  const handleTraversal = (type = 'inorder') => {
+    setTraversalOutput([]);
+    const newSteps = [];
+    const order = [];
 
-  const handleInorderSuccessor = async () => {
-    if (!targetNodeId || isIterating) return;
-    
-    const target = nodes.find(n => n.id === targetNodeId);
-    if (!target) {
-      logOutput(`> tree.inorderSuccessor(${targetNodeId})`);
-      logOutput(`  Error: Node not found`);
-      return;
+    function traverseIn(node) {
+      if (!node) return;
+      traverseIn(node.left);
+      order.push(node.val);
+      newSteps.push({
+        treeSnapshot: treeRoot,
+        activeNodeVal: node.val,
+        traversalItem: node.val,
+        explanation: {
+          action: `In-Order: Visited Node [${node.val}] (Left ➔ ROOT ➔ Right)`,
+          intuition: "In-Order traversal of a BST visits nodes in strictly ASCENDING sorted order!",
+          next: "Proceed to right subtree."
+        },
+        phase: "INORDER_VISIT",
+        activeLine: 12,
+        variables: { visited: node.val, orderLength: order.length },
+        sound: 'compare'
+      });
+      traverseIn(node.right);
     }
 
-    setIsIterating(true);
-    resetHighlight();
-    logOutput(`> tree.inorderSuccessor(${targetNodeId})`);
-    
-    highlightNode(target.id, 'yellow');
-    await new Promise(r => setTimeout(r, 600));
+    function traversePre(node) {
+      if (!node) return;
+      order.push(node.val);
+      newSteps.push({
+        treeSnapshot: treeRoot,
+        activeNodeVal: node.val,
+        traversalItem: node.val,
+        explanation: {
+          action: `Pre-Order: Visited Node [${node.val}] (ROOT ➔ Left ➔ Right)`,
+          intuition: "Pre-Order visits parent before children, ideal for cloning or serializing trees.",
+          next: "Traverse left subtree."
+        },
+        phase: "PREORDER_VISIT",
+        activeLine: 10,
+        variables: { visited: node.val },
+        sound: 'compare'
+      });
+      traversePre(node.left);
+      traversePre(node.right);
+    }
 
-    let current = target.id;
-    const { right } = getChildren(current);
+    function traversePost(node) {
+      if (!node) return;
+      traversePost(node.left);
+      traversePost(node.right);
+      order.push(node.val);
+      newSteps.push({
+        treeSnapshot: treeRoot,
+        activeNodeVal: node.val,
+        traversalItem: node.val,
+        explanation: {
+          action: `Post-Order: Visited Node [${node.val}] (Left ➔ Right ➔ ROOT)`,
+          intuition: "Post-Order visits children first, ideal for calculating subtree sizes or deleting trees.",
+          next: "Ascend to parent node."
+        },
+        phase: "POSTORDER_VISIT",
+        activeLine: 14,
+        variables: { visited: node.val },
+        sound: 'compare'
+      });
+    }
 
-    if (right) {
-      logOutput(`  Node has right child, finding min in right subtree`);
-      highlightNode(right.id, 'orange');
-      await new Promise(r => setTimeout(r, 600));
-      
-      let succ = right.id;
-      while (true) {
-        const { left } = getChildren(succ);
-        if (!left) break;
-        logOutput(`  Checking left child ${left.id}...`);
-        highlightNode(left.id, 'orange');
-        await new Promise(r => setTimeout(r, 600));
-        succ = left.id;
-      }
-      
-      highlightNode(succ, 'green');
-      logOutput(`  Successor: ${succ}`);
-    } else {
-      logOutput(`  No right child, finding deepest ancestor`);
-      let succ = null;
-      let ancestorId = getRoot().id;
-      
-      let tempPath = [];
-      while (ancestorId !== target.id) {
-        tempPath.push(ancestorId);
-        const ancestor = nodes.find(n => n.id === ancestorId);
-        if (Number(target.id) < Number(ancestorId)) {
-          succ = ancestorId;
-          ancestorId = getChildren(ancestorId).left?.id;
-        } else {
-          ancestorId = getChildren(ancestorId).right?.id;
-        }
-      }
-      
-      for(let a of tempPath) {
-        highlightNode(a, 'orange');
-        await new Promise(r => setTimeout(r, 400));
-      }
-
-      if (succ) {
-        highlightNode(succ, 'green');
-        logOutput(`  Successor: ${succ}`);
-      } else {
-        logOutput(`  No successor (node is max)`);
+    function traverseLevel(root) {
+      if (!root) return;
+      const q = [root];
+      while (q.length > 0) {
+        const curr = q.shift();
+        order.push(curr.val);
+        newSteps.push({
+          treeSnapshot: treeRoot,
+          activeNodeVal: curr.val,
+          traversalItem: curr.val,
+          explanation: {
+            action: `Level-Order (BFS): Dequeued Node [${curr.val}]`,
+            intuition: "Level-Order processes nodes row-by-row using a FIFO Queue.",
+            next: `Enqueue children (${curr.left ? curr.left.val : ''} ${curr.right ? curr.right.val : ''}).`
+          },
+          phase: "LEVEL_VISIT",
+          activeLine: 15,
+          variables: { dequeued: curr.val, queueRemaining: q.length },
+          sound: 'compare'
+        });
+        if (curr.left) q.push(curr.left);
+        if (curr.right) q.push(curr.right);
       }
     }
-    
-    setIsIterating(false);
+
+    if (type === 'inorder') traverseIn(treeRoot);
+    else if (type === 'preorder') traversePre(treeRoot);
+    else if (type === 'postorder') traversePost(treeRoot);
+    else if (type === 'levelorder') traverseLevel(treeRoot);
+
+    newSteps.push({
+      treeSnapshot: treeRoot,
+      activeNodeVal: null,
+      explanation: {
+        action: `${type.toUpperCase()} Traversal Complete! Output: [${order.join(', ')}]`,
+        intuition: `Visited all ${order.length} nodes in O(n) linear time.`,
+        next: "Ready for next command."
+      },
+      phase: "COMPLETE",
+      activeLine: 16,
+      variables: { totalNodes: order.length },
+      sound: 'found'
+    });
+
+    addLog(`> ${type}Traversal(): Completed. Output = [${order.join(', ')}].`);
+    executeSteps(newSteps);
   };
+
+  // Reset tree
+  const handleReset = () => {
+    const root = createNode(50);
+    root.left = createNode(25);
+    root.right = createNode(75);
+    root.left.left = createNode(15);
+    root.left.right = createNode(35);
+    root.right.left = createNode(60);
+    root.right.right = createNode(85);
+
+    setTreeRoot(root);
+    setSteps([]);
+    setCurrentStepIdx(0);
+    setTraversalOutput([]);
+    setIsPlaying(false);
+    addLog(`> Tree reset to default 7-node balanced BST.`);
+  };
+
+  // Controls Slot for ResponsiveVisualizerShell
+  const controlsSlot = (
+    <div className="flex flex-col gap-4">
+      {/* Back to Tree Catalog */}
+      <Link
+        to="/visualizer/tree"
+        className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline"
+      >
+        <span>‹ Back to 12 Tree Cards</span>
+      </Link>
+
+      {/* Algorithm Quick Switcher Dropdown */}
+      <div className="flex flex-col gap-1">
+        <label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Select Tree Concept</label>
+        <select
+          value={algoId || 'bst'}
+          onChange={(e) => navigate(`/visualizer/tree/${e.target.value}`)}
+          className="w-full bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-bold text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-xs"
+        >
+          {TREE_ALGORITHMS.map(a => (
+            <option key={a.id} value={a.id}>
+              {a.name} ({a.tag})
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Tree Architecture Toggle */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Tree Mode</label>
+        <div className="grid grid-cols-2 gap-1.5 bg-black/5 dark:bg-white/5 p-1 rounded-lg border border-gray-200 dark:border-white/10">
+          <button
+            onClick={() => setTreeMode('bst')}
+            className={`py-1.5 text-xs font-bold rounded-md transition-all ${
+              treeMode === 'bst' ? 'bg-teal-600 text-white shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-white'
+            }`}
+          >
+            Binary Search Tree (BST)
+          </button>
+          <button
+            onClick={() => setTreeMode('avl')}
+            className={`py-1.5 text-xs font-bold rounded-md transition-all ${
+              treeMode === 'avl' ? 'bg-teal-600 text-white shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-white'
+            }`}
+          >
+            AVL Tree (Self-Balancing)
+          </button>
+        </div>
+      </div>
+
+      {/* Dynamic Insertion Section */}
+      <div className="flex flex-col gap-2 p-3 rounded-xl bg-teal-500/5 border border-teal-500/20">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-black text-teal-600 dark:text-teal-400 flex items-center gap-1.5">
+            <Plus size={14} /> Insert Node Dynamically
+          </span>
+          <span className="text-[10px] text-gray-400">BST Placement</span>
+        </div>
+
+        <div className="flex gap-2">
+          <input
+            type="number"
+            value={inputVal}
+            onChange={e => setInputVal(e.target.value)}
+            className="flex-1 bg-white dark:bg-black/60 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold"
+            placeholder="Node Value"
+          />
+          <button
+            onClick={handleInsert}
+            className="py-1.5 px-4 bg-teal-600 hover:bg-teal-500 text-white rounded-lg text-xs font-bold transition-all shadow-xs"
+          >
+            Insert BST
+          </button>
+        </div>
+      </div>
+
+      {/* Dynamic Deletion Section */}
+      <div className="flex flex-col gap-2 p-3 rounded-xl bg-rose-500/5 border border-rose-500/20">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-black text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+            <Trash2 size={14} /> Delete Node Dynamically
+          </span>
+          <span className="text-[10px] text-gray-400">Click node or by value</span>
+        </div>
+
+        <div className="flex gap-2">
+          <input
+            type="number"
+            value={deleteVal}
+            onChange={e => setDeleteVal(e.target.value)}
+            className="flex-1 bg-white dark:bg-black/60 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold"
+            placeholder="Delete Value"
+          />
+          <button
+            onClick={() => handleDelete()}
+            className="py-1.5 px-4 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold transition-all shadow-xs"
+          >
+            Delete Node
+          </button>
+        </div>
+        <p className="text-[10px] text-gray-400 italic">
+          Handles all 3 cases: 0 children (leaf), 1 child (splice), 2 children (in-order successor swap).
+        </p>
+      </div>
+
+      {/* Search BST */}
+      <div className="flex flex-col gap-2 p-3 rounded-xl bg-indigo-500/5 border border-indigo-500/20">
+        <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
+          <Search size={14} /> Search Value
+        </span>
+        <div className="flex gap-2">
+          <input
+            type="number"
+            value={searchVal}
+            onChange={e => setSearchVal(e.target.value)}
+            className="flex-1 bg-white dark:bg-black/60 border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold"
+            placeholder="Search Value"
+          />
+          <button
+            onClick={handleSearch}
+            className="py-1.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-all shadow-xs"
+          >
+            Search
+          </button>
+        </div>
+      </div>
+
+      {/* Traversals */}
+      <div className="flex flex-col gap-2">
+        <label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Tree Traversals</label>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => handleTraversal('inorder')}
+            className="py-1.5 px-2 bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-xs font-bold hover:border-teal-500 transition-all text-left"
+          >
+            In-Order (Sorted)
+          </button>
+          <button
+            onClick={() => handleTraversal('preorder')}
+            className="py-1.5 px-2 bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-xs font-bold hover:border-teal-500 transition-all text-left"
+          >
+            Pre-Order (Clone)
+          </button>
+          <button
+            onClick={() => handleTraversal('postorder')}
+            className="py-1.5 px-2 bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-xs font-bold hover:border-teal-500 transition-all text-left"
+          >
+            Post-Order (Bottom-Up)
+          </button>
+          <button
+            onClick={() => handleTraversal('levelorder')}
+            className="py-1.5 px-2 bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-xs font-bold hover:border-teal-500 transition-all text-left"
+          >
+            Level-Order (BFS)
+          </button>
+        </div>
+      </div>
+
+      {/* Sound & Reset */}
+      <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-white/10">
+        <button
+          onClick={() => setIsMuted(!isMuted)}
+          className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
+        >
+          {isMuted ? <VolumeX size={14} className="text-rose-400" /> : <Volume2 size={14} className="text-teal-400" />}
+          <span>{isMuted ? 'Sound Muted' : 'Synthesizer Active'}</span>
+        </button>
+        <button
+          onClick={handleReset}
+          className="text-xs text-gray-400 hover:text-rose-400 flex items-center gap-1 transition-colors"
+        >
+          <RotateCcw size={12} /> Reset Tree
+        </button>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="fixed top-[64px] bottom-0 left-0 right-0 bg-gray-50 dark:bg-[#09090b] flex flex-col lg:flex-row overflow-hidden">
-      <div className={`w-full lg:w-[350px] xl:w-[400px] h-1/2 lg:h-full bg-white/80 dark:bg-black/40 backdrop-blur-xl border-r border-b lg:border-b-0 border-gray-200 dark:border-white/10 shadow-2xl flex flex-col z-10 shrink-0 overflow-y-auto transition-all duration-300 ${isSidebarOpen ? "ml-0" : "-ml-[100%] lg:-ml-[400px]"}`}>
-        <div className="p-4 lg:p-6 flex flex-col gap-6 h-full">
-          <Link to="/visualizer" className="text-gray-500 hover:text-[var(--color-nova-red)] transition-colors flex items-center gap-2 font-semibold w-fit bg-black/5 dark:bg-white/5 px-3 py-1.5 rounded-full text-sm border border-gray-200 dark:border-white/10">
-            <ArrowLeft size={14} /> Back to Dashboard
-          </Link>
-          <div>
-            <h1 className="text-2xl lg:text-3xl font-black text-[var(--color-nova-red)] tracking-tight mb-2">Binary Tree</h1>
-            <p className="text-xs lg:text-sm text-gray-500 font-medium">Hierarchical nodes with left and right child pointers.</p>
-          </div>
-          <div className="flex flex-col gap-4">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-200 dark:border-white/10 pb-2">Modify</h3>
-            <div className="flex flex-col gap-3 bg-black/5 dark:bg-white/5 p-4 rounded-lg border border-gray-200 dark:border-white/5">
-              <div className="flex flex-col gap-1">
-                <label className="text-xs text-gray-500 font-bold">Target Parent Node</label>
-                <input 
-                  type="number" 
-                  value={targetVal}
-                  onChange={(e) => setTargetVal(e.target.value)}
-                  className="bg-white dark:bg-black border border-gray-300 dark:border-gray-800 rounded px-3 py-1.5 text-sm w-full"
-                  placeholder="e.g. 10"
-                />
-              </div>
-              <div className="flex gap-2">
-                <div className="flex flex-col gap-1 flex-1">
-                  <label className="text-xs text-gray-500 font-bold">New Value</label>
-                  <input 
-                    type="number" 
-                    value={nodeVal}
-                    onChange={(e) => setNodeVal(e.target.value)}
-                    className="bg-white dark:bg-black border border-gray-300 dark:border-gray-800 rounded px-3 py-1.5 text-sm w-full"
-                    placeholder="e.g. 5"
-                  />
-                </div>
-                <div className="flex flex-col gap-1 flex-1">
-                  <label className="text-xs text-gray-500 font-bold">Direction</label>
-                  <select 
-                    value={direction} 
-                    onChange={(e) => setDirection(e.target.value)}
-                    className="bg-white dark:bg-black border border-gray-300 dark:border-gray-800 rounded px-3 py-1.5 text-sm w-full"
-                  >
-                    <option value="left">Left</option>
-                    <option value="right">Right</option>
-                  </select>
-                </div>
-              </div>
-              <button onClick={handleAddNode} disabled={isIterating} className="bg-[var(--color-nova-brown)] text-white py-2 mt-1 rounded text-sm font-bold shadow-sm hover:brightness-110 disabled:opacity-50">Add Node</button>
-            </div>
-            <button onClick={handleClear} disabled={isIterating} className="border border-gray-300 dark:border-white/20 text-gray-600 dark:text-gray-300 py-1.5 rounded text-sm font-bold hover:bg-gray-200 dark:hover:bg-white/10 disabled:opacity-50">Reset Tree</button>
-          </div>
-          <div className="flex flex-col gap-4">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-200 dark:border-white/10 pb-2">Methods</h3>
-            <div className="grid grid-cols-2 gap-2">
-              <button onClick={handleHeight} disabled={isIterating} className="bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10 py-2 rounded text-sm font-bold hover:bg-black/10 dark:hover:bg-white/10 disabled:opacity-50">height()</button>
-              <button onClick={handleFind} disabled={isIterating} className="bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10 py-2 rounded text-sm font-bold hover:bg-black/10 dark:hover:bg-white/10 disabled:opacity-50">find(val)</button>
-            </div>
-            <div className="flex gap-2 mt-2">
-                <input type="text" placeholder="id" value={targetNodeId} onChange={e=>setTargetNodeId(e.target.value)} className="w-1/3 bg-white dark:bg-black border border-gray-300 dark:border-gray-800 rounded px-2 py-1 text-xs" />
-                <button onClick={handleInorderSuccessor} disabled={isIterating} className="w-2/3 border border-[var(--color-nova-brown)] text-[var(--color-nova-brown)] rounded text-[10px] sm:text-xs font-bold hover:bg-[var(--color-nova-brown)] hover:text-white disabled:opacity-50">Successor</button>
-            </div>
-            <div className="grid grid-cols-2 gap-2 mt-2">
-              <button onClick={handleBFS} disabled={isIterating} className="border border-[var(--color-nova-brown)] text-[var(--color-nova-brown)] rounded text-[10px] sm:text-xs font-bold hover:bg-[var(--color-nova-brown)] hover:text-white disabled:opacity-50 py-1.5">bfs()</button>
-              <button onClick={handleDFS} disabled={isIterating} className="border border-[var(--color-nova-brown)] text-[var(--color-nova-brown)] rounded text-[10px] sm:text-xs font-bold hover:bg-[var(--color-nova-brown)] hover:text-white disabled:opacity-50 py-1.5">dfs()</button>
-            </div>
-          </div>
-          <div className="mt-auto pt-8"></div>
-        </div>
-      </div>
-      <div className="w-full lg:flex-1 h-1/2 lg:h-full flex flex-col relative overflow-hidden">
-        <div className="flex-1 w-full h-full relative overflow-hidden bg-gray-50/50 dark:bg-black/20">
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            fitView
-          >
-            <Controls className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden shadow-lg" />
-            <Background variant="dots" gap={16} size={1} color="rgba(150,150,150,0.2)" />
-          </ReactFlow>
-        </div>
-        <div className={`w-full bg-[#0d1117] border-t border-white/10 flex flex-col shrink-0 font-mono shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-20 transition-all duration-300 ${isConsoleOpen ? 'h-48 lg:h-56' : 'h-10'}`}>
-          <div 
-            onClick={() => setIsConsoleOpen(!isConsoleOpen)}
-            className="flex items-center justify-between px-4 py-2 bg-[#161b22] border-b border-white/5 cursor-pointer hover:bg-[#1f2630] transition-colors"
-          >
+    <ResponsiveVisualizerShell
+      title="Binary Tree & BST"
+      subtitle="Hierarchical tree with left-smaller, right-larger invariant and self-balancing rotations."
+      currentPath="/visualizer/tree"
+      category="ds"
+      controls={controlsSlot}
+      metrics={
+        <ComplexityBadge
+          timeComplexity={{
+            average: "O(log n) Search/Insert/Delete",
+            worst: "O(n) Skewed | O(log n) AVL"
+          }}
+          spaceComplexity="O(h) Call Stack"
+          activeOperation={activeStep.phase}
+          notes="Subtrees maintain the binary search invariant: Left < Root < Right."
+        />
+      }
+      codeInspector={
+        <CodeInspector
+          codeSnippets={CODE_SNIPPETS}
+          activeLine={activeStep.activeLine}
+          variables={activeStep.variables}
+          title="Tree Source Implementation"
+        />
+      }
+      consoleOutput={logs}
+      playback={
+        <VisualizerPlaybackBar
+          isPlaying={isPlaying}
+          onPlayPause={() => setIsPlaying(!isPlaying)}
+          onStepForward={() => setCurrentStepIdx(prev => Math.min(prev + 1, steps.length - 1))}
+          onStepBackward={() => setCurrentStepIdx(prev => Math.max(prev - 1, 0))}
+          onReset={handleReset}
+          speed={speed}
+          onSpeedChange={setSpeed}
+          currentStep={currentStepIdx + 1}
+          totalSteps={Math.max(steps.length, 1)}
+        />
+      }
+    >
+      <div className="flex-1 flex flex-col p-4 lg:p-6 overflow-y-auto w-full max-w-5xl mx-auto gap-4">
+        {/* ELI5 Intuition Card */}
+        <div className="bg-white/90 dark:bg-[#121214]/90 backdrop-blur-md border border-teal-500/20 rounded-2xl p-4 shadow-lg flex flex-col gap-3">
+          <div className="flex items-center justify-between border-b border-gray-200 dark:border-white/5 pb-2">
             <div className="flex items-center gap-2">
-              <Terminal size={14} className="text-gray-400" />
-              <span className="text-xs text-gray-400 font-bold tracking-wider">CONSOLE OUTPUT</span>
+              <Compass size={18} className="text-teal-500 animate-spin" style={{ animationDuration: '8s' }} />
+              <span className="text-xs font-black uppercase tracking-wider text-gray-800 dark:text-gray-200">
+                ELI5 Intuition: Tree Structure & Successor Mechanics
+              </span>
             </div>
-            {isConsoleOpen ? <ChevronDown size={14} className="text-gray-400" /> : <ChevronUp size={14} className="text-gray-400" />}
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wide bg-teal-500/10 text-teal-500 border border-teal-500/30">
+              PHASE: {activeStep.phase}
+            </span>
           </div>
-          <div className="p-4 overflow-y-auto flex-1 flex flex-col gap-1 text-sm">
-            <AnimatePresence initial={false}>
-              {outputLines.map((line, i) => (
-                <motion.div 
-                  key={`${i}-${line}`}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className={`${line.startsWith('>') ? 'text-[#7ee787]' : 'text-[#c9d1d9] ml-4 opacity-80'}`}
-                >
-                  {line}
-                </motion.div>
-              ))}
-            </AnimatePresence>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="p-2.5 rounded-xl bg-teal-500/5 border border-teal-500/10">
+              <span className="text-[10px] font-bold text-teal-600 dark:text-teal-400 uppercase tracking-wider flex items-center gap-1 mb-1">
+                🎯 What's Happening
+              </span>
+              <p className="text-xs text-gray-700 dark:text-gray-300 font-medium leading-relaxed">
+                {activeStep.explanation?.action || "Ready for operation."}
+              </p>
+            </div>
+            <div className="p-2.5 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
+              <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1 mb-1">
+                💡 Why It Happens (Intuition)
+              </span>
+              <p className="text-xs text-gray-700 dark:text-gray-300 font-medium leading-relaxed">
+                {activeStep.explanation?.intuition || "BST splits search space by half at each comparison."}
+              </p>
+            </div>
+            <div className="p-2.5 rounded-xl bg-cyan-500/5 border border-cyan-500/10">
+              <span className="text-[10px] font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-wider flex items-center gap-1 mb-1">
+                🔮 What Happens Next
+              </span>
+              <p className="text-xs text-gray-700 dark:text-gray-300 font-medium leading-relaxed">
+                {activeStep.explanation?.next || "Click any node circle to delete it."}
+              </p>
+            </div>
           </div>
         </div>
 
-      </div>
+        {/* Dynamic SVG Tree Canvas */}
+        <div className="flex-1 min-h-[380px] bg-white/50 dark:bg-[#0c0c0e]/80 backdrop-blur-sm border border-gray-200 dark:border-white/10 rounded-2xl p-4 flex flex-col items-center justify-center relative overflow-hidden shadow-inner">
+          <div className="absolute top-3 left-4 text-xs font-semibold text-gray-400 flex items-center gap-2">
+            <span>Mode: <strong className="text-teal-500 uppercase">{treeMode}</strong></span>
+            <span>•</span>
+            <span>Nodes: <strong className="text-teal-500">{svgNodes.length}</strong></span>
+          </div>
 
-    </div>
+          <svg className="w-full h-[340px] select-none">
+            {/* Edges */}
+            {svgEdges.map(edge => (
+              <line
+                key={edge.id}
+                x1={edge.x1}
+                y1={edge.y1}
+                x2={edge.x2}
+                y2={edge.y2}
+                stroke="currentColor"
+                strokeWidth={2.5}
+                className="text-gray-300 dark:text-white/20 transition-all duration-300"
+              />
+            ))}
+
+            {/* Nodes */}
+            {svgNodes.map(node => {
+              const isActive = activeStep.activeNodeVal === node.val;
+              const isComparing = activeStep.comparingVal === node.val;
+              const isSuccessor = activeStep.successorVal === node.val;
+              const isPath = activeStep.highlightPath?.includes(node.val);
+
+              return (
+                <g 
+                  key={node.id} 
+                  transform={`translate(${node.x}, ${node.y})`}
+                  onClick={() => handleDelete(node.val)}
+                  className="cursor-pointer group"
+                >
+                  {/* Outer glow ring for active / successor */}
+                  {(isActive || isSuccessor || isPath) && (
+                    <circle
+                      r={26}
+                      fill="none"
+                      stroke={isSuccessor ? '#F59E0B' : isActive ? '#14B8A6' : '#3B82F6'}
+                      strokeWidth={3}
+                      strokeDasharray="4 3"
+                      className="animate-spin"
+                      style={{ animationDuration: '4s' }}
+                    />
+                  )}
+
+                  {/* Node Circle */}
+                  <circle
+                    r={20}
+                    fill={
+                      isSuccessor
+                        ? '#F59E0B'
+                        : isActive
+                          ? '#14B8A6'
+                          : isPath
+                            ? '#2563EB'
+                            : '#18181b'
+                    }
+                    stroke={
+                      isSuccessor
+                        ? '#FCD34D'
+                        : isActive
+                          ? '#5EEAD4'
+                          : '#3F3F46'
+                    }
+                    strokeWidth={2.5}
+                    className="transition-all duration-300 group-hover:scale-110 shadow-lg"
+                  />
+
+                  {/* Value Text */}
+                  <text
+                    textAnchor="middle"
+                    dy=".3em"
+                    fill="white"
+                    fontSize={13}
+                    fontWeight="bold"
+                    className="pointer-events-none"
+                  >
+                    {node.val}
+                  </text>
+
+                  {/* Balance factor pill in AVL mode */}
+                  {treeMode === 'avl' && (
+                    <g transform="translate(14, -14)">
+                      <circle r={8} fill="#3F3F46" />
+                      <text
+                        textAnchor="middle"
+                        dy=".35em"
+                        fill="#A1A1AA"
+                        fontSize={9}
+                        fontWeight="bold"
+                      >
+                        {node.bf}
+                      </text>
+                    </g>
+                  )}
+                </g>
+              );
+            })}
+          </svg>
+
+          {/* Traversal Output Ribbon */}
+          {traversalOutput.length > 0 && (
+            <div className="w-full mt-2 p-2.5 rounded-xl bg-teal-500/10 border border-teal-500/25 flex items-center gap-2 overflow-x-auto">
+              <span className="text-[10px] font-black tracking-wider uppercase text-teal-600 dark:text-teal-400 whitespace-nowrap">
+                Traversal Output:
+              </span>
+              <div className="flex items-center gap-1.5 flex-1">
+                {traversalOutput.map((val, idx) => (
+                  <span
+                    key={idx}
+                    className="px-2 py-0.5 rounded-md bg-teal-500 text-black text-xs font-mono font-bold shadow-xs"
+                  >
+                    {val}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="absolute bottom-2 text-center text-xs text-gray-400">
+            💡 <em>Tip: Click on any circle node to delete it with animated 0/1/2-child handling!</em>
+          </div>
+        </div>
+      </div>
+    </ResponsiveVisualizerShell>
   );
 }

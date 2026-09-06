@@ -1,0 +1,30 @@
+[
+  {
+    "_id": "comp_1",
+    "id": "comp_1",
+    "title": "Global Code-Off 2024",
+    "dateString": "May 15-16",
+    "prizePool": ",000",
+    "registrations": "1,200/5,000",
+    "status": "Active",
+    "type": "Global"
+  },
+  {
+    "_id": "comp_2",
+    "id": "comp_2",
+    "title": "AI Challenge: Image Recognition",
+    "dateString": "June 1",
+    "difficulty": "Expert",
+    "status": "Upcoming",
+    "type": "Challenge"
+  },
+  {
+    "_id": "comp_3",
+    "id": "comp_3",
+    "title": "Fastest Coder Series: Python",
+    "dateString": "Weekly (Next: Mon)",
+    "difficulty": "Leaderboard Qualified",
+    "status": "Upcoming",
+    "type": "Series"
+  }
+]

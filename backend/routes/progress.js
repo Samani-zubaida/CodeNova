@@ -1,14 +1,19 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
 const Progress = require('../models/Progress');
+const storage = require('../services/storage');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'algoverse_super_secret_jwt_key_2026';
+const isDbConnected = () => mongoose.connection.readyState === 1;
 
 const authenticate = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ message: 'Access denied' });
 
   try {
-    const jwt = require('jsonwebtoken');
-    const verified = jwt.verify(token, process.env.JWT_SECRET);
+    const verified = jwt.verify(token, JWT_SECRET);
     req.user = verified;
     next();
   } catch (error) {
@@ -18,12 +23,21 @@ const authenticate = (req, res, next) => {
 
 router.get('/', authenticate, async (req, res) => {
   try {
-    let progress = await Progress.findOne({ userId: req.user.id });
-    if (!progress) {
-      progress = new Progress({ userId: req.user.id });
-      await progress.save();
+    if (isDbConnected()) {
+      try {
+        let progress = await Progress.findOne({ userId: req.user.id }).maxTimeMS(2000);
+        if (!progress) {
+          progress = new Progress({ userId: req.user.id });
+          await progress.save();
+        }
+        return res.json(progress);
+      } catch (dbErr) {
+        console.warn('[Progress GET] MongoDB error, switching to local store:', dbErr.message);
+      }
     }
-    res.json(progress);
+
+    const localProg = storage.getProgress(req.user.id);
+    return res.json(localProg);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -32,18 +46,35 @@ router.get('/', authenticate, async (req, res) => {
 router.post('/update', authenticate, async (req, res) => {
   try {
     const { score, town2Unlocked, town3Unlocked } = req.body;
-    let progress = await Progress.findOne({ userId: req.user.id });
     
-    if (!progress) {
-      progress = new Progress({ userId: req.user.id });
+    if (isDbConnected()) {
+      try {
+        let progress = await Progress.findOne({ userId: req.user.id }).maxTimeMS(2000);
+        if (!progress) {
+          progress = new Progress({ userId: req.user.id });
+        }
+
+        if (score) progress.totalScore += score;
+        if (town2Unlocked !== undefined) progress.town2Unlocked = town2Unlocked;
+        if (town3Unlocked !== undefined) progress.town3Unlocked = town3Unlocked;
+
+        await progress.save();
+        return res.json(progress);
+      } catch (dbErr) {
+        console.warn('[Progress Update] MongoDB error, switching to local store:', dbErr.message);
+      }
     }
 
-    if (score) progress.totalScore += score;
-    if (town2Unlocked !== undefined) progress.town2Unlocked = town2Unlocked;
-    if (town3Unlocked !== undefined) progress.town3Unlocked = town3Unlocked;
+    const updates = {};
+    if (score) {
+      const current = storage.getProgress(req.user.id);
+      updates.totalScore = (current.totalScore || 0) + score;
+    }
+    if (town2Unlocked !== undefined) updates.town2Unlocked = town2Unlocked;
+    if (town3Unlocked !== undefined) updates.town3Unlocked = town3Unlocked;
 
-    await progress.save();
-    res.json(progress);
+    const updated = storage.updateProgress(req.user.id, updates);
+    return res.json(updated);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

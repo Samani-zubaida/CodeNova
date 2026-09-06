@@ -1,0 +1,81 @@
+[
+  {
+    "id": "usr_1788692009067_pw5yj",
+    "username": "tester2026",
+    "email": "tester2026@test.com",
+    "passwordHash": "$2b$10$S1KyjUVIrGmk2DfDJb0SW./JRLbQ5ChZaDvlVIDVEXRB7fdGXYCSW",
+    "activityLog": [],
+    "currentStreak": 0,
+    "longestStreak": 0,
+    "earnedBadges": [],
+    "xp": 0,
+    "createdAt": "2026-09-06T10:53:29.067Z",
+    "_id": "usr_1788692009067_pw5yj"
+  },
+  {
+    "id": "usr_1788692206343_uwosc",
+    "username": "hero_92206",
+    "email": "hero_92206@matrix.org",
+    "passwordHash": "$2b$10$FGZ.UxSIVuTmzmxuvmoUA.ngpdyWE1GEP7rxErdPxfkXn5dYbXFyu",
+    "activityLog": [
+      "2026-09-06"
+    ],
+    "currentStreak": 1,
+    "longestStreak": 1,
+    "earnedBadges": [
+      {
+        "badgeId": "welcome",
+        "name": "Novice Coder"
+      },
+      {
+        "badgeId": "speed_demon",
+        "name": "Speed Demon",
+        "awardedAt": "2026-09-06T10:56:46.419Z"
+      }
+    ],
+    "xp": 100,
+    "createdAt": "2026-09-06T10:56:46.343Z",
+    "_id": "usr_1788692206343_uwosc",
+    "updatedAt": "2026-09-06T10:56:46.419Z"
+  },
+  {
+    "id": "usr_demo_account",
+    "_id": "usr_demo_account",
+    "username": "DemoExplorer",
+    "email": "demo@algoverse.io",
+    "passwordHash": "$2b$10$vedBZ00hsP0KvHpGpiGMm.Nlv5h.Hm7nD4Og4xZgJ9/Oz85b5EtEO",
+    "xp": 12500,
+    "currentStreak": 5,
+    "longestStreak": 14,
+    "activityLog": [
+      "2026-09-06"
+    ],
+    "earnedBadges": [
+      {
+        "badgeId": "demo_badge",
+        "name": "Demo Explorer"
+      }
+    ],
+    "createdAt": "2026-09-06T10:56:54.053Z"
+  },
+  {
+    "id": "usr_1788692266348_tj1m6",
+    "username": "Hacker1",
+    "email": "hacker1@local.dev",
+    "passwordHash": "mock_local_hash",
+    "activityLog": [
+      "2026-09-06"
+    ],
+    "currentStreak": 1,
+    "longestStreak": 1,
+    "earnedBadges": [
+      {
+        "badgeId": "welcome",
+        "name": "Novice Coder"
+      }
+    ],
+    "xp": 100,
+    "createdAt": "2026-09-06T10:57:46.348Z",
+    "_id": "usr_1788692266348_tj1m6"
+  }
+]

@@ -3,8 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Navbar from './components/layout/Navbar';
 import VisualizerDashboard from './pages/VisualizerDashboard';
 import Sandbox from './pages/Sandbox';
-import GameWorld from './game/GameWorld';
-import HostDashboard from './game/HostDashboard';
+// import GameWorld from './game/GameWorld';
 
 // Data Structures
 import ArrayHub from './visualizers/ds/ArrayHub';
@@ -36,23 +35,13 @@ import RailFenceVisualizer from './visualizers/crypto/RailFenceVisualizer';
 import ColumnarVisualizer from './visualizers/crypto/ColumnarVisualizer';
 import AESVisualizer from './visualizers/crypto/AESVisualizer';
 import RSAVIsualizer from "./visualizers/crypto/RSAVIsualizer";
+// import RSAVIsualizer from './visualizers/crypto/RSAVIsualizer';
 import SHA256Visualizer from './visualizers/crypto/SHA256Visualizer';
 import DigitalSignatureVisualizer from './visualizers/crypto/DigitalSignatureVisualizer';
 import SteganographyVisualizer from './visualizers/crypto/SteganographyVisualizer';
 import EnigmaVisualizer from './visualizers/crypto/EnigmaVisualizer';
 import HackerModeVisualizer from './visualizers/crypto/HackerModeVisualizer';
 import DHVisualizer from './visualizers/crypto/DHVisualizer';
-
-import Auth from './pages/Auth';
-import useAppStore from './store/useAppStore';
-
-const PrivateRoute = ({ children }) => {
-  const user = useAppStore(state => state.user);
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
-  return children;
-};
 
 function App() {
   return (
@@ -63,7 +52,6 @@ function App() {
         <main className="pt-16 min-h-screen">
           <Routes>
             <Route path="/" element={<Navigate to="/visualizer" replace />} />
-            <Route path="/auth" element={<Auth />} />
             <Route path="/visualizer" element={<VisualizerDashboard />} />
             
             {/* DS Routes */}

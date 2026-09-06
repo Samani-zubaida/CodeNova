@@ -1,0 +1,1127 @@
+const axios = require('axios');
+
+// Execute code via JDoodle API
+exports.executeCode = async (req, res) => {
+  try {
+    const { language, code } = req.body;
+
+    const clientId = process.env.JDOODLE_CLIENT_ID;
+    const clientSecret = process.env.JDOODLE_CLIENT_SECRET;
+
+    if (!clientId || !clientSecret) {
+      return res.status(500).json({
+        message: 'Missing JDoodle credentials in backend .env file',
+        error: 'Please add JDOODLE_CLIENT_ID and JDOODLE_CLIENT_SECRET to your .env file.'
+      });
+    }
+
+    const jdoodleLanguages = {
+      javascript: { language: 'nodejs', versionIndex: '4' },
+      python: { language: 'python3', versionIndex: '4' },
+      cpp: { language: 'cpp17', versionIndex: '0' },
+      java: { language: 'java', versionIndex: '4' }
+    };
+
+    const jConfig = jdoodleLanguages[language];
+
+    if (!jConfig) {
+      return res.status(400).json({
+        message: 'Unsupported language'
+      });
+    }
+
+    const response = await axios.post(
+      'https://api.jdoodle.com/v1/execute',
+      {
+        script: code,
+        language: jConfig.language,
+        versionIndex: jConfig.versionIndex,
+        clientId,
+        clientSecret
+      }
+    );
+
+    const data = response.data;
+
+    res.json({
+      language,
+      run: {
+        stdout: data.output || '',
+        stderr: data.error || '',
+        code: data.statusCode === 200 ? 0 : 1
+      }
+    });
+
+  } catch (error) {
+    console.error(
+      'Execution error:',
+      error.response?.data || error.message
+    );
+
+    res.status(500).json({
+      message: 'Failed to execute code',
+      error: error.response?.data?.error || error.message
+    });
+  }
+};
+
+
+// Visualize code using native Gemini API
+exports.visualizeCode = async (req, res) => {
+  try {
+    const { language, code } = req.body;
+
+    if (!process.env.Gemini_API_KEY && !process.env.OPENROUTER_API_KEY) {
+      return res.status(500).json({ message: 'Missing API Key in .env file' });
+    }
+
+    const prompt = `
+You are a code execution tracing engine for a D3.js algorithm and data-structure visualizer.
+
+Analyze the provided ${language} code and simulate its ACTUAL runtime execution step-by-step.
+
+The code may contain ANY algorithm or data structure, including but not limited to:
+- Arrays
+- Strings
+- Linked Lists
+- Doubly Linked Lists
+- Circular Linked Lists
+- Stacks
+- Queues
+- Deques
+- Priority Queues
+- Min Heaps
+- Max Heaps
+- Hash Maps
+- Hash Sets
+- Binary Trees
+- Binary Search Trees (BST)
+- AVL Trees
+- Tries
+- Graphs
+- BFS
+- DFS
+- Dijkstra
+- Bellman-Ford
+- Floyd-Warshall
+- Topological Sort
+- Union Find / DSU
+- Sorting algorithms
+- Searching algorithms
+- Two Pointer
+- Sliding Window
+- Greedy algorithms
+- Dynamic Programming
+- Recursion
+- Backtracking
+- Divide and Conquer
+- Any combination of the above
+
+Your output will be consumed directly by a FRONTEND D3.js visualization.
+Therefore, every execution step must contain enough structured state information for the frontend to visually reconstruct what is happening.
+
+==================================================
+1. EXECUTION SIMULATION
+==================================================
+
+Trace the code according to actual execution order.
+
+If the code contains input:
+- Use the provided input.
+
+If the code does not contain input:
+- Generate a small, reasonable sample input that allows the algorithm to execute meaningfully.
+
+Do NOT invent behavior that the code does not perform.
+
+Track:
+- Variable changes
+- Data structure changes
+- Pointer/reference changes
+- Comparisons
+- Swaps
+- Insertions
+- Deletions
+- Visits
+- Pushes/pops
+- Enqueue/dequeue
+- Recursive calls/returns
+- DP updates
+- Heap operations
+- Graph traversal
+- Final result
+
+==================================================
+2. MAXIMUM NUMBER OF STEPS
+==================================================
+
+Return AT MOST 150 execution steps.
+
+150 is a HARD LIMIT.
+
+
+Prioritize important visualization events over trivial statements.
+
+Prefer steps such as:
+- Array swap
+- Array comparison
+- Pointer movement
+- Linked-list pointer change
+- Node insertion/deletion
+- Stack push/pop
+- Queue enqueue/dequeue
+- Heap insertion/removal/swapping
+- Tree traversal
+- Graph node visit
+- Graph edge exploration
+- DP cell update
+- Recursive call
+- Backtracking decision
+- Final result
+
+Do not waste steps on simple variable declarations unless they are important to understanding the visualization.
+
+If execution contains loops (e.g. adding elements, sorting, graph traversal):
+- You MUST show EVERY single iteration.
+- Do NOT skip steps or sample representative iterations.
+- If an array is populated element by element, show the array growing element by element.
+- If a sorting algorithm swaps 10 times, show all 10 swaps.
+- If a graph algorithm visits 8 nodes, show all 8 visits.
+- ALWAYS include the step that produces the final result.
+
+==================================================
+3. STATE REPRESENTATION
+==================================================
+
+The "state" object is specifically designed for D3.js visualization.
+
+Every state value MUST be a STRICTLY TYPED JSON OBJECT (not strings) following the State Value Schemas at the bottom of this prompt.
+
+Examples:
+
+Correct:
+"state": {
+  "array": { "type": "array", "values": [5, 2, 8, 1], "active": [1] },
+  "i": { "type": "primitive", "value": 2 },
+  "queue": { "type": "queue", "values": [2, 4, 5] }
+}
+
+Incorrect:
+"state": {
+  "array": "[5, 2, 8, 1]",
+  "i": "2"
+}
+
+==================================================
+4. ARRAYS
+==================================================
+
+For arrays show:
+- Current array
+- Important indexes/pointers
+- Current comparison
+- Swapped elements when applicable
+
+Example:
+
+"state": {
+  "array": "[5, 2, 8, 1]",
+  "i": "0",
+  "j": "1",
+  "comparing": "[5, 2]"
+}
+
+For large arrays (>8 elements):
+show only the relevant window and use "...".
+
+==================================================
+5. STRINGS
+==================================================
+
+Show:
+- Current string
+- Active index
+- left/right pointers
+- Current substring when relevant
+
+Example:
+
+"state": {
+  "string": "abcdef",
+  "left": "1",
+  "right": "4",
+  "current": "bcde"
+}
+
+==================================================
+6. LINKED LISTS
+==================================================
+
+Represent the list in traversal order.
+
+Example:
+
+"state": {
+  "list": "10 -> 20 -> 30 -> 40 -> null",
+  "current": "20",
+  "previous": "10",
+  "next": "30"
+}
+
+For reversal:
+
+"state": {
+  "list": "10 <- 20 <- 30 <- 40",
+  "previous": "20",
+  "current": "30",
+  "next": "40"
+}
+
+Track:
+- head
+- current
+- previous
+- next
+- inserted node
+- deleted node
+
+==================================================
+7. DOUBLY LINKED LIST
+==================================================
+
+Show both directions when relevant.
+
+Example:
+
+"state": {
+  "list": "10 <-> 20 <-> 30",
+  "current": "20",
+  "previous": "10",
+  "next": "30"
+}
+
+==================================================
+8. CIRCULAR LINKED LIST
+==================================================
+
+Clearly indicate the circular connection.
+
+Example:
+
+"state": {
+  "list": "10 -> 20 -> 30 -> 10",
+  "current": "20"
+}
+
+==================================================
+9. STACK
+==================================================
+
+Represent stack from TOP to BOTTOM.
+
+Example:
+
+"state": {
+  "stack": "[30, 20, 10]",
+  "top": "30",
+  "action": "push"
+}
+
+For pop:
+
+"state": {
+  "stack": "[20, 10]",
+  "popped": "30"
+}
+
+==================================================
+10. QUEUE
+==================================================
+
+Represent queue from FRONT to REAR.
+
+Example:
+
+"state": {
+  "queue": "[10, 20, 30]",
+  "front": "10",
+  "rear": "30"
+}
+
+==================================================
+11. DEQUE
+==================================================
+
+Show elements from FRONT to REAR.
+
+Example:
+
+"state": {
+  "deque": "[10, 20, 30]",
+  "front": "10",
+  "rear": "30"
+}
+
+==================================================
+12. PRIORITY QUEUE
+==================================================
+
+Treat priority queues as a logical data structure.
+
+Show:
+- Elements
+- Priority
+- Current highest/lowest priority element
+- Operation being performed
+
+Example:
+
+"state": {
+  "priorityQueue": "[(A,1), (B,3), (C,5)]",
+  "top": "C",
+  "operation": "extract"
+}
+
+If implemented using a heap, ALSO show heap state.
+
+==================================================
+13. MIN HEAP / MAX HEAP
+==================================================
+
+Represent the heap in BOTH useful forms when possible:
+
+1. Array representation
+2. Tree relationship
+
+Example:
+
+"state": {
+  "heap": "[10, 20, 30, 40, 50]",
+  "type": "minHeap",
+  "current": "10",
+  "parent": "20",
+  "children": "[20, 30]"
+}
+
+For heapify/swap:
+
+"state": {
+  "heap": "[20, 10, 30, 40]",
+  "comparing": "[10, 20]",
+  "swapped": "true"
+}
+
+==================================================
+14. HASH MAP
+==================================================
+
+Show relevant key-value pairs.
+
+Example:
+
+"state": {
+  "map": "{a: 10, b: 20, c: 30}",
+  "key": "b",
+  "value": "20"
+}
+
+Do not dump a huge map.
+
+==================================================
+15. HASH SET
+==================================================
+
+Example:
+
+"state": {
+  "set": "{1, 3, 5}",
+  "current": "3"
+}
+
+==================================================
+16. BINARY TREE
+==================================================
+
+Show:
+- Current node
+- Parent
+- Left child
+- Right child
+- Traversal path
+
+Example:
+
+"state": {
+  "current": "10",
+  "left": "5",
+  "right": "15",
+  "path": "[10, 5]"
+}
+
+==================================================
+17. BST
+==================================================
+
+Show the comparison and traversal direction.
+
+Example:
+
+"state": {
+  "current": "10",
+  "target": "7",
+  "comparison": "7 < 10",
+  "direction": "left",
+  "path": "[10]"
+}
+
+==================================================
+18. AVL / BALANCED TREES
+==================================================
+
+Track:
+- Node
+- Balance factor
+- Rotation
+- Tree relationship
+
+Example:
+
+"state": {
+  "node": "30",
+  "balanceFactor": "2",
+  "rotation": "rightRotate",
+  "path": "[30, 20, 10]"
+}
+
+==================================================
+19. TRIE
+==================================================
+
+Show:
+- Current character
+- Current prefix
+- Traversal path
+
+Example:
+
+"state": {
+  "character": "p",
+  "prefix": "app",
+  "path": "a -> p -> p"
+}
+
+==================================================
+20. GRAPH
+==================================================
+
+For graphs, show the adjacency structure ONCE when it becomes relevant.
+
+Example:
+
+"state": {
+  "graph": "{0:[1,2], 1:[0,3], 2:[0,3], 3:[1,2]}",
+  "current": "0",
+  "visited": "{0}",
+  "frontier": "[1,2]"
+}
+
+For large graphs, truncate irrelevant portions with "...".
+
+==================================================
+21. BFS
+==================================================
+
+Track:
+
+- Current node
+- Visited nodes
+- Queue/frontier
+- Traversal order
+
+Example:
+
+"state": {
+  "current": "2",
+  "visited": "{0,1,2}",
+  "queue": "[3,4]",
+  "order": "[0,1,2]"
+}
+
+==================================================
+22. DFS
+==================================================
+
+Track:
+
+- Current node
+- Visited nodes
+- DFS stack OR recursion path
+- Traversal order
+
+Example:
+
+"state": {
+  "current": "3",
+  "visited": "{0,1,3}",
+  "stack": "[0,1,3]",
+  "order": "[0,1,3]"
+}
+
+For recursive DFS, prefer:
+
+"callStack": "[dfs(0), dfs(1), dfs(3)]"
+
+==================================================
+23. DIJKSTRA / SHORTEST PATH
+==================================================
+
+Track:
+
+- Current node
+- Distance table
+- Priority queue
+- Visited/finalized nodes
+- Relaxed edge
+
+Example:
+
+"state": {
+  "current": "B",
+  "distances": "{A:0, B:4, C:2, D:7}",
+  "priorityQueue": "[(C,2),(B,4)]",
+  "visited": "{A,C}",
+  "edge": "C -> D"
+}
+
+==================================================
+24. TOPOLOGICAL SORT
+==================================================
+
+Track:
+
+- Current node
+- In-degree
+- Queue
+- Result
+
+Example:
+
+"state": {
+  "current": "A",
+  "indegree": "{A:0, B:1, C:2}",
+  "queue": "[B]",
+  "order": "[A]"
+}
+
+==================================================
+25. UNION FIND / DSU
+==================================================
+
+Track:
+
+- Parent array
+- Rank/size
+- Current nodes
+- Find path
+- Union operation
+
+Example:
+
+"state": {
+  "parent": "[0,0,2,2]",
+  "rank": "[2,0,1,0]",
+  "current": "[1,3]",
+  "operation": "union"
+}
+
+==================================================
+26. DYNAMIC PROGRAMMING
+==================================================
+
+DP IS ONE OF THE MOST IMPORTANT CASES.
+
+Do NOT only show the final answer.
+
+Show the DP table/array as it changes.
+
+For 1D DP:
+
+"state": {
+  "dp": "[0, 1, 1, 2, ...]",
+  "index": "3",
+  "value": "2"
+}
+
+For 2D DP:
+
+"state": {
+  "dp": "[[0,0,0],[0,1,1],[0,1,2],...]",
+  "row": "2",
+  "col": "2",
+  "value": "2"
+}
+
+For large tables:
+show the relevant local region only.
+
+==================================================
+27. MEMOIZATION
+==================================================
+
+Show:
+
+- Current recursive call
+- Memo table
+- Cache hit/miss
+- Returned value
+
+Example:
+
+"state": {
+  "call": "fib(5)",
+  "memo": "{2:1,3:2,4:3}",
+  "cache": "miss"
+}
+
+==================================================
+28. RECURSION
+==================================================
+
+Track:
+
+- Current function
+- Arguments
+- Call stack
+- Depth
+- Return value when relevant
+
+Example:
+
+"state": {
+  "function": "factorial",
+  "args": "3",
+  "callStack": "[factorial(5), factorial(4), factorial(3)]",
+  "depth": "3"
+}
+
+==================================================
+29. BACKTRACKING
+==================================================
+
+Track:
+
+- Current choice
+- Current path
+- Choices remaining
+- Backtracking event
+
+Example:
+
+"state": {
+  "path": "[1,2]",
+  "choice": "3",
+  "remaining": "[4]",
+  "action": "backtrack"
+}
+
+==================================================
+30. SORTING
+==================================================
+
+For sorting algorithms track:
+
+- Array
+- Active indexes
+- Compared elements
+- Swapped elements
+- Sorted region when relevant
+
+Example:
+
+"state": {
+  "array": "[1,3,2,5]",
+  "i": "1",
+  "j": "2",
+  "comparing": "[3,2]",
+  "swapped": "[1,2,3,5]"
+}
+
+==================================================
+31. TWO POINTER
+==================================================
+
+Track:
+
+- Array/string
+- left
+- right
+- Current values
+- Comparison/result
+
+Example:
+
+"state": {
+  "array": "[1,2,4,7,9]",
+  "left": "0",
+  "right": "4",
+  "values": "[1,9]"
+}
+
+==================================================
+32. SLIDING WINDOW
+==================================================
+
+Track:
+
+- Current window
+- left
+- right
+- Window contents
+- Current result
+
+Example:
+
+"state": {
+  "array": "[2,3,1,4,5]",
+  "left": "1",
+  "right": "3",
+  "window": "[3,1,4]",
+  "result": "8"
+}
+
+==================================================
+33. GREEDY
+==================================================
+
+Track:
+
+- Current candidate
+- Selected candidates
+- Remaining candidates
+- Current result
+
+==================================================
+34. BACKTRACKING / SEARCH
+==================================================
+
+Track decisions and state changes rather than every trivial recursive statement.
+
+==================================================
+35. TERMINAL OUTPUT / PRINTS
+==================================================
+
+Whenever the code explicitly prints, logs, or outputs something to the terminal (e.g., console.log, print(), System.out.println), you MUST include a "result" key inside the state object containing EXACTLY what was printed.
+
+The frontend uses the "result" key to synchronize the terminal output with the visualization step!
+
+Example:
+"state": {
+  "array": { "type": "array", "values": [1,2,3], "active": [2] },
+  "result": "3"
+}
+
+
+==================================================
+35. FINAL RESULT
+==================================================
+
+The FINAL execution step MUST represent the completed result.
+
+Examples:
+
+"state": {
+  "array": "[1,2,3,4]",
+  "result": "sorted"
+}
+
+or:
+
+"state": {
+  "result": "7"
+}
+
+or:
+
+"state": {
+  "order": "[0,1,2,3]",
+  "result": "BFS complete"
+}
+
+==================================================
+36. LINE NUMBERS
+==================================================
+
+"line" MUST be the actual line number from the supplied code.
+
+Count lines starting from 1.
+
+Do not invent line numbers.
+
+==================================================
+37. ACTION
+==================================================
+
+"action" must be a SHORT description of what happened.
+
+Good:
+
+"Compare adjacent elements"
+"Swap elements"
+"Visit graph node"
+"Enqueue neighbor"
+"Fill DP cell"
+"Push value onto stack"
+"Pop from queue"
+"Reverse linked-list pointer"
+"Recursive call"
+"Backtrack"
+"Extract minimum from heap"
+
+Bad:
+
+"Something happens here"
+
+==================================================
+38. IMPORTANT D3.JS RULE
+==================================================
+
+The state must describe the CURRENT state AFTER the action on that line.
+
+This means the frontend should be able to render the state directly without executing the code itself.
+
+For example, after a swap:
+
+"state": {
+  "array": "[1,2,3,4]",
+  "swapped": "[1,2]"
+}
+
+NOT the state before the swap.
+
+==================================================
+39. CONSISTENCY RULE
+==================================================
+
+Use stable variable names whenever possible.
+
+For example:
+
+Arrays:
+array, i, j, left, right
+
+Linked lists:
+head, current, previous, next
+
+Stacks:
+stack, top
+
+Queues:
+queue, front, rear
+
+Graphs:
+graph, current, visited, queue, stack, order
+
+DP:
+dp, row, col, value
+
+Trees:
+root, current, left, right, path
+
+Heaps:
+heap, parent, children, current
+
+This makes the frontend D3.js renderer easier to implement.
+
+==================================================
+CODE TO ANALYZE
+==================================================
+You MUST return ONLY a valid JSON object.
+DO NOT wrap the response in markdown blocks like \`\`\`json. Return pure JSON only.
+
+The JSON object must have exactly two keys:
+1. "metadata": An object containing "timeComplexity" (string), "spaceComplexity" (string), "dataStructure" (string), and "explanation" (string explaining how/why the time complexity is calculated).
+2. "steps": A valid JSON array where each object represents a step in execution.
+
+The "steps" array must contain objects with exactly these keys:
+- "line": The integer line number being executed
+- "action": A short string description of what this line does
+- "state": A dictionary object representing variable/structure names as keys and their current values as STRICTLY TYPED JSON OBJECTS (not strings) following the schemas below.
+
+State Value Schemas (Choose the appropriate schema for each variable):
+
+1. Arrays / Strings:
+{ "type": "array", "values": [1, 2, 3], "active": [1], "swapping": [0, 1] }
+- "active": Array of indices currently being accessed/compared.
+- "swapping": Array of exactly two indices being swapped (optional).
+
+2. Trees (Binary Trees, BSTs, Tries, Heaps):
+{ "type": "tree", "root": { "name": "1", "children": [{"name": "2"}, {"name": "3"}] }, "active": ["2"] }
+- "root": A recursive object. Use "name" for the node value as a string. "children" is an array of child node objects. Omit "children" if it's a leaf.
+- "active": Array of "name" strings that are currently being visited or evaluated.
+
+3. Stacks / Queues:
+{ "type": "stack", "values": [1, 2], "active": [1] }
+
+4. Graph (Adjacency List/Matrix):
+{ "type": "graph", "nodes": ["A", "B", "C"], "edges": [{"from": "A", "to": "B"}], "active": ["A"] }
+
+5. Primitives / Pointers (Integers, booleans, simple strings):
+{ "type": "primitive", "value": 1 }
+
+General rules:
+- Cap at 12 key execution steps. Prioritize steps that change the core data structure (a swap, a visit, a push/pop) over steps that don't.
+- For loops/recursion over many elements, sample representative iterations.
+- If an array has more than 8 elements, show only the relevant window and note truncation with "...".
+- IMPORTANT: You MUST wrap your final JSON object inside <json_result> and </json_result> tags.
+
+<json_result>
+{
+  "metadata": {
+    "timeComplexity": "O(N)",
+    "spaceComplexity": "O(1)",
+    "dataStructure": "Array",
+    "explanation": "There is a single loop iterating N times, hence O(N) time complexity."
+  },
+  "steps": [ ... ]
+}
+</json_result>
+
+\`\`\`${language}
+${code}
+\`\`\`
+`;
+
+    if (!process.env.Gemini_API_KEY) {
+      return res.status(500).json({ message: 'Missing Gemini_API_KEY in .env file' });
+    }
+
+    const startedAt = Date.now();
+    console.log(`[visualize] calling native Gemini API...`);
+
+    const response = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${process.env.Gemini_API_KEY}`, {
+      contents: [{
+        parts: [{ text: prompt }]
+      }],
+      generationConfig: {
+        temperature: 0.2,
+        maxOutputTokens: 8192
+      }
+    }, {
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      timeout: 30000
+    });
+
+    console.log(`[visualize] success with Gemini in ${Date.now() - startedAt}ms`);
+
+    const finishReason = response.data.candidates?.[0]?.finishReason;
+    if (finishReason === 'MAX_TOKENS') {
+      console.warn('[visualize] response was cut off by max_tokens — will attempt to salvage complete steps');
+    }
+
+    let content = (response.data.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
+
+    // Extract JSON using XML tags to avoid catching random brackets in reasoning text
+    const tagStart = '<json_result>';
+    const tagEnd = '</json_result>';
+    const startIndex = content.indexOf(tagStart);
+
+    if (startIndex !== -1) {
+      let endIndex = content.lastIndexOf(tagEnd);
+      if (endIndex === -1) endIndex = content.length; // Handle cut off
+      content = content.substring(startIndex + tagStart.length, endIndex).trim();
+    } else {
+      // Fallback if model forgot tags
+      const bracketStart = content.indexOf('[');
+      if (bracketStart !== -1) {
+        let bracketEnd = content.lastIndexOf(']');
+        if (bracketEnd === -1) bracketEnd = content.length;
+        content = content.substring(bracketStart, bracketEnd === content.length ? content.length : bracketEnd + 1);
+      }
+    }
+
+    let parsed;
+    try {
+      parsed = JSON.parse(content);
+      console.log(`[visualize] generated ${parsed.steps?.length} steps`);
+
+    } catch (parseErr) {
+      console.warn(`[visualize] JSON.parse failed (${parseErr.message}) — attempting to repair truncated response`);
+      try {
+        parsed = repairTruncatedStepsArray(content);
+        console.warn(`[visualize] repaired truncated response — recovered ${parsed.steps?.length} of the generated steps`);
+      } catch (repairErr) {
+        console.error('[visualize] repair failed, raw content was:', content.slice(0, 500));
+        throw new Error(
+          `Model returned invalid or truncated JSON and it could not be repaired (${parseErr.message}). ` +
+          `Try again, or simplify/shorten the code being visualized.`
+        );
+      }
+    }
+
+    res.json({ metadata: parsed.metadata, steps: parsed.steps, truncated: finishReason === 'MAX_TOKENS' });
+
+  } catch (error) {
+    console.error('Visualization error:', error.response?.data || error.message);
+    res.status(500).json({ message: 'Failed to generate visual steps', error: error.response?.data || error.message });
+  }
+};
+
+/**
+ * Attempts to salvage a valid array of step objects from a JSON response
+ * that got cut off mid-generation (e.g. due to hitting max_tokens).
+ * Scans for the last position where a complete top-level object in the
+ * array closed, truncates there, and closes the array.
+ */
+function repairTruncatedStepsArray(raw) {
+  let str = raw.trim();
+  const start = str.indexOf('{');
+  if (start === -1) {
+    throw new Error('No JSON object found in response');
+  }
+  str = str.slice(start);
+
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+  let lastCompleteEnd = -1;
+
+  for (let i = 0; i < str.length; i++) {
+    const ch = str[i];
+
+    if (inString) {
+      if (escape) {
+        escape = false;
+      } else if (ch === '\\') {
+        escape = true;
+      } else if (ch === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (ch === '"') {
+      inString = true;
+      continue;
+    }
+
+    if (ch === '{' || ch === '[') {
+      depth++;
+    } else if (ch === '}' || ch === ']') {
+      depth--;
+      // depth === 2 means we're back to just inside the steps array —
+      // i.e. we just closed a complete top-level step object.
+      if (depth === 2 && ch === '}') {
+        lastCompleteEnd = i;
+      }
+    }
+  }
+
+  if (lastCompleteEnd === -1) {
+    throw new Error('Could not find any complete step object to salvage');
+  }
+
+  const salvaged = str.slice(0, lastCompleteEnd + 1) + ']}';
+  return JSON.parse(salvaged);
+}

@@ -1,9 +1,12 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
 import VisualizerDashboard from './pages/VisualizerDashboard';
 import Sandbox from './pages/Sandbox';
-// import GameWorld from './game/GameWorld';
+import GameWorld from './game/GameWorld';
+import HostDashboard from './game/HostDashboard';
+import Home from './pages/Home';
+import Intro from './pages/Intro';
 
 // Data Structures
 import ArrayHub from './visualizers/ds/ArrayHub';
@@ -43,16 +46,21 @@ import EnigmaVisualizer from './visualizers/crypto/EnigmaVisualizer';
 import HackerModeVisualizer from './visualizers/crypto/HackerModeVisualizer';
 import DHVisualizer from './visualizers/crypto/DHVisualizer';
 
-function App() {
+function AppContent() {
+  const location = useLocation();
+  const isHome = location.pathname === '/';
+  const isIntro = location.pathname === '/intro';
+  const isFullscreen = isHome || isIntro;
+
   return (
-    <Router>
-      <div className="min-h-screen bg-gray-50 dark:bg-[#09090b] text-gray-900 dark:text-gray-100 font-sans transition-colors duration-300">
-        <Navbar />
-        
-        <main className="pt-16 min-h-screen">
-          <Routes>
-            <Route path="/" element={<Navigate to="/visualizer" replace />} />
-            <Route path="/visualizer" element={<VisualizerDashboard />} />
+    <div className={isFullscreen ? '' : 'min-h-screen bg-gray-50 dark:bg-[#09090b] text-gray-900 dark:text-gray-100 font-sans transition-colors duration-300'}>
+      {!isFullscreen && <Navbar />}
+      
+      <main className={isFullscreen ? '' : 'pt-16 min-h-screen'}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/intro" element={<Intro />} />
+          <Route path="/visualizer" element={<VisualizerDashboard />} />
             
             {/* DS Routes */}
             {/* Array Suite: 16-Option Catalog Hub & Dedicated 3D Model Visualizer */}
@@ -101,14 +109,21 @@ function App() {
             <Route path="/visualizer/hacker" element={<div className="p-8"><HackerModeVisualizer /></div>} />
             <Route path="/visualizer/dh" element={<div className="p-8"><DHVisualizer /></div>} />
 
-            <Route path="/game" element={<PrivateRoute><GameWorld /></PrivateRoute>} />
-            <Route path="/host" element={<PrivateRoute><HostDashboard /></PrivateRoute>} />
+            <Route path="/game" element={<GameWorld />} />
+            <Route path="/host" element={<HostDashboard />} />
 
             {/* Sandbox */}
-            <Route path="/sandbox" element={<PrivateRoute><Sandbox /></PrivateRoute>} />
-          </Routes>
-        </main>
-      </div>
+          <Route path="/sandbox" element={<Sandbox />} />
+        </Routes>
+      </main>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 }

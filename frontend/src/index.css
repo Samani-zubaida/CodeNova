@@ -147,7 +147,24 @@
   }
 
   html {
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
+  }
+
+  /* Lenis smooth scrolling compatibility */
+  html.lenis, html.lenis body {
+    height: auto;
+  }
+
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+
+  .lenis.lenis-smooth [data-lenis-prevent] {
+    overscroll-behavior: contain;
+  }
+
+  .lenis.lenis-stopped {
+    overflow: hidden;
   }
 
   button,
@@ -176,4 +193,11 @@
 /* Disable the default theme transition on body when using view transitions */
 html.view-transition-active body {
   transition: none !important;
+}
+
+/* Intro Page Geometric Typography */
+.intro-page {
+  font-family: 'Inter Tight', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }

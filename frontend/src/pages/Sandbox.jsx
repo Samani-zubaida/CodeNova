@@ -30,8 +30,8 @@ const Sandbox = () => {
   const [isDraggingTerminal, setIsDraggingTerminal] = useState(false);
   const [isDraggingSidebar, setIsDraggingSidebar] = useState(false);
   
-  const [visualData, setVisualData] = useState(null);
-  const [visualMetadata, setVisualMetadata] = useState(null);
+  const [analysisData, setAnalysisData] = useState(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isVisualizing, setIsVisualizing] = useState(false);
   
   const { setExecutionOutput } = useAppStore();
@@ -71,23 +71,21 @@ const Sandbox = () => {
     }
   };
 
-  const handleVisualize = async () => {
-    setMobileTab('visualizer');
-    setIsVisualizing(true);
-    setVisualData(null);
-    setVisualMetadata(null);
+  const handleAnalyze = async () => {
+    setMobileTab('analysis');
+    setIsAnalyzing(true);
+    setAnalysisData(null);
     try {
       const response = await axios.post('http://localhost:5000/api/sandbox/visualize', {
         code,
         language
       });
-      setVisualData(response.data.steps);
-      setVisualMetadata(response.data.metadata || null);
+      setAnalysisData(response.data.analysis);
     } catch (error) {
-      console.error('Visualization failed:', error);
-      setVisualData({ error: 'Failed to generate visual steps.' });
+      console.error('Analysis failed:', error);
+      setAnalysisData({ error: 'Failed to generate code analysis.' });
     } finally {
-      setIsVisualizing(false);
+      setIsAnalyzing(false);
     }
   };
 
@@ -173,16 +171,16 @@ const Sandbox = () => {
           <TerminalSquare size={14} /> Output
         </button>
         <button 
-          onClick={() => setMobileTab('visualizer')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${mobileTab === 'visualizer' ? 'bg-[var(--color-nova-red)]/10 text-[var(--color-nova-red)]' : 'text-gray-500 hover:bg-black/5'}`}
+          onClick={() => setMobileTab('analysis')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${mobileTab === 'analysis' ? 'bg-[var(--color-nova-red)]/10 text-[var(--color-nova-red)]' : 'text-gray-500 hover:bg-black/5'}`}
         >
-          <LayoutDashboard size={14} /> Visualizer
+          <LayoutDashboard size={14} /> Analysis
         </button>
       </div>
 
       {/* Left Panel: Editor & Terminal */}
       <div 
-        className={`flex-col w-full h-full lg:border-r border-black/5 dark:border-white/5 ${mobileTab === 'visualizer' ? 'hidden lg:flex' : 'flex'}`}
+        className={`flex-col w-full h-full lg:border-r border-black/5 dark:border-white/5 ${mobileTab === 'analysis' ? 'hidden lg:flex' : 'flex'}`}
         style={typeof window !== 'undefined' && window.innerWidth >= 1024 ? { width: `${leftPanelWidth}%` } : {}}
       >
         
@@ -211,12 +209,12 @@ const Sandbox = () => {
             </div>
             <div className="flex gap-2">
               <button 
-                onClick={handleVisualize}
-                disabled={isVisualizing}
+                onClick={handleAnalyze}
+                disabled={isAnalyzing}
                 className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium bg-gradient-to-r from-[var(--color-nova-brown)] to-[#a88a7c] hover:brightness-110 text-white shadow-sm shadow-[var(--color-nova-brown)]/30 rounded-md transition-all transform active:scale-95 disabled:opacity-50 disabled:active:scale-100"
               >
-                {isVisualizing ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
-                <span className="hidden sm:inline">Visualize</span>
+                {isAnalyzing ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                <span className="hidden sm:inline">Analyze</span>
               </button>
               <button 
                 onClick={handleRunCode}
@@ -283,13 +281,12 @@ const Sandbox = () => {
 
       {/* Right Panel: Visualizer */}
       <div 
-        className={`w-full h-full p-3 lg:p-4 ${mobileTab !== 'visualizer' ? 'hidden lg:block' : 'block'}`}
+        className={`w-full h-full p-3 lg:p-4 ${mobileTab !== 'analysis' ? 'hidden lg:block' : 'block'}`}
         style={typeof window !== 'undefined' && window.innerWidth >= 1024 ? { width: `calc(${100 - leftPanelWidth}% - 8px)` } : {}}
       >
         <VisualCanvas 
-          data={visualData} 
-          metadata={visualMetadata}
-          isVisualizing={isVisualizing} 
+          analysisData={analysisData} 
+          isAnalyzing={isAnalyzing} 
           setShowTerminal={(show) => {
             setShowTerminal(show);
             if(show && typeof window !== 'undefined' && window.innerWidth < 1024) setMobileTab('terminal');

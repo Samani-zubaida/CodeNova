@@ -4,6 +4,8 @@ const User = require('../models/User');
 const Competition = require('../models/Competition');
 const bcrypt = require('bcryptjs');
 
+const mongoose = require('mongoose');
+
 // Seed script to populate mock data if empty
 const seedDatabase = async () => {
   try {
@@ -54,23 +56,25 @@ const seedDatabase = async () => {
 };
 
 
-// Simulate real-time leaderboard activity
-setInterval(async () => {
-  try {
-    const users = await User.find({});
-    for (const user of users) {
-      if (Math.random() > 0.6) {
-        user.xp += Math.floor(Math.random() * 50);
-        await user.save();
-      }
-    }
-  } catch (err) {
-    console.error("Leaderboard simulation error:", err);
-  }
-}, 5000);
+// Fire the seed async only when database is connected
+mongoose.connection.once('open', () => {
+  seedDatabase();
 
-// Fire the seed async (doesn't block)
-seedDatabase();
+  // Simulate real-time leaderboard activity
+  setInterval(async () => {
+    try {
+      const users = await User.find({});
+      for (const user of users) {
+        if (Math.random() > 0.6) {
+          const xpGain = Math.floor(Math.random() * 50);
+          await User.updateOne({ _id: user._id }, { $inc: { xp: xpGain } });
+        }
+      }
+    } catch (err) {
+      console.error("Leaderboard simulation error:", err);
+    }
+  }, 5000);
+});
 
 // GET /api/dashboard/leaderboard
 router.get('/leaderboard', async (req, res) => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -21,6 +21,7 @@ import ResponsiveVisualizerShell from '../../components/visualizer/ResponsiveVis
 import VisualizerPlaybackBar from '../../components/visualizer/VisualizerPlaybackBar';
 import ComplexityBadge from '../../components/visualizer/ComplexityBadge';
 import CodeInspector from '../../components/visualizer/CodeInspector';
+import DryRunVariableTracker from '../../components/visualizer/DryRunVariableTracker';
 
 // Multi-language code snippets
 const CODE_SNIPPETS = {
@@ -479,6 +480,7 @@ export default function Array3DVisualizer() {
   const [animationSteps, setAnimationSteps] = useState([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
 
   // Active Pointers & Visual Highlights
@@ -522,7 +524,7 @@ export default function Array3DVisualizer() {
   useEffect(() => {
     if (isPlaying) {
       if (currentStepIndex < animationSteps.length - 1) {
-        const delay = 1100 / playbackSpeed;
+        const delay = Math.max(200, Math.round(1600 / playbackSpeed));
         timerRef.current = setTimeout(() => {
           applyStep(currentStepIndex + 1);
         }, delay);
@@ -700,6 +702,7 @@ export default function Array3DVisualizer() {
           targetK: l,
           compared: null,
           mergedBuffer: [],
+      merged: [],
           isComplete: false
         },
         actionBanner: `🔄 MERGING: Range [${l}...${r}] ➔ Combining Left [${left.join(', ')}] & Right [${right.join(', ')}].`,
@@ -735,6 +738,7 @@ export default function Array3DVisualizer() {
             targetK: k,
             compared: { leftVal: valL, rightVal: valR, winner: isLeftSmaller ? 'left' : 'right' },
             mergedBuffer: [...buffer],
+      merged: [...buffer],
             isComplete: false
           },
           actionBanner: `⚖️ COMPARING: Left[${i}] (${valL}) vs Right[${j}] (${valR}) ➔ ${isLeftSmaller ? `${valL} ≤ ${valR} (Left smaller)` : `${valR} < ${valL} (Right smaller)`}`,
@@ -766,6 +770,7 @@ export default function Array3DVisualizer() {
             targetK: k + 1,
             compared: { leftVal: valL, rightVal: valR, winner: isLeftSmaller ? 'left' : 'right' },
             mergedBuffer: [...buffer],
+      merged: [...buffer],
             isComplete: false
           },
           actionBanner: `⬇️ PLACED: Added ${chosenVal} to merged buffer for slot [${k}].`,
@@ -802,6 +807,7 @@ export default function Array3DVisualizer() {
             targetK: k + 1,
             compared: null,
             mergedBuffer: [...buffer],
+      merged: [...buffer],
             isComplete: false
           },
           actionBanner: `➡️ FLUSHING: Right half exhausted; appending remaining Left (${val}) into slot [${k}].`,
@@ -836,6 +842,7 @@ export default function Array3DVisualizer() {
             targetK: k + 1,
             compared: null,
             mergedBuffer: [...buffer],
+      merged: [...buffer],
             isComplete: false
           },
           actionBanner: `➡️ FLUSHING: Left half exhausted; appending remaining Right (${val}) into slot [${k}].`,
@@ -867,6 +874,7 @@ export default function Array3DVisualizer() {
           targetK: k,
           compared: null,
           mergedBuffer: [...buffer],
+      merged: [...buffer],
           isComplete: true
         },
         actionBanner: `✨ MERGED: Range [${l}...${r}] sorted and written back to main array: [${arr.slice(l, r + 1).join(', ')}]!`,
@@ -1529,6 +1537,111 @@ export default function Array3DVisualizer() {
   const maxRainVal = Math.max(...array, 3);
   const rainTicks = Array.from({ length: maxRainVal + 2 }, (_, i) => i);
 
+
+  // Extract active step for Dry Run Variable Tracker
+  const currentStepData = animationSteps[currentStepIndex] || {};
+
+  const trackedVariables = useMemo(() => {
+    const vars = [];
+    const s = currentStepData;
+    const ptrs = s.pointers || pointers || {};
+    const rng = s.activeRange || activeRange || {};
+
+    // 1. Pointers
+    if (ptrs.i !== undefined) {
+      vars.push({
+        name: 'i',
+        value: ptrs.i >= 0 && ptrs.i < array.length ? `${ptrs.i} (val: ${array[ptrs.i]})` : ptrs.i,
+        type: 'Pointer',
+        role: 'Outer loop index / Left scanner',
+        isChanged: true
+      });
+    }
+    if (ptrs.j !== undefined) {
+      vars.push({
+        name: 'j',
+        value: ptrs.j >= 0 && ptrs.j < array.length ? `${ptrs.j} (val: ${array[ptrs.j]})` : ptrs.j,
+        type: 'Pointer',
+        role: 'Inner loop index / Right scanner',
+        isChanged: true
+      });
+    }
+    if (ptrs.mid !== undefined) {
+      vars.push({
+        name: 'mid',
+        value: ptrs.mid >= 0 && ptrs.mid < array.length ? `${ptrs.mid} (val: ${array[ptrs.mid]})` : ptrs.mid,
+        type: 'Index',
+        role: 'Middle pivot / split index',
+        isChanged: true
+      });
+    }
+    if (ptrs.low !== undefined) {
+      vars.push({
+        name: 'low',
+        value: ptrs.low >= 0 && ptrs.low < array.length ? `${ptrs.low} (val: ${array[ptrs.low]})` : ptrs.low,
+        type: 'Boundary',
+        role: 'Search window lower bound'
+      });
+    }
+    if (ptrs.high !== undefined) {
+      vars.push({
+        name: 'high',
+        value: ptrs.high >= 0 && ptrs.high < array.length ? `${ptrs.high} (val: ${array[ptrs.high]})` : ptrs.high,
+        type: 'Boundary',
+        role: 'Search window upper bound'
+      });
+    }
+
+    // 2. Active Range
+    if (rng.l !== undefined && ptrs.i === undefined) {
+      vars.push({
+        name: 'left',
+        value: rng.l,
+        type: 'Range',
+        role: 'Subarray left boundary'
+      });
+    }
+    if (rng.r !== undefined && ptrs.j === undefined) {
+      vars.push({
+        name: 'right',
+        value: rng.r,
+        type: 'Range',
+        role: 'Subarray right boundary'
+      });
+    }
+
+    // 3. Highlighted / Swapping elements
+    if (s.swappingIndices && s.swappingIndices.length > 0) {
+      vars.push({
+        name: 'swapping',
+        value: `Indices [${s.swappingIndices.join(', ')}]`,
+        type: 'Action',
+        role: 'Elements being exchanged in-place',
+        isChanged: true
+      });
+    }
+
+    // 4. Target search value
+    if (searchTarget !== undefined) {
+      vars.push({
+        name: 'target',
+        value: searchTarget,
+        type: 'Target',
+        role: 'Goal search value'
+      });
+    }
+
+    // 5. Array size
+    vars.push({
+      name: 'n',
+      value: array.length,
+      type: 'Size',
+      role: 'Total elements in array'
+    });
+
+    return vars;
+  }, [currentStepData, pointers, activeRange, array, searchTarget]);
+
   return (
     <ResponsiveVisualizerShell
       title={currentAlgo.name}
@@ -1539,7 +1652,7 @@ export default function Array3DVisualizer() {
         <div className="flex items-center gap-2">
           <Link
             to="/visualizer/array"
-            className="flex items-center gap-1 text-xs font-semibold text-gray-500 hover:text-[#BC4A54] transition-colors"
+            className="flex items-center gap-1 text-xs font-semibold text-gray-500 hover:text-[#AB526B] transition-colors"
           >
             <ArrowLeft size={14} />
             <span>Array Suite</span>
@@ -1559,7 +1672,7 @@ export default function Array3DVisualizer() {
               <select
                 value={currentAlgo.id}
                 onChange={(e) => navigate(`/visualizer/array/${e.target.value}`)}
-                className="w-full bg-gray-50 dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#333] rounded-xl px-3 py-2 text-xs font-bold text-gray-800 dark:text-gray-100 appearance-none cursor-pointer pr-8 focus:outline-hidden focus:ring-2 focus:ring-[#BC4A54]"
+                className="w-full bg-gray-50 dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#5C4E49] rounded-xl px-3 py-2 text-xs font-bold text-gray-800 dark:text-gray-100 appearance-none cursor-pointer pr-8 focus:outline-hidden focus:ring-2 focus:ring-[#AB526B]"
               >
                 {ARRAY_CATALOG.map((a) => (
                   <option key={a.id} value={a.id}>
@@ -1574,7 +1687,7 @@ export default function Array3DVisualizer() {
           {/* Contextual Config Controls */}
           {currentAlgo.id === 'binary_search' && (
             <div className="flex items-center gap-2 p-2 rounded-xl bg-gray-50 dark:bg-[#1C1C1C] border border-gray-200 dark:border-[#2A2A2A]">
-              <Target size={14} className="text-[#BC4A54] shrink-0" />
+              <Target size={14} className="text-[#AB526B] shrink-0" />
               <input
                 type="number"
                 value={searchTarget}
@@ -1587,7 +1700,7 @@ export default function Array3DVisualizer() {
 
           {currentAlgo.id === 'two_sum' && (
             <div className="flex items-center gap-2 p-2 rounded-xl bg-gray-50 dark:bg-[#1C1C1C] border border-gray-200 dark:border-[#2A2A2A]">
-              <Target size={14} className="text-[#BC4A54] shrink-0" />
+              <Target size={14} className="text-[#AB526B] shrink-0" />
               <input
                 type="number"
                 value={targetSum}
@@ -1630,7 +1743,7 @@ export default function Array3DVisualizer() {
           <div className="flex gap-2 pt-1">
             <button
               onClick={handleExecute}
-              className="flex-1 py-2.5 bg-[#BC4A54] hover:bg-[#a63d46] active:scale-95 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5"
+              className="flex-1 py-2.5 bg-[#AB526B] hover:bg-[#a63d46] active:scale-95 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5"
             >
               <Play size={14} className="fill-white" />
               <span>Simulate {currentAlgo.name}</span>
@@ -1642,7 +1755,7 @@ export default function Array3DVisualizer() {
                 handleReset();
               }}
               title="Randomize Elements"
-              className="p-2.5 bg-gray-100 dark:bg-[#202020] border border-gray-200 dark:border-[#333] rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-200 transition-colors shrink-0"
+              className="p-2.5 bg-gray-100 dark:bg-[#202020] border border-gray-200 dark:border-[#5C4E49] rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-200 transition-colors shrink-0"
             >
               <RefreshCw size={14} />
             </button>
@@ -1670,6 +1783,9 @@ export default function Array3DVisualizer() {
           }}
           speed={playbackSpeed}
           onSpeedChange={setPlaybackSpeed}
+          isVoiceEnabled={isVoiceEnabled}
+          onToggleVoice={() => setIsVoiceEnabled(!isVoiceEnabled)}
+          stepDescription={currentStepData.actionBanner || currentStepData.description || ''}
         />
       }
       codeInspector={
@@ -1678,13 +1794,34 @@ export default function Array3DVisualizer() {
           activeLine={activeCodeLine}
         />
       }
+      rightPanel={
+        <div className="flex flex-col gap-3">
+          <DryRunVariableTracker
+            title={`${currentAlgo.title || currentAlgo.name || 'Array'} — Dry Run`}
+            stepNumber={currentStepIndex + 1}
+            totalSteps={Math.max(1, animationSteps.length)}
+            actionBadge={(() => {
+              const st = currentStepData.stepType || 'STEP';
+              return { label: st, icon: '⚡', bg: 'bg-cyan-500/20 border-cyan-400 text-cyan-300' };
+            })()}
+            codeStatement={(() => {
+              const snippets = currentCode?.javascript || [];
+              return snippets[activeCodeLine] || '';
+            })()}
+            explanation={currentStepData.description || currentStepData.actionBanner || currentStepData.log || 'Executing array algorithm step.'}
+            variables={trackedVariables}
+            isVoiceEnabled={isVoiceEnabled}
+            onToggleVoice={() => setIsVoiceEnabled(!isVoiceEnabled)}
+          />
+        </div>
+      }
       consoleLogs={consoleLogs}
     >
-      {/* Visual Canvas Area */}
-      <div className="relative w-full h-full flex flex-col items-center justify-between p-3 sm:p-5 overflow-y-auto">
+      {/* Visual Canvas Area - UNOBSTRUCTED HERO CANVAS AT TOP */}
+      <div className="relative w-full h-full flex flex-col items-center justify-start p-3 sm:p-5 overflow-y-auto gap-4">
         
-        {/* Dynamic Action Banner */}
-        <div className="w-full flex flex-col gap-2 max-w-2xl">
+        {/* 1. Dynamic Action Banner (Crisp 1-line HUD) */}
+        <div className="w-full flex flex-col gap-2 max-w-3xl">
           <AnimatePresence mode="wait">
             {actionBanner ? (
               <motion.div
@@ -1692,18 +1829,18 @@ export default function Array3DVisualizer() {
                 initial={{ opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 6 }}
-                className="px-3.5 py-2 rounded-xl bg-[#F4E9D4] dark:bg-[#251E1C] border border-[#E4D1BC] dark:border-[#3D2C28] text-[#8B2635] dark:text-[#E27D89] text-xs font-bold shadow-xs flex items-center justify-between gap-2"
+                className="px-4 py-2 rounded-xl bg-[#F4E9D4] dark:bg-[#251E1C] border border-[#E4D1BC] dark:border-[#3D2C28] text-[#8B2635] dark:text-[#E27D89] text-xs font-bold shadow-xs flex items-center justify-between gap-2"
               >
                 <div className="flex items-center gap-2 truncate">
-                  <Sparkles size={14} className="shrink-0 text-[#BC4A54]" />
+                  <Sparkles size={14} className="shrink-0 text-[#AB526B]" />
                   <span className="truncate">{actionBanner}</span>
                 </div>
-                <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-[#BC4A54]/10 dark:bg-[#BC4A54]/20 shrink-0">
+                <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-[#AB526B]/10 dark:bg-[#AB526B]/20 shrink-0">
                   Step {currentStepIndex + 1}/{Math.max(1, animationSteps.length)}
                 </span>
               </motion.div>
             ) : (
-              <div className="px-3.5 py-2 rounded-xl bg-gray-50 dark:bg-[#181818] border border-gray-200 dark:border-[#282828] text-gray-500 text-xs flex items-center gap-2">
+              <div className="px-4 py-2 rounded-xl bg-gray-50 dark:bg-[#181818] border border-gray-200 dark:border-[#282828] text-gray-500 text-xs flex items-center gap-2">
                 <Sparkles size={14} className="text-gray-400" />
                 <span>Press <strong>Simulate {currentAlgo.name}</strong> to begin step-by-step execution.</span>
               </div>
@@ -1731,23 +1868,22 @@ export default function Array3DVisualizer() {
               </div>
             </motion.div>
           )}
-
         </div>
 
         {/* ======================================================== */}
         {/* CASE A: DEDICATED MERGE SORT DIVIDE & CONQUER ARENA      */}
         {/* ======================================================== */}
         {isMergeSort ? (
-          <div className="w-full max-w-2xl bg-white dark:bg-[#141414] rounded-2xl border border-[#EBE0D3] dark:border-[#262626] p-4 sm:p-5 my-auto shadow-xs flex flex-col gap-4">
+          <div className="w-full max-w-3xl bg-white dark:bg-[#423834] rounded-2xl border border-[#EBE0D3] dark:border-[#5C4E49] p-4 sm:p-5 shadow-sm flex flex-col gap-4">
             
             {/* 1. Global Array State with Active Range Frame */}
             <div className="flex flex-col gap-1.5 pb-3 border-b border-gray-100 dark:border-[#222]">
               <div className="flex items-center justify-between text-[11px] font-bold">
                 <span className="text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-                  <Layers size={13} className="text-[#BC4A54]" />
+                  <Layers size={13} className="text-[#AB526B]" />
                   <span>Main Array State [0...{array.length - 1}]</span>
                 </span>
-                <span className="font-mono text-[#BC4A54] bg-[#BC4A54]/10 dark:bg-[#BC4A54]/20 px-2 py-0.5 rounded-full text-[10px]">
+                <span className="font-mono text-[#AB526B] bg-[#AB526B]/10 dark:bg-[#AB526B]/20 px-2 py-0.5 rounded-full text-[10px]">
                   {activeRange ? `Active Range: [${activeRange.l}...${activeRange.r}]` : 'Divide & Conquer Root'}
                 </span>
               </div>
@@ -1763,259 +1899,203 @@ export default function Array3DVisualizer() {
                   return (
                     <motion.div
                       key={`ms-global-${idx}`}
-                      className={`relative flex flex-col items-center justify-end rounded-xl p-1.5 transition-all flex-1 max-w-[48px] min-w-[32px] ${
+                      className={`relative flex flex-col items-center justify-end rounded-xl p-2 transition-all flex-1 max-w-[52px] min-w-[34px] ${
                         !inRange 
                           ? 'opacity-30 grayscale' 
                           : isSorted
-                          ? 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-400'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/40 border-2 border-emerald-500 text-emerald-700'
                           : isLeft
-                          ? 'bg-cyan-50 dark:bg-cyan-950/40 border border-cyan-400'
+                          ? 'bg-cyan-50 dark:bg-cyan-950/40 border-2 border-cyan-400'
                           : isRight
-                          ? 'bg-purple-50 dark:bg-purple-950/40 border border-purple-400'
-                          : 'bg-gray-50 dark:bg-[#1E1E1E] border border-gray-300 dark:border-[#333]'
+                          ? 'bg-purple-50 dark:bg-purple-950/40 border-2 border-purple-400'
+                          : 'bg-gray-50 dark:bg-[#1E1E1E] border border-gray-300 dark:border-[#5C4E49]'
                       }`}
                     >
                       {/* Pointer Tag */}
-                      <div className="absolute -top-5 text-[8px] font-mono font-black uppercase text-[#BC4A54]">
+                      <div className="absolute -top-5 text-[9px] font-mono font-black uppercase text-[#AB526B]">
                         {activeRange?.l === idx && 'L'}
                         {activeRange?.m === idx && ' M'}
                         {activeRange?.r === idx && ' R'}
                       </div>
 
-                      <span className={`font-mono font-bold text-sm ${isSorted ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-900 dark:text-gray-100'}`}>
+                      <span className={`font-mono font-bold text-sm ${isSorted ? 'text-emerald-600 dark:text-emerald-400 font-black' : 'text-gray-900 dark:text-gray-100'}`}>
                         {val}
                       </span>
                       <span className="text-[9px] font-mono text-gray-400">[{idx}]</span>
+                      {isSorted && (
+                        <span className="absolute -top-2 -right-1 text-[10px]">✓</span>
+                      )}
                     </motion.div>
                   );
                 })}
               </div>
             </div>
 
-            {/* 2. DYNAMIC ANIMATION ARENA: DIVIDING vs BASE CASE vs MERGING */}
-            {activeStepType === 'DIVIDE' ? (
-              /* --- DIVIDING ANIMATION VIEW --- */
-              <motion.div
-                key="divide-stage"
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-4 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 flex flex-col items-center gap-3 text-center"
-              >
-                <div className="flex items-center gap-2 text-xs font-bold text-amber-800 dark:text-amber-300">
-                  <Scissors size={14} className="text-[#BC4A54] animate-pulse" />
-                  <span>✂️ DIVIDING SUBARRAY [ {activeDivideState?.range} ] AT MIDPOINT index {activeDivideState?.m}</span>
-                </div>
+            {/* 2. Divide Tree Level Visualizer */}
+            {activeDivideState ? (
+              (() => {
+                const leftArr = activeDivideState.left || activeDivideState.leftPart || (activeDivideState.val !== undefined ? [activeDivideState.val] : []);
+                const rightArr = activeDivideState.right || activeDivideState.rightPart || [];
+                const isBase = activeDivideState.val !== undefined && rightArr.length === 0;
 
-                <div className="flex items-center justify-center gap-3 w-full">
-                  {/* Left Subarray Half */}
-                  <div className="flex-1 p-3 rounded-xl bg-cyan-50 dark:bg-cyan-950/40 border-2 border-cyan-300 dark:border-cyan-700 flex flex-col items-center gap-2 shadow-xs">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
-                      Left Half [ {activeDivideState?.l}...{activeDivideState?.m} ]
-                    </span>
-                    <div className="flex gap-1.5">
-                      {activeDivideState?.leftPart?.map((v, i) => (
-                        <div key={`d-left-${i}`} className="w-8 h-9 rounded-lg bg-cyan-500 text-white font-mono font-bold text-xs flex items-center justify-center shadow-xs">
-                          {v}
-                        </div>
-                      ))}
+                return (
+                  <div className="flex flex-col items-center gap-3 p-3 rounded-xl bg-[#FDFBF7] dark:bg-[#423834] border border-dashed border-[#E4D1BC] dark:border-[#5C4E49]">
+                    <div className="flex items-center gap-2 text-xs font-bold text-gray-700 dark:text-gray-300">
+                      <span className={`w-2 h-2 rounded-full ${isBase ? 'bg-emerald-500' : 'bg-cyan-500'}`} />
+                      <span>{isBase ? 'Phase: BASE CASE SUBARRAY' : 'Phase: DIVIDING SUBARRAYS'}</span>
+                      {activeDivideState.range && (
+                        <span className="text-[10px] font-mono text-gray-400">
+                          Range: {activeDivideState.range}
+                        </span>
+                      )}
                     </div>
-                  </div>
 
-                  {/* Division Scissor Divider */}
-                  <div className="flex flex-col items-center justify-center text-amber-600 dark:text-amber-400 font-mono text-xs font-bold px-1 shrink-0">
-                    <div className="w-0.5 h-4 bg-amber-300 dark:bg-amber-700 mb-1" />
-                    <span className="text-base">✂️</span>
-                    <span className="text-[9px] uppercase font-bold text-amber-600 dark:text-amber-400">Split</span>
-                    <div className="w-0.5 h-4 bg-amber-300 dark:bg-amber-700 mt-1" />
-                  </div>
-
-                  {/* Right Subarray Half */}
-                  <div className="flex-1 p-3 rounded-xl bg-purple-50 dark:bg-purple-950/40 border-2 border-purple-300 dark:border-purple-700 flex flex-col items-center gap-2 shadow-xs">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-purple-600 dark:text-purple-400">
-                      Right Half [ {activeDivideState?.m + 1}...{activeDivideState?.r} ]
-                    </span>
-                    <div className="flex gap-1.5">
-                      {activeDivideState?.rightPart?.map((v, i) => (
-                        <div key={`d-right-${i}`} className="w-8 h-9 rounded-lg bg-purple-500 text-white font-mono font-bold text-xs flex items-center justify-center shadow-xs">
-                          {v}
+                    {isBase ? (
+                      <div className="flex items-center justify-center p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800">
+                        <span className="text-xs font-mono font-bold text-emerald-700 dark:text-emerald-300">
+                          ✓ Base Element: [{activeDivideState.val}] at index [{activeDivideState.l}] (Size 1 — Inherently Sorted)
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center gap-6 sm:gap-8 w-full pt-1">
+                        {/* Left Half Box */}
+                        <div className="flex flex-col items-center gap-1 p-2 rounded-xl bg-cyan-50 dark:bg-cyan-950/40 border border-cyan-300 dark:border-cyan-800">
+                          <span className="text-[10px] font-mono font-bold text-cyan-700 dark:text-cyan-300">
+                            Left: [{leftArr.join(', ')}]
+                          </span>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
 
-                <p className="text-[11px] text-gray-500 dark:text-gray-400 italic">
-                  Halving problem size from {activeDivideState?.leftPart?.length + activeDivideState?.rightPart?.length} elements into {activeDivideState?.leftPart?.length} and {activeDivideState?.rightPart?.length} elements.
-                </p>
-              </motion.div>
-            ) : activeStepType === 'BASE_CASE' ? (
-              /* --- BASE CASE ANIMATION VIEW --- */
-              <motion.div
-                key="base-stage"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="p-4 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-300 dark:border-emerald-800 flex flex-col items-center gap-2 text-center"
-              >
-                <span className="text-xs font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
-                  🎯 Base Case Reached (Length = 1)
-                </span>
-                <div className="w-11 h-11 rounded-xl bg-emerald-500 text-white font-mono font-black text-base flex items-center justify-center shadow-md ring-4 ring-emerald-200 dark:ring-emerald-800/60">
-                  {activeDivideState?.val}
-                </div>
-                <span className="text-[11px] text-gray-600 dark:text-gray-300 font-medium">
-                  A subarray with only 1 element is inherently sorted! Ready to merge.
-                </span>
-              </motion.div>
+                        <span className="text-gray-400 font-mono text-xs">➔ SPLIT ➔</span>
+
+                        {/* Right Half Box */}
+                        <div className="flex flex-col items-center gap-1 p-2 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-300 dark:border-purple-800">
+                          <span className="text-[10px] font-mono font-bold text-purple-700 dark:text-purple-300">
+                            Right: [{rightArr.join(', ')}]
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()
             ) : activeMergeState ? (
-              /* --- MERGING ANIMATION VIEW --- */
-              <motion.div
-                key="merge-stage"
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-4 rounded-xl bg-gradient-to-b from-white to-gray-50 dark:from-[#181818] dark:to-[#121212] border border-cyan-200 dark:border-cyan-900/50 flex flex-col gap-3 shadow-xs"
-              >
-                {/* Subarrays Comparing Side-by-Side */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
-                  
-                  {/* Left Subarray with Pointer i */}
-                  <div className="p-3 rounded-xl bg-cyan-50/70 dark:bg-cyan-950/30 border border-cyan-200 dark:border-cyan-800/80 flex flex-col items-center gap-2">
-                    <div className="flex items-center justify-between w-full text-[10px] font-bold text-cyan-600 dark:text-cyan-400 uppercase">
-                      <span>Left Subarray</span>
-                      <span>Pointer i: [{activeMergeState.activeI < activeMergeState.leftSub.length ? activeMergeState.activeI : 'done'}]</span>
+              (() => {
+                const leftSub = activeMergeState.leftSub || [];
+                const rightSub = activeMergeState.rightSub || [];
+                const mergedArr = activeMergeState.merged || activeMergeState.mergedBuffer || [];
+
+                return (
+                  /* 3. Conquering / Merging Active Buffers Comparison Desk */
+                  <div className="flex flex-col gap-3 p-3.5 rounded-xl bg-amber-50/40 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50">
+                    <div className="flex items-center justify-between text-xs font-bold text-amber-900 dark:text-amber-300">
+                      <span className="flex items-center gap-1.5">
+                        <ArrowRight size={13} className="text-amber-600" />
+                        <span>Phase: TWO-POINTER MERGE CONQUER</span>
+                      </span>
+                      <span className="text-[10px] font-mono">
+                        Comparing pointers: p1 vs p2
+                      </span>
                     </div>
-                    <div className="flex gap-1.5">
-                      {activeMergeState.leftSub.map((val, idx) => {
-                        const isActive = activeMergeState.activeI === idx;
-                        const isMerged = idx < activeMergeState.activeI;
-                        return (
-                          <div
-                            key={`left-sub-${idx}`}
-                            className={`relative w-9 h-10 rounded-xl flex flex-col items-center justify-center font-mono font-bold text-xs transition-all ${
-                              isActive 
-                                ? 'bg-cyan-500 text-white shadow-md ring-3 ring-cyan-300 -translate-y-1' 
-                                : isMerged
-                                ? 'bg-gray-200 dark:bg-gray-800 text-gray-400 opacity-50'
-                                : 'bg-white dark:bg-[#202020] text-gray-800 dark:text-gray-200 border border-cyan-200'
-                            }`}
-                          >
-                            {isActive && (
-                              <span className="absolute -top-3.5 bg-cyan-600 text-white text-[8px] px-1 rounded-full font-black">
-                                i
-                              </span>
-                            )}
-                            <span>{val}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
 
-                  {/* Right Subarray with Pointer j */}
-                  <div className="p-3 rounded-xl bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/80 flex flex-col items-center gap-2">
-                    <div className="flex items-center justify-between w-full text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase">
-                      <span>Right Subarray</span>
-                      <span>Pointer j: [{activeMergeState.activeJ < activeMergeState.rightSub.length ? activeMergeState.activeJ : 'done'}]</span>
-                    </div>
-                    <div className="flex gap-1.5">
-                      {activeMergeState.rightSub.map((val, idx) => {
-                        const isActive = activeMergeState.activeJ === idx;
-                        const isMerged = idx < activeMergeState.activeJ;
-                        return (
-                          <div
-                            key={`right-sub-${idx}`}
-                            className={`relative w-9 h-10 rounded-xl flex flex-col items-center justify-center font-mono font-bold text-xs transition-all ${
-                              isActive 
-                                ? 'bg-purple-500 text-white shadow-md ring-3 ring-purple-300 -translate-y-1' 
-                                : isMerged
-                                ? 'bg-gray-200 dark:bg-gray-800 text-gray-400 opacity-50'
-                                : 'bg-white dark:bg-[#202020] text-gray-800 dark:text-gray-200 border border-purple-200'
-                            }`}
-                          >
-                            {isActive && (
-                              <span className="absolute -top-3.5 bg-purple-600 text-white text-[8px] px-1 rounded-full font-black">
-                                j
-                              </span>
-                            )}
-                            <span>{val}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                </div>
-
-                {/* Comparison Callout */}
-                {activeMergeState.compared && (
-                  <div className="py-1 px-3 rounded-lg bg-gray-100 dark:bg-[#202020] border border-gray-200 dark:border-[#333] flex items-center justify-center gap-2 text-xs font-mono font-bold">
-                    <span className="text-cyan-600 dark:text-cyan-400">Left: {activeMergeState.compared.leftVal}</span>
-                    <span className="text-gray-400">vs</span>
-                    <span className="text-purple-600 dark:text-purple-400">Right: {activeMergeState.compared.rightVal}</span>
-                    <span className="text-gray-300 dark:text-gray-600">➔</span>
-                    <span className="text-emerald-600 dark:text-emerald-400">
-                      Smaller: {activeMergeState.compared.winner === 'left' ? activeMergeState.compared.leftVal : activeMergeState.compared.rightVal}
-                    </span>
-                  </div>
-                )}
-
-                {/* Merged Target Buffer */}
-                <div className="p-3 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800 flex flex-col items-center gap-2">
-                  <div className="flex items-center justify-between w-full text-[10px] font-bold text-emerald-700 dark:text-emerald-300 uppercase">
-                    <span>Merged Buffer (Sorted Result for {activeMergeState.range})</span>
-                    <span>Target k: [{activeMergeState.targetK ?? 0}]</span>
-                  </div>
-
-                  <div className="flex gap-1.5 min-h-[44px] items-center">
-                    {Array.from({ length: activeMergeState.leftSub.length + activeMergeState.rightSub.length }).map((_, slotIdx) => {
-                      const val = activeMergeState.mergedBuffer[slotIdx];
-                      const isFilled = val !== undefined;
-                      const isCurrent = slotIdx === activeMergeState.mergedBuffer.length - 1;
-
-                      return (
-                        <div
-                          key={`buf-slot-${slotIdx}`}
-                          className={`relative w-9 h-10 rounded-xl flex items-center justify-center font-mono font-bold text-xs transition-all ${
-                            isFilled 
-                              ? isCurrent
-                                ? 'bg-emerald-500 text-white shadow-md ring-3 ring-emerald-300 scale-105'
-                                : 'bg-emerald-600 text-white'
-                              : 'border-2 border-dashed border-emerald-300 dark:border-emerald-800 text-gray-400 bg-white/50 dark:bg-[#1A1A1A]'
-                          }`}
-                        >
-                          {isFilled ? val : <span className="text-[9px] text-gray-400 font-mono">[{slotIdx}]</span>}
+                    {/* Auxiliary Buffers Display */}
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* Left Subarray with pointer */}
+                      <div className="flex flex-col gap-1 p-2 rounded-lg bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#5C4E49]">
+                        <span className="text-[10px] font-mono text-gray-400 font-bold">Left Buffer</span>
+                        <div className="flex items-center gap-1 overflow-x-auto">
+                          {leftSub.map((v, i) => (
+                            <span
+                              key={`ms-lsub-${i}`}
+                              className={`px-2 py-1 rounded text-xs font-mono font-bold ${
+                                activeMergeState.p1 === i || activeMergeState.activeI === i
+                                  ? 'bg-amber-500 text-white shadow-xs ring-2 ring-amber-300'
+                                  : 'bg-gray-100 dark:bg-[#2A2A2A] text-gray-700 dark:text-gray-300'
+                              }`}
+                            >
+                              {v}
+                            </span>
+                          ))}
                         </div>
-                      );
-                    })}
+                      </div>
+
+                      {/* Right Subarray with pointer */}
+                      <div className="flex flex-col gap-1 p-2 rounded-lg bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-[#5C4E49]">
+                        <span className="text-[10px] font-mono text-gray-400 font-bold">Right Buffer</span>
+                        <div className="flex items-center gap-1 overflow-x-auto">
+                          {rightSub.map((v, i) => (
+                            <span
+                              key={`ms-rsub-${i}`}
+                              className={`px-2 py-1 rounded text-xs font-mono font-bold ${
+                                activeMergeState.p2 === i || activeMergeState.activeJ === i
+                                  ? 'bg-amber-500 text-white shadow-xs ring-2 ring-amber-300'
+                                  : 'bg-gray-100 dark:bg-[#2A2A2A] text-gray-700 dark:text-gray-300'
+                              }`}
+                            >
+                              {v}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Merge Destination Result Buffer */}
+                    <div className="flex flex-col gap-1 p-2 rounded-lg bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/60">
+                      <span className="text-[10px] font-mono text-emerald-700 dark:text-emerald-400 font-bold">
+                        Merged Result Buffer:
+                      </span>
+                      <div className="flex items-center gap-1 overflow-x-auto py-0.5">
+                        {mergedArr.length > 0 ? (
+                          mergedArr.map((mv, mi) => (
+                            <span
+                              key={`ms-merged-${mi}`}
+                              className="px-2 py-0.5 rounded bg-emerald-500 text-white font-mono text-xs font-bold shadow-2xs"
+                            >
+                              {mv}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-xs font-mono text-gray-400 italic">Empty</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-
-                  {activeMergeState.isComplete && (
-                    <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                      <CheckCircle size={13} />
-                      <span>Buffer filled! Writing sorted values back into full array.</span>
-                    </span>
-                  )}
-                </div>
-
-              </motion.div>
+                );
+              })()
             ) : (
-              /* Ready state */
-              <div className="p-6 rounded-xl bg-gray-50 dark:bg-[#1A1A1A] border border-dashed border-gray-200 dark:border-[#333] flex flex-col items-center justify-center text-center gap-2">
-                <GitFork size={28} className="text-[#BC4A54]" />
-                <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Ready to Visualize Divide & Conquer</span>
-                <span className="text-[11px] text-gray-400 max-w-sm">
-                  Click Simulate below to watch the array divide recursively into single elements and then merge back together in sorted order.
-                </span>
+              /* --- BASE CASE ANIMATION VIEW --- */
+              <div className="p-3 text-center text-xs font-mono text-gray-400 border border-dashed border-gray-200 dark:border-[#5C4E49] rounded-xl">
+                Merge sort divide & conquer ready. Press Simulate to observe split and two-way merge.
               </div>
             )}
+
+            {/* Merge Sort Legend */}
+            <div className="flex items-center justify-center gap-4 text-[10px] font-mono pt-1 text-gray-500">
+              <div className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-xs bg-cyan-400" />
+                <span>Left Branch</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-xs bg-purple-400" />
+                <span>Right Branch</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-xs bg-amber-500" />
+                <span>Comparing Pointers</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-xs bg-emerald-500" />
+                <span>Merged & Sorted</span>
+              </div>
+            </div>
 
           </div>
         ) : isTrappingRain ? (
           /* ======================================================== */
           /* CASE B: TRAPPING RAIN WATER COMPACT 2D HISTOGRAM         */
           /* ======================================================== */
-          <div className="w-full max-w-2xl bg-white dark:bg-[#141414] rounded-2xl border border-[#EBE0D3] dark:border-[#262626] p-4 sm:p-5 my-auto shadow-xs overflow-x-auto">
+          <div className="w-full max-w-3xl bg-white dark:bg-[#423834] rounded-2xl border border-[#EBE0D3] dark:border-[#5C4E49] p-4 sm:p-5 shadow-sm overflow-x-auto">
             
-            <div className="relative flex items-end min-h-[140px] pl-7 pb-6 min-w-[360px]">
+            <div className="relative flex items-end min-h-[160px] pl-7 pb-6 min-w-[380px]">
               
               {/* Y-Axis Arrow */}
               <div className="absolute left-5 top-0 bottom-6 flex flex-col items-center pointer-events-none">
@@ -2041,7 +2121,7 @@ export default function Array3DVisualizer() {
               <div className="absolute left-5 right-0 bottom-6 h-0.5 bg-gray-900 dark:bg-gray-100 pointer-events-none" />
 
               {/* Contiguous Black Bars + Blue Water Blocks (Compact & Neat) */}
-              <div className="flex items-end gap-0.5 w-full justify-start pl-1 z-10">
+              <div className="flex items-end gap-1 w-full justify-start pl-1 z-10">
                 {array.map((val, idx) => {
                   const trapped = trappedWaterHeights[idx] || computeGoalIndexBreakdown(idx)?.trappedAtCol || 0;
                   const isGoal = idx === goalIndex;
@@ -2051,53 +2131,54 @@ export default function Array3DVisualizer() {
                     .map(([p]) => p.toUpperCase());
 
                   return (
-                    <div
-                      key={`rain-bar-${idx}`}
+                    <div 
+                      key={`rain-col-${idx}`} 
+                      className="relative flex flex-col items-center justify-end flex-1 max-w-[42px] min-w-[26px] group cursor-pointer"
                       onClick={() => setGoalIndex(idx)}
-                      className="relative flex flex-col items-center justify-end cursor-pointer flex-1 max-w-[38px] min-w-[20px]"
                     >
-                      {/* Pointer Badge */}
-                      <div className="absolute -top-6 flex flex-col items-center pointer-events-none z-20">
-                        {matchingPointers.length > 0 ? (
-                          <span className="px-1 py-0.2 rounded bg-[#BC4A54] text-white text-[8px] font-black">
+                      {/* Active Pointers Floating Tag (Left / Right) */}
+                      <div className="absolute -top-7 flex flex-col items-center pointer-events-none z-20">
+                        {matchingPointers.length > 0 && (
+                          <span className="px-1.5 py-0.2 rounded bg-amber-500 text-white text-[9px] font-mono font-black uppercase shadow-xs">
                             {matchingPointers.join(',')}
                           </span>
-                        ) : isGoal ? (
-                          <span className="text-[9px] text-[#BC4A54] font-black">★</span>
-                        ) : null}
+                        )}
+                        {isGoal && (
+                          <span className="px-1 py-0.2 rounded bg-blue-600 text-white text-[8px] font-mono font-bold uppercase shadow-xs">
+                            INSPECT
+                          </span>
+                        )}
                       </div>
 
-                      {/* Solid Blue Water Block */}
-                      {trapped > 0 && (
+                      {/* Stacked Tower: Water (Top) + Solid Terrain Bar (Bottom) */}
+                      <div className={`w-full flex flex-col items-center justify-end rounded-t-sm transition-all duration-200 ${
+                        isGoal ? 'ring-2 ring-blue-500 shadow-md' : ''
+                      }`}>
+                        {/* Trapped Water Block */}
+                        {trapped > 0 && (
+                          <motion.div
+                            initial={{ height: 0 }}
+                            animate={{ height: `${trapped * compactUnitPx}px` }}
+                            transition={{ duration: 0.25 }}
+                            className="w-full bg-blue-500/80 dark:bg-blue-600/80 border-t border-blue-400 flex items-center justify-center text-[10px] font-mono font-black text-white"
+                          >
+                            {trapped > 0.5 ? `+${trapped}` : ''}
+                          </motion.div>
+                        )}
+
+                        {/* Solid Elevation Terrain Bar (Dark Obsidian / Slate) */}
                         <div
-                          className="w-full bg-[#3B82F6] dark:bg-[#2563EB] border-t border-x border-blue-400 flex items-center justify-center text-[9px] font-mono font-bold text-white transition-all"
-                          style={{
-                            height: `${trapped * compactUnitPx}px`
-                          }}
+                          className="w-full bg-gray-900 dark:bg-gray-100 flex items-center justify-center text-[11px] font-mono font-bold text-white dark:text-gray-900 rounded-t-xs"
+                          style={{ height: `${Math.max(val * compactUnitPx, 4)}px` }}
                         >
-                          {trapped}
+                          {val > 0 && val}
                         </div>
-                      )}
-
-                      {/* Solid Black Terrain Bar */}
-                      <div
-                        className={`w-full flex items-center justify-center font-mono font-bold text-[9px] transition-colors ${
-                          isGoal 
-                            ? 'bg-black dark:bg-[#000] ring-2 ring-[#BC4A54] text-white' 
-                            : 'bg-black dark:bg-[#080808] text-gray-300'
-                        }`}
-                        style={{
-                          height: `${Math.max(val * compactUnitPx, 2)}px`,
-                          borderTop: val === 0 ? '1px solid #666' : 'none'
-                        }}
-                      >
-                        {val > 0 && val}
                       </div>
 
-                      {/* X-Axis Index Label */}
+                      {/* Index Label */}
                       <div className="absolute -bottom-5 text-center">
-                        <span className={`text-[9px] font-mono ${isGoal ? 'text-[#BC4A54] font-black' : 'text-gray-400'}`}>
-                          {idx}
+                        <span className={`text-[9px] font-mono ${isGoal ? 'font-black text-blue-600 dark:text-blue-400 underline' : 'text-gray-400'}`}>
+                          [{idx}]
                         </span>
                       </div>
                     </div>
@@ -2107,41 +2188,164 @@ export default function Array3DVisualizer() {
 
             </div>
 
-            {/* Legend */}
-            <div className="mt-5 pt-3 border-t border-gray-100 dark:border-[#222] flex items-center justify-center gap-4 text-[10px] font-mono">
-              <div className="flex items-center gap-1.5">
-                <div className="w-3 h-3 bg-black rounded-xs" />
-                <span className="text-gray-600 dark:text-gray-400">Terrain (Black)</span>
+            {/* Trapping Rain Water Real-Time Running Total Banner */}
+            <div className="mt-5 pt-3 border-t border-gray-100 dark:border-[#222] flex items-center justify-between text-xs font-mono">
+              <div className="flex items-center gap-3 text-gray-500">
+                <span className="flex items-center gap-1">
+                  <span className="w-2.5 h-2.5 bg-gray-900 dark:bg-gray-100 rounded-xs" />
+                  <span>Terrain</span>
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-2.5 h-2.5 bg-blue-500 rounded-xs" />
+                  <span>Trapped Water</span>
+                </span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-3 h-3 bg-[#3B82F6] rounded-xs" />
-                <span className="text-gray-600 dark:text-gray-400">Trapped Water (Blue)</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-3 h-3 border border-[#BC4A54] rounded-xs" />
-                <span className="text-gray-600 dark:text-gray-400">Goal Index</span>
+              <div className="flex items-center gap-1.5 font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-900">
+                <span>Total Accumulated:</span>
+                <span className="text-sm font-black">{trappingWaterStats.totalTrapped} Units 💧</span>
               </div>
             </div>
 
           </div>
         ) : (
           /* ======================================================== */
-          /* CASE C: BUBBLE SORT & OTHERS (COMPACT BARS, ZERO WATER)  */
+          /* CASE C: SORTING, SEARCHING & ARRAY LOGIC (UNOBSTRUCTED)  */
           /* ======================================================== */
-          <div className="w-full max-w-xl bg-white dark:bg-[#141414] rounded-2xl border border-[#EBE0D3] dark:border-[#262626] p-5 my-auto shadow-xs">
+          <div className="w-full max-w-3xl bg-white dark:bg-[#423834] rounded-2xl border border-[#EBE0D3] dark:border-[#5C4E49] p-5 shadow-sm flex flex-col items-center">
             
-            <div className="flex items-end justify-center gap-2 sm:gap-3 min-h-[160px] pb-6">
+            {/* 1. INSTANT INTUITION FLOATING COMPARISON / CONDITION BRIDGE */}
+            {(() => {
+              // Check if currently swapping or comparing 2 elements
+              const activePair = swappingIndices.length >= 2 
+                ? swappingIndices 
+                : highlightedIndices.length >= 2 
+                ? highlightedIndices 
+                : [];
+              
+              if (activePair.length >= 2) {
+                const idxA = Math.min(activePair[0], activePair[1]);
+                const idxB = Math.max(activePair[0], activePair[1]);
+                const valA = array[idxA];
+                const valB = array[idxB];
+                const isSwappingNow = swappingIndices.includes(idxA) && swappingIndices.includes(idxB);
+                const needsSwap = valA > valB; // Ascending sort condition
+
+                return (
+                  <motion.div
+                    key={`compare-bridge-${idxA}-${idxB}`}
+                    initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    className={`mb-5 px-4 py-2 rounded-xl text-xs font-mono font-bold flex flex-wrap items-center justify-center gap-3 shadow-sm border ${
+                      isSwappingNow
+                        ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-200'
+                        : needsSwap
+                        ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-200'
+                        : 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
+                    }`}
+                  >
+                    <span className="px-2.5 py-1 rounded-md bg-white dark:bg-black/50 border border-current font-black">
+                      [{idxA}] = {valA}
+                    </span>
+                    <span className="text-sm font-black">
+                      {valA === valB ? '==' : needsSwap ? '>' : '<='}
+                    </span>
+                    <span className="px-2.5 py-1 rounded-md bg-white dark:bg-black/50 border border-current font-black">
+                      [{idxB}] = {valB}
+                    </span>
+                    <span className="text-gray-400">➔</span>
+                    <span className={`px-2.5 py-1 rounded-lg text-[11px] font-black uppercase tracking-wider text-white shadow-xs ${
+                      isSwappingNow 
+                        ? 'bg-rose-600 animate-pulse' 
+                        : needsSwap 
+                        ? 'bg-amber-600' 
+                        : 'bg-emerald-600'
+                    }`}>
+                      {isSwappingNow 
+                        ? '🔄 SWAPPING NOW' 
+                        : needsSwap 
+                        ? '⚠️ SWAP: Out of Order (A > B)' 
+                        : '✓ OK: In Correct Order'}
+                    </span>
+                  </motion.div>
+                );
+              }
+
+              // Check if Binary Search is active
+              if (currentAlgo.id === 'binary-search' || pointers.mid !== undefined) {
+                const target = searchTarget !== undefined ? searchTarget : targetSum;
+                const midIdx = pointers.mid;
+                const midVal = midIdx !== undefined ? array[midIdx] : undefined;
+                const isFound = midVal == target;
+
+                return (
+                  <motion.div
+                    key={`bs-hud-${midIdx}`}
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-5 flex flex-wrap items-center justify-center gap-2.5"
+                  >
+                    <div className="px-3.5 py-1.5 rounded-xl bg-cyan-50 dark:bg-cyan-950/40 border border-cyan-300 dark:border-cyan-800 text-cyan-800 dark:text-cyan-200 font-mono text-xs font-bold flex items-center gap-2 shadow-xs">
+                      <span>🎯 Target to Find:</span>
+                      <span className="text-sm font-black underline decoration-cyan-500">{target}</span>
+                    </div>
+
+                    {midIdx !== undefined && (
+                      <div className={`px-3.5 py-1.5 rounded-xl border font-mono text-xs font-bold flex items-center gap-2 shadow-xs ${
+                        isFound
+                          ? 'bg-emerald-500 text-white border-emerald-400 ring-2 ring-emerald-300 animate-bounce'
+                          : midVal > target
+                          ? 'bg-amber-500 text-white border-amber-400'
+                          : 'bg-indigo-500 text-white border-indigo-400'
+                      }`}>
+                        <span>MID [{midIdx}] = {midVal}</span>
+                        <span>➔</span>
+                        <span className="font-black uppercase tracking-wide">
+                          {isFound
+                            ? '🎉 MATCH FOUND!'
+                            : midVal > target
+                            ? `${midVal} > ${target} ➔ Discard Right Half`
+                            : `${midVal} < ${target} ➔ Discard Left Half`}
+                        </span>
+                      </div>
+                    )}
+                  </motion.div>
+                );
+              }
+
+              // Check if Quick Sort Pivot is active
+              if (pointers.pivot !== undefined) {
+                const pVal = array[pointers.pivot];
+                return (
+                  <div className="mb-4 px-3.5 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-200 font-mono text-xs font-bold flex items-center gap-2">
+                    <span>👑 PIVOT ELEMENT:</span>
+                    <span className="px-2 py-0.5 rounded bg-amber-500 text-white font-black">
+                      [{pointers.pivot}] = {pVal}
+                    </span>
+                    <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                      (Partitioning: elements &lt; {pVal} on left, &gt; {pVal} on right)
+                    </span>
+                  </div>
+                );
+              }
+
+              return null;
+            })()}
+
+            {/* 2. MAIN ARRAY BARS DISPLAY */}
+            <div className="w-full flex items-end justify-center gap-2 sm:gap-3 min-h-[200px] pb-6 pt-4">
               <AnimatePresence mode="popLayout">
                 {array.map((val, idx) => {
                   const isHighlighted = highlightedIndices.includes(idx);
                   const isSwapping = swappingIndices.includes(idx);
                   const isSorted = sortedIndices.has(idx);
                   const isEliminated = eliminatedRange && (idx >= eliminatedRange.start && idx <= eliminatedRange.end);
+                  const isMid = pointers.mid === idx;
+                  const isPivot = pointers.pivot === idx;
 
-                  // Normalized height for sorting bars (neat & compact, max 115px)
-                  const barHeight = Math.max(22, (Math.abs(val) / maxSortingVal) * 115);
+                  // Normalized height for sorting bars (tall & clear, max 150px)
+                  const barHeight = Math.max(34, (Math.abs(val) / maxSortingVal) * 150);
 
-                  // Active pointers
+                  // Active pointers matching this index
                   const matchingPointers = Object.entries(pointers)
                     .filter(([_, pos]) => pos === idx)
                     .map(([p]) => p.toUpperCase());
@@ -2152,44 +2356,71 @@ export default function Array3DVisualizer() {
                       layout
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ 
-                        opacity: isEliminated ? 0.3 : 1, 
-                        scale: isSwapping ? 1.08 : 1,
-                        y: isSwapping ? -16 : 0
+                        opacity: isEliminated ? 0.25 : 1, 
+                        scale: isSwapping ? 1.1 : isMid ? 1.05 : 1,
+                        y: isSwapping ? -18 : 0
                       }}
                       exit={{ opacity: 0 }}
-                      transition={{ type: 'spring', stiffness: 320, damping: 26 }}
-                      className="relative flex flex-col items-center justify-end flex-1 max-w-[46px] min-w-[28px]"
+                      transition={{ type: 'spring', stiffness: 340, damping: 26 }}
+                      className="relative flex flex-col items-center justify-end flex-1 max-w-[54px] min-w-[32px]"
                     >
-                      {/* Pointer Flag Label */}
-                      <div className="absolute -top-7 flex flex-col items-center pointer-events-none z-20">
-                        {matchingPointers.length > 0 && (
+                      {/* Top Badges (Pointers, Mid, Pivot, Swapping) */}
+                      <div className="absolute -top-8 flex flex-col items-center pointer-events-none z-20 gap-0.5">
+                        {isPivot && (
+                          <span className="px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[8px] font-black uppercase shadow-xs">
+                            👑 PIVOT
+                          </span>
+                        )}
+                        {isMid && (
+                          <span className="px-1.5 py-0.5 rounded-full bg-cyan-500 text-white text-[8px] font-black uppercase shadow-xs">
+                            🎯 MID
+                          </span>
+                        )}
+                        {matchingPointers.length > 0 && !isPivot && !isMid && (
                           <span className={`px-1.5 py-0.5 rounded text-white text-[9px] font-black tracking-wider uppercase shadow-xs ${
-                            isSwapping ? 'bg-rose-500' : 'bg-[#BC4A54]'
+                            isSwapping ? 'bg-rose-500' : 'bg-[#AB526B]'
                           }`}>
                             {matchingPointers.join(',')}
                           </span>
                         )}
                       </div>
 
-                      {/* The Sorting Bar */}
+                      {/* Discarded Overlay Hatched Pattern for Eliminated Ranges */}
+                      {isEliminated && (
+                        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center pointer-events-none">
+                          <span className="text-red-500 font-black text-xs">✕</span>
+                          <span className="text-[8px] font-mono font-bold text-red-500/80 uppercase">OUT</span>
+                        </div>
+                      )}
+
+                      {/* The Array Bar */}
                       <div
-                        className={`w-full rounded-xl flex flex-col items-center justify-between p-1 font-mono font-bold text-xs shadow-xs border transition-colors duration-200 ${
+                        className={`w-full rounded-xl flex flex-col items-center justify-between p-1 font-mono font-bold text-xs shadow-xs border transition-all duration-200 ${
                           isSorted
-                            ? 'bg-emerald-500 text-white border-emerald-400'
+                            ? 'bg-emerald-500 text-white border-emerald-400 ring-2 ring-emerald-300/40 shadow-sm'
                             : isSwapping
-                            ? 'bg-rose-500 text-white border-rose-400 shadow-md ring-2 ring-rose-400/50'
+                            ? 'bg-rose-500 text-white border-rose-400 shadow-md ring-2 ring-rose-400/60'
                             : isHighlighted
-                            ? 'bg-cyan-500 text-white border-cyan-400 ring-2 ring-cyan-400/50'
-                            : 'bg-gray-100 dark:bg-[#1E1E1E] text-gray-900 dark:text-gray-100 border-gray-300 dark:border-[#333]'
+                            ? 'bg-cyan-500 text-white border-cyan-400 ring-2 ring-cyan-400/60 shadow-sm'
+                            : isMid
+                            ? 'bg-indigo-500 text-white border-indigo-400 ring-2 ring-indigo-300'
+                            : isEliminated
+                            ? 'bg-gray-200 dark:bg-[#5C4E49] text-gray-400 border-dashed border-red-300 dark:border-red-900/50'
+                            : 'bg-gray-100 dark:bg-[#1E1E1E] text-gray-900 dark:text-gray-100 border-gray-300 dark:border-[#5C4E49]'
                         }`}
                         style={{ height: `${barHeight}px` }}
                       >
-                        <span className="text-[11px] font-black">{val}</span>
+                        <span className="text-[12px] font-black">{val}</span>
+                        {isSorted && (
+                          <span className="text-[9px] font-mono text-emerald-100">✓</span>
+                        )}
                       </div>
 
                       {/* Index Label */}
                       <div className="absolute -bottom-5 text-center">
-                        <span className="text-[9px] font-mono text-gray-400 font-bold">
+                        <span className={`text-[9px] font-mono font-bold ${
+                          isHighlighted ? 'text-cyan-600 dark:text-cyan-400 underline' : 'text-gray-400'
+                        }`}>
                           [{idx}]
                         </span>
                       </div>
@@ -2200,12 +2431,10 @@ export default function Array3DVisualizer() {
             </div>
 
             {/* Subtitle / Legend */}
-            <div className="mt-6 pt-3 border-t border-gray-100 dark:border-[#222] flex items-center justify-center gap-4 text-[10px] font-mono">
+            <div className="mt-7 pt-3 border-t border-gray-100 dark:border-[#222] flex flex-wrap items-center justify-center gap-4 text-[10px] font-mono">
               <div className="flex items-center gap-1.5">
                 <div className="w-2.5 h-2.5 bg-cyan-500 rounded-xs" />
-                <span className="text-gray-600 dark:text-gray-400">
-                  Comparing [j, j+1]
-                </span>
+                <span className="text-gray-600 dark:text-gray-400">Comparing Active</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <div className="w-2.5 h-2.5 bg-rose-500 rounded-xs" />
@@ -2213,7 +2442,15 @@ export default function Array3DVisualizer() {
               </div>
               <div className="flex items-center gap-1.5">
                 <div className="w-2.5 h-2.5 bg-emerald-500 rounded-xs" />
-                <span className="text-gray-600 dark:text-gray-400">Sorted Locked</span>
+                <span className="text-gray-600 dark:text-gray-400">Sorted Locked (✓)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 bg-indigo-500 rounded-xs" />
+                <span className="text-gray-600 dark:text-gray-400">Mid / Pivot</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 bg-gray-300 dark:bg-gray-700 rounded-xs border border-dashed border-red-400" />
+                <span className="text-gray-600 dark:text-gray-400">Eliminated (✕)</span>
               </div>
             </div>
 
@@ -2221,6 +2458,7 @@ export default function Array3DVisualizer() {
         )}
 
       </div>
+
     </ResponsiveVisualizerShell>
   );
 }

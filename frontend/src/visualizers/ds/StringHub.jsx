@@ -24,7 +24,7 @@ const KMPGraphic = () => (
       <rect x="70" y="0" width="13" height="16" fill="#FDFBF7" stroke="#333" strokeWidth="0.8"/>
       <text x="76.5" y="11" fontSize="8" fill="#333" textAnchor="middle">D</text>
     </g>
-    <path d="M58 52 C 45 68 30 68 22 52" stroke="#BC4A54" strokeWidth="1.8" strokeDasharray="2 2" fill="none"/>
+    <path d="M58 52 C 45 68 30 68 22 52" stroke="#AB526B" strokeWidth="1.8" strokeDasharray="2 2" fill="none"/>
     <text x="50" y="78" fontSize="8" fill="#333" textAnchor="middle" fontFamily="monospace">LPS Shift (No Backtrack)</text>
   </svg>
 );
@@ -33,7 +33,7 @@ const RabinKarpGraphic = () => (
   <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="100" height="100" rx="16" fill="#E8D1CB"/>
     <g transform="translate(12, 30)">
-      <rect x="0" y="0" width="36" height="20" rx="3" fill="#BC4A54" stroke="#333" strokeWidth="1"/>
+      <rect x="0" y="0" width="36" height="20" rx="3" fill="#AB526B" stroke="#333" strokeWidth="1"/>
       <text x="18" y="13" fontSize="8" fill="#fff" textAnchor="middle" fontWeight="bold" fontFamily="monospace">H:5280</text>
       <text x="50" y="14" fontSize="11" fill="#333" textAnchor="middle" fontWeight="bold">==</text>
       <rect x="62" y="0" width="36" height="20" rx="3" fill="#10B981" stroke="#333" strokeWidth="1"/>
@@ -56,9 +56,9 @@ const BoyerMooreGraphic = () => (
       <rect x="54" y="0" width="15" height="16" fill="#10B981" stroke="#333" strokeWidth="1"/>
       <text x="61.5" y="11" fontSize="8" fill="#fff" textAnchor="middle" fontWeight="bold">D</text>
     </g>
-    <path d="M68 50 L20 50" stroke="#BC4A54" strokeWidth="1.8"/>
-    <polygon points="22,47 18,50 22,53" fill="#BC4A54"/>
-    <text x="50" y="65" fontSize="7" fill="#BC4A54" textAnchor="middle" fontWeight="bold">Right-to-Left Scan</text>
+    <path d="M68 50 L20 50" stroke="#AB526B" strokeWidth="1.8"/>
+    <polygon points="22,47 18,50 22,53" fill="#AB526B"/>
+    <text x="50" y="65" fontSize="7" fill="#AB526B" textAnchor="middle" fontWeight="bold">Right-to-Left Scan</text>
     <text x="50" y="80" fontSize="8" fill="#333" textAnchor="middle" fontFamily="monospace">Bad Character Jump</text>
   </svg>
 );
@@ -71,7 +71,7 @@ const LongestPalindromeGraphic = () => (
       <text x="7.5" y="12" fontSize="9" fill="#333" textAnchor="middle">b</text>
       <rect x="16" y="0" width="15" height="18" fill="#10B981" stroke="#333" strokeWidth="1.2"/>
       <text x="23.5" y="12" fontSize="9" fill="#fff" textAnchor="middle" fontWeight="bold">a</text>
-      <rect x="32" y="0" width="16" height="18" fill="#BC4A54" stroke="#333" strokeWidth="1.2"/>
+      <rect x="32" y="0" width="16" height="18" fill="#AB526B" stroke="#333" strokeWidth="1.2"/>
       <text x="40" y="12" fontSize="9" fill="#fff" textAnchor="middle" fontWeight="bold">b</text>
       <rect x="49" y="0" width="15" height="18" fill="#10B981" stroke="#333" strokeWidth="1.2"/>
       <text x="56.5" y="12" fontSize="9" fill="#fff" textAnchor="middle" fontWeight="bold">a</text>
@@ -88,22 +88,22 @@ const ZAlgorithmGraphic = () => (
   <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="100" height="100" rx="16" fill="#F4E9D4"/>
     <g transform="translate(10, 32)">
-      <rect x="0" y="0" width="15" height="15" fill="#BC4A54" stroke="#333" strokeWidth="0.8"/>
+      <rect x="0" y="0" width="15" height="15" fill="#AB526B" stroke="#333" strokeWidth="0.8"/>
       <text x="7.5" y="10.5" fontSize="8" fill="#fff" textAnchor="middle">a</text>
-      <rect x="16" y="0" width="15" height="15" fill="#BC4A54" stroke="#333" strokeWidth="0.8"/>
+      <rect x="16" y="0" width="15" height="15" fill="#AB526B" stroke="#333" strokeWidth="0.8"/>
       <text x="23.5" y="10.5" fontSize="8" fill="#fff" textAnchor="middle">b</text>
       <rect x="32" y="0" width="15" height="15" fill="#FDFBF7" stroke="#333" strokeWidth="0.8"/>
       <text x="39.5" y="10.5" fontSize="8" fill="#333" textAnchor="middle">c</text>
-      <rect x="48" y="0" width="15" height="15" fill="#BC4A54" stroke="#333" strokeWidth="0.8"/>
+      <rect x="48" y="0" width="15" height="15" fill="#AB526B" stroke="#333" strokeWidth="0.8"/>
       <text x="55.5" y="10.5" fontSize="8" fill="#fff" textAnchor="middle">a</text>
-      <rect x="64" y="0" width="15" height="15" fill="#BC4A54" stroke="#333" strokeWidth="0.8"/>
+      <rect x="64" y="0" width="15" height="15" fill="#AB526B" stroke="#333" strokeWidth="0.8"/>
       <text x="71.5" y="10.5" fontSize="8" fill="#fff" textAnchor="middle">b</text>
     </g>
     <g transform="translate(10, 52)">
       <text x="7.5" y="11" fontSize="9" fill="#888" textAnchor="middle" fontFamily="monospace">-</text>
       <text x="23.5" y="11" fontSize="9" fill="#333" textAnchor="middle" fontFamily="monospace">0</text>
       <text x="39.5" y="11" fontSize="9" fill="#333" textAnchor="middle" fontFamily="monospace">0</text>
-      <text x="55.5" y="11" fontSize="9" fill="#BC4A54" textAnchor="middle" fontWeight="bold" fontFamily="monospace">2</text>
+      <text x="55.5" y="11" fontSize="9" fill="#AB526B" textAnchor="middle" fontWeight="bold" fontFamily="monospace">2</text>
       <text x="71.5" y="11" fontSize="9" fill="#333" textAnchor="middle" fontFamily="monospace">0</text>
     </g>
     <text x="50" y="80" fontSize="8" fill="#333" textAnchor="middle" fontFamily="monospace">Z[i] Prefix Match Length</text>
@@ -132,7 +132,7 @@ const LevenshteinGraphic = () => (
       <text x="7.5" y="42" fontSize="7" fill="#888" textAnchor="middle">2</text>
       <rect x="16" y="32" width="15" height="15" fill="#FDFBF7" stroke="#333" strokeWidth="0.8"/>
       <text x="23.5" y="42" fontSize="7" fill="#888" textAnchor="middle">1</text>
-      <rect x="32" y="32" width="15" height="15" fill="#BC4A54" stroke="#333" strokeWidth="1"/>
+      <rect x="32" y="32" width="15" height="15" fill="#AB526B" stroke="#333" strokeWidth="1"/>
       <text x="39.5" y="42" fontSize="7" fill="#fff" textAnchor="middle" fontWeight="bold">1</text>
     </g>
     <text x="50" y="84" fontSize="8" fill="#333" textAnchor="middle" fontFamily="monospace">Edit Distance DP Grid</text>
@@ -143,9 +143,9 @@ const LCSGraphic = () => (
   <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="100" height="100" rx="16" fill="#D3DFC8"/>
     <g transform="translate(10, 32)">
-      <text x="10" y="14" fontSize="9" fill="#BC4A54" fontWeight="bold">A</text>
+      <text x="10" y="14" fontSize="9" fill="#AB526B" fontWeight="bold">A</text>
       <text x="25" y="14" fontSize="9" fill="#10B981" fontWeight="bold">B</text>
-      <text x="40" y="14" fontSize="9" fill="#BC4A54" fontWeight="bold">C</text>
+      <text x="40" y="14" fontSize="9" fill="#AB526B" fontWeight="bold">C</text>
       <text x="55" y="14" fontSize="9" fill="#10B981" fontWeight="bold">D</text>
       <text x="70" y="14" fontSize="9" fill="#888">E</text>
     </g>
@@ -182,8 +182,8 @@ const RunLengthGraphic = () => (
     <g transform="translate(10, 30)">
       <rect x="0" y="0" width="80" height="16" rx="3" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
       <text x="40" y="11" fontSize="8" fill="#333" textAnchor="middle" fontFamily="monospace">"AAAAABBBCC"</text>
-      <path d="M40 22 L40 32" stroke="#BC4A54" strokeWidth="1.5"/>
-      <rect x="15" y="34" width="50" height="16" rx="3" fill="#BC4A54"/>
+      <path d="M40 22 L40 32" stroke="#AB526B" strokeWidth="1.5"/>
+      <rect x="15" y="34" width="50" height="16" rx="3" fill="#AB526B"/>
       <text x="40" y="45" fontSize="9" fill="#fff" textAnchor="middle" fontWeight="bold" fontFamily="monospace">"A5B3C2"</text>
     </g>
     <text x="50" y="76" fontSize="8" fill="#333" textAnchor="middle" fontFamily="monospace">Lossless Compression</text>
@@ -196,7 +196,7 @@ const ReverseWordsGraphic = () => (
     <g transform="translate(10, 30)">
       <rect x="0" y="0" width="36" height="16" rx="2" fill="#FDFBF7" stroke="#333" strokeWidth="0.8"/>
       <text x="18" y="11" fontSize="7" fill="#333" textAnchor="middle">"the"</text>
-      <rect x="42" y="0" width="38" height="16" rx="2" fill="#BC4A54"/>
+      <rect x="42" y="0" width="38" height="16" rx="2" fill="#AB526B"/>
       <text x="61" y="11" fontSize="7" fill="#fff" textAnchor="middle" fontWeight="bold">"sky"</text>
     </g>
     <path d="M40 52 C 55 64 25 64 40 52" stroke="#333" strokeWidth="1.2" fill="none"/>
@@ -209,8 +209,8 @@ const IsomorphicGraphic = () => (
     <rect width="100" height="100" rx="16" fill="#F4E9D4"/>
     <g transform="translate(15, 32)">
       <text x="15" y="12" fontSize="9" fill="#06B6D4" fontWeight="bold">e ➔ a</text>
-      <text x="15" y="26" fontSize="9" fill="#BC4A54" fontWeight="bold">g ➔ d</text>
-      <text x="15" y="40" fontSize="9" fill="#BC4A54" fontWeight="bold">g ➔ d</text>
+      <text x="15" y="26" fontSize="9" fill="#AB526B" fontWeight="bold">g ➔ d</text>
+      <text x="15" y="40" fontSize="9" fill="#AB526B" fontWeight="bold">g ➔ d</text>
     </g>
     <text x="50" y="78" fontSize="8" fill="#333" textAnchor="middle" fontFamily="monospace">"egg" ⟷ "add" Valid</text>
   </svg>
@@ -221,12 +221,12 @@ const ValidParenthesesGraphic = () => (
     <rect width="100" height="100" rx="16" fill="#E8D1CB"/>
     <g transform="translate(12, 34)">
       <rect x="0" y="0" width="76" height="20" rx="4" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
-      <text x="12" y="14" fontSize="11" fill="#BC4A54" fontWeight="bold">{'{'}</text>
+      <text x="12" y="14" fontSize="11" fill="#AB526B" fontWeight="bold">{'{'}</text>
       <text x="24" y="14" fontSize="11" fill="#06B6D4" fontWeight="bold">[</text>
       <text x="36" y="14" fontSize="11" fill="#10B981" fontWeight="bold">(</text>
       <text x="46" y="14" fontSize="11" fill="#10B981" fontWeight="bold">)</text>
       <text x="56" y="14" fontSize="11" fill="#06B6D4" fontWeight="bold">]</text>
-      <text x="66" y="14" fontSize="11" fill="#BC4A54" fontWeight="bold">{'}'}</text>
+      <text x="66" y="14" fontSize="11" fill="#AB526B" fontWeight="bold">{'}'}</text>
     </g>
     <text x="50" y="76" fontSize="8" fill="#10B981" textAnchor="middle" fontWeight="bold" fontFamily="monospace">LIFO Match: Valid ✓</text>
   </svg>
@@ -357,7 +357,7 @@ export default function StringHub() {
   });
 
   return (
-    <div className="min-h-[calc(100vh-76px)] bg-[#FDFBF7] dark:bg-[#121212] relative overflow-hidden flex flex-col transition-colors duration-300 pb-16">
+    <div className="min-h-[calc(100vh-76px)] bg-[#FDFBF7] dark:bg-[#331921] relative overflow-hidden flex flex-col transition-colors duration-300 pb-16">
       
       {/* Background Gradients */}
       <div className="absolute top-0 right-0 w-[60vw] h-[60vw] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none -translate-y-1/4 translate-x-1/4" />
@@ -384,7 +384,7 @@ export default function StringHub() {
               placeholder="Search 12 pure string algorithms..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-white dark:bg-[#1A1A1A] border border-[#EBE0D3] dark:border-[#333] rounded-full text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs text-gray-800 dark:text-gray-200"
+              className="w-full pl-9 pr-4 py-2 bg-white dark:bg-[#423834] border border-[#EBE0D3] dark:border-[#5C4E49] rounded-full text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs text-gray-800 dark:text-gray-200"
             />
           </div>
         </div>
@@ -414,10 +414,10 @@ export default function StringHub() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ delay: i * 0.03 }}
-                className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-4 md:p-5 shadow-sm border border-[#EBE0D3]/50 dark:border-[#333] hover:shadow-md transition-all duration-300 group flex flex-col h-full cursor-pointer"
+                className="bg-white dark:bg-[#423834] rounded-2xl p-4 md:p-5 shadow-sm border border-[#EBE0D3]/50 dark:border-[#5C4E49] hover:shadow-md transition-all duration-300 group flex flex-col h-full cursor-pointer"
               >
                 <Link to={`/visualizer/string/${item.id}`} className="block group/head flex-1 flex flex-col">
-                  <div className="w-full h-24 md:h-28 mb-3 rounded-xl overflow-hidden bg-gray-50 dark:bg-[#252525] flex items-center justify-center transform group-hover/head:scale-[1.02] transition-transform duration-300">
+                  <div className="w-full h-24 md:h-28 mb-3 rounded-xl overflow-hidden bg-gray-50 dark:bg-[#5C4E49] flex items-center justify-center transform group-hover/head:scale-[1.02] transition-transform duration-300">
                     {item.graphic}
                   </div>
 
@@ -438,7 +438,7 @@ export default function StringHub() {
                 <div className="flex justify-end mt-auto pt-2">
                   <Link 
                     to={`/visualizer/string/${item.id}`}
-                    className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white dark:bg-[#1A1A1A] border border-[#EBE0D3] dark:border-[#333] flex items-center justify-center text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300 shadow-xs"
+                    className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white dark:bg-[#423834] border border-[#EBE0D3] dark:border-[#5C4E49] flex items-center justify-center text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300 shadow-xs"
                     title={`Visualize ${item.name}`}
                   >
                     <ArrowRight size={14} className="md:w-4 md:h-4" />

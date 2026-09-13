@@ -83,7 +83,7 @@ const Sandbox = () => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="flex h-full p-4 gap-3 overflow-hidden"
+      className="flex h-full p-4 gap-3 overflow-hidden bg-[#FAF7F2] dark:bg-[#331921] text-[#2D1F23] dark:text-[#F4EBC3] transition-colors"
     >
       <div className="flex flex-col w-1/2 gap-3 h-[calc(100vh-64px)]">
         
@@ -101,7 +101,7 @@ const Sandbox = () => {
               <select 
                 value={language} 
                 onChange={handleLanguageChange}
-                className="appearance-none bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-md pl-2 pr-6 py-1 text-[11px] font-medium focus:outline-none focus:ring-1 focus:ring-[var(--color-nova-red)]/50 transition-all cursor-pointer"
+                className="appearance-none bg-white/80 dark:bg-[#423834] border border-[#EBE0D3] dark:border-[#5C4E49] text-[#2D1F23] dark:text-[#F4EBC3] rounded-md pl-2 pr-6 py-1 text-[11px] font-medium focus:outline-none focus:ring-1 focus:ring-[#AB526B]/50 transition-all cursor-pointer"
               >
                 <option value="javascript">JavaScript</option>
                 <option value="python">Python</option>
@@ -120,7 +120,7 @@ const Sandbox = () => {
             <button 
               onClick={handleVisualize}
               disabled={isVisualizing}
-              className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium bg-gradient-to-r from-[var(--color-nova-brown)] to-[#a88a7c] hover:brightness-110 text-white shadow-sm shadow-[var(--color-nova-brown)]/30 rounded-md transition-all transform active:scale-95 disabled:opacity-50 disabled:active:scale-100"
+              className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium bg-[#BCA297] hover:bg-[#A4877B] text-white shadow-xs rounded-md transition-all transform active:scale-95 disabled:opacity-50"
             >
               {isVisualizing ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
               Visualize
@@ -128,7 +128,7 @@ const Sandbox = () => {
             <button 
               onClick={handleRunCode}
               disabled={isExecuting}
-              className="flex items-center gap-1 px-3 py-1 text-[11px] font-bold bg-gradient-to-r from-[var(--color-nova-red)] to-[#C86B85] text-white shadow-sm shadow-[var(--color-nova-red)]/40 hover:shadow-[var(--color-nova-red)]/60 rounded-md transition-all transform hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 disabled:hover:translate-y-0 disabled:active:scale-100"
+              className="flex items-center gap-1 px-3 py-1 text-[11px] font-bold bg-[#AB526B] hover:bg-[#8E3B53] text-white shadow-xs rounded-md transition-all transform hover:-translate-y-0.5 active:scale-95 disabled:opacity-50"
             >
               {isExecuting ? <Loader2 size={12} className="animate-spin" /> : <Play size={12} className="fill-white" />}
               Run Code

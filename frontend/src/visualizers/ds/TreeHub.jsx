@@ -10,7 +10,7 @@ import { ArrowRight, Search, ArrowLeft, GitFork } from 'lucide-react';
 const BSTGraphic = () => (
   <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="100" height="100" rx="16" fill="#F4E9D4"/>
-    <circle cx="50" cy="24" r="8" fill="#BC4A54" stroke="#333" strokeWidth="1"/>
+    <circle cx="50" cy="24" r="8" fill="#AB526B" stroke="#333" strokeWidth="1"/>
     <text x="50" y="27.5" fontSize="8" fill="#fff" textAnchor="middle" fontWeight="bold">50</text>
     <line x1="44" y1="29" x2="30" y2="49" stroke="#333" strokeWidth="1.2"/>
     <line x1="56" y1="29" x2="70" y2="49" stroke="#333" strokeWidth="1.2"/>
@@ -34,7 +34,7 @@ const AVLGraphic = () => (
     <text x="26" y="63" fontSize="7" fill="#333" textAnchor="middle">20</text>
     <circle cx="74" cy="60" r="7" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
     <text x="74" y="63" fontSize="7" fill="#333" textAnchor="middle">40</text>
-    <path d="M78 48 C 88 35 65 15 52 20" stroke="#BC4A54" strokeWidth="1.5" strokeDasharray="2 2" fill="none"/>
+    <path d="M78 48 C 88 35 65 15 52 20" stroke="#AB526B" strokeWidth="1.5" strokeDasharray="2 2" fill="none"/>
     <text x="50" y="82" fontSize="8" fill="#333" textAnchor="middle" fontFamily="monospace">|BF| ≤ 1 Auto-Rotations</text>
   </svg>
 );
@@ -58,7 +58,7 @@ const InorderGraphic = () => (
 const PreorderGraphic = () => (
   <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="100" height="100" rx="16" fill="#F4E9D4"/>
-    <circle cx="50" cy="24" r="8" fill="#BC4A54" stroke="#333" strokeWidth="1"/>
+    <circle cx="50" cy="24" r="8" fill="#AB526B" stroke="#333" strokeWidth="1"/>
     <text x="50" y="27.5" fontSize="8" fill="#fff" textAnchor="middle" fontWeight="bold">1</text>
     <line x1="45" y1="28" x2="30" y2="46" stroke="#333" strokeWidth="1"/>
     <line x1="55" y1="28" x2="70" y2="46" stroke="#333" strokeWidth="1"/>
@@ -73,7 +73,7 @@ const PreorderGraphic = () => (
 const PostorderGraphic = () => (
   <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="100" height="100" rx="16" fill="#D3DFC8"/>
-    <circle cx="50" cy="24" r="8" fill="#BC4A54" stroke="#333" strokeWidth="1"/>
+    <circle cx="50" cy="24" r="8" fill="#AB526B" stroke="#333" strokeWidth="1"/>
     <text x="50" y="27.5" fontSize="8" fill="#fff" textAnchor="middle" fontWeight="bold">3</text>
     <line x1="45" y1="28" x2="30" y2="46" stroke="#333" strokeWidth="1"/>
     <line x1="55" y1="28" x2="70" y2="46" stroke="#333" strokeWidth="1"/>
@@ -93,8 +93,8 @@ const LevelorderGraphic = () => (
     <line x1="55" y1="26" x2="70" y2="42" stroke="#333" strokeWidth="1"/>
     <circle cx="26" cy="46" r="6" fill="#06B6D4" stroke="#333" strokeWidth="1"/>
     <circle cx="74" cy="46" r="6" fill="#06B6D4" stroke="#333" strokeWidth="1"/>
-    <path d="M15 22 L85 22" stroke="#BC4A54" strokeWidth="1" strokeDasharray="3 3"/>
-    <path d="M15 46 L85 46" stroke="#BC4A54" strokeWidth="1" strokeDasharray="3 3"/>
+    <path d="M15 22 L85 22" stroke="#AB526B" strokeWidth="1" strokeDasharray="3 3"/>
+    <path d="M15 46 L85 46" stroke="#AB526B" strokeWidth="1" strokeDasharray="3 3"/>
     <text x="50" y="76" fontSize="8" fill="#333" textAnchor="middle" fontFamily="monospace">Row-by-Row FIFO Queue</text>
   </svg>
 );
@@ -102,10 +102,10 @@ const LevelorderGraphic = () => (
 const LCAGraphic = () => (
   <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="100" height="100" rx="16" fill="#F4E9D4"/>
-    <circle cx="50" cy="24" r="8" fill="#BC4A54" stroke="#333" strokeWidth="1.5"/>
+    <circle cx="50" cy="24" r="8" fill="#AB526B" stroke="#333" strokeWidth="1.5"/>
     <text x="50" y="27.5" fontSize="8" fill="#fff" textAnchor="middle" fontWeight="bold">LCA</text>
-    <line x1="45" y1="28" x2="26" y2="52" stroke="#BC4A54" strokeWidth="1.8"/>
-    <line x1="55" y1="28" x2="74" y2="52" stroke="#BC4A54" strokeWidth="1.8"/>
+    <line x1="45" y1="28" x2="26" y2="52" stroke="#AB526B" strokeWidth="1.8"/>
+    <line x1="55" y1="28" x2="74" y2="52" stroke="#AB526B" strokeWidth="1.8"/>
     <circle cx="26" cy="56" r="7" fill="#06B6D4" stroke="#333" strokeWidth="1"/>
     <text x="26" y="59" fontSize="7" fill="#fff" textAnchor="middle" fontWeight="bold">p</text>
     <circle cx="74" cy="56" r="7" fill="#06B6D4" stroke="#333" strokeWidth="1"/>
@@ -131,7 +131,7 @@ const MaxDepthGraphic = () => (
 const InvertTreeGraphic = () => (
   <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="100" height="100" rx="16" fill="#E8D1CB"/>
-    <circle cx="50" cy="24" r="7" fill="#BC4A54" stroke="#333" strokeWidth="1"/>
+    <circle cx="50" cy="24" r="7" fill="#AB526B" stroke="#333" strokeWidth="1"/>
     <circle cx="25" cy="54" r="7" fill="#06B6D4" stroke="#333" strokeWidth="1"/>
     <text x="25" y="57" fontSize="7" fill="#fff" textAnchor="middle">L</text>
     <circle cx="75" cy="54" r="7" fill="#10B981" stroke="#333" strokeWidth="1"/>
@@ -160,13 +160,13 @@ const ValidateBSTGraphic = () => (
 const DiameterGraphic = () => (
   <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="100" height="100" rx="16" fill="#D3DFC8"/>
-    <circle cx="50" cy="20" r="6" fill="#BC4A54" stroke="#333" strokeWidth="1"/>
-    <line x1="45" y1="24" x2="25" y2="46" stroke="#BC4A54" strokeWidth="2"/>
-    <line x1="55" y1="24" x2="75" y2="46" stroke="#BC4A54" strokeWidth="2"/>
-    <circle cx="25" cy="50" r="6" fill="#BC4A54" stroke="#333" strokeWidth="1"/>
-    <line x1="25" y1="56" x2="15" y2="76" stroke="#BC4A54" strokeWidth="2"/>
-    <circle cx="15" cy="78" r="6" fill="#BC4A54" stroke="#333" strokeWidth="1"/>
-    <circle cx="75" cy="50" r="6" fill="#BC4A54" stroke="#333" strokeWidth="1"/>
+    <circle cx="50" cy="20" r="6" fill="#AB526B" stroke="#333" strokeWidth="1"/>
+    <line x1="45" y1="24" x2="25" y2="46" stroke="#AB526B" strokeWidth="2"/>
+    <line x1="55" y1="24" x2="75" y2="46" stroke="#AB526B" strokeWidth="2"/>
+    <circle cx="25" cy="50" r="6" fill="#AB526B" stroke="#333" strokeWidth="1"/>
+    <line x1="25" y1="56" x2="15" y2="76" stroke="#AB526B" strokeWidth="2"/>
+    <circle cx="15" cy="78" r="6" fill="#AB526B" stroke="#333" strokeWidth="1"/>
+    <circle cx="75" cy="50" r="6" fill="#AB526B" stroke="#333" strokeWidth="1"/>
     <text x="50" y="82" fontSize="8" fill="#333" textAnchor="middle" fontFamily="monospace">Longest Path Between Leaves</text>
   </svg>
 );
@@ -174,7 +174,7 @@ const DiameterGraphic = () => (
 const SegmentTreeGraphic = () => (
   <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="100" height="100" rx="16" fill="#E8D1CB"/>
-    <rect x="35" y="16" width="30" height="15" rx="3" fill="#BC4A54"/>
+    <rect x="35" y="16" width="30" height="15" rx="3" fill="#AB526B"/>
     <text x="50" y="27" fontSize="8" fill="#fff" textAnchor="middle" fontWeight="bold">Σ[0..3]</text>
     <line x1="42" y1="31" x2="28" y2="48" stroke="#333" strokeWidth="1.2"/>
     <line x1="58" y1="31" x2="72" y2="48" stroke="#333" strokeWidth="1.2"/>
@@ -311,7 +311,7 @@ export default function TreeHub() {
   });
 
   return (
-    <div className="min-h-[calc(100vh-76px)] bg-[#FDFBF7] dark:bg-[#121212] relative overflow-hidden flex flex-col transition-colors duration-300 pb-16">
+    <div className="min-h-[calc(100vh-76px)] bg-[#FDFBF7] dark:bg-[#331921] relative overflow-hidden flex flex-col transition-colors duration-300 pb-16">
       
       {/* Background Gradients */}
       <div className="absolute top-0 right-0 w-[60vw] h-[60vw] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none -translate-y-1/4 translate-x-1/4" />
@@ -338,7 +338,7 @@ export default function TreeHub() {
               placeholder="Search 12 tree algorithms..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-white dark:bg-[#1A1A1A] border border-[#EBE0D3] dark:border-[#333] rounded-full text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-xs text-gray-800 dark:text-gray-200"
+              className="w-full pl-9 pr-4 py-2 bg-white dark:bg-[#423834] border border-[#EBE0D3] dark:border-[#5C4E49] rounded-full text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-xs text-gray-800 dark:text-gray-200"
             />
           </div>
         </div>
@@ -368,11 +368,11 @@ export default function TreeHub() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ delay: i * 0.03 }}
-                className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-4 md:p-5 shadow-sm border border-[#EBE0D3]/50 dark:border-[#333] hover:shadow-md transition-all duration-300 group flex flex-col h-full cursor-pointer"
+                className="bg-white dark:bg-[#423834] rounded-2xl p-4 md:p-5 shadow-sm border border-[#EBE0D3]/50 dark:border-[#5C4E49] hover:shadow-md transition-all duration-300 group flex flex-col h-full cursor-pointer"
               >
                 <Link to={`/visualizer/tree/${item.id}`} className="block group/head flex-1 flex flex-col">
                   {/* Graphic Thumbnail */}
-                  <div className="w-full h-24 md:h-28 mb-3 rounded-xl overflow-hidden bg-gray-50 dark:bg-[#252525] flex items-center justify-center transform group-hover/head:scale-[1.02] transition-transform duration-300">
+                  <div className="w-full h-24 md:h-28 mb-3 rounded-xl overflow-hidden bg-gray-50 dark:bg-[#5C4E49] flex items-center justify-center transform group-hover/head:scale-[1.02] transition-transform duration-300">
                     {item.graphic}
                   </div>
 
@@ -396,7 +396,7 @@ export default function TreeHub() {
                 <div className="flex justify-end mt-auto pt-2">
                   <Link 
                     to={`/visualizer/tree/${item.id}`}
-                    className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white dark:bg-[#1A1A1A] border border-[#EBE0D3] dark:border-[#333] flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-300 shadow-xs"
+                    className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white dark:bg-[#423834] border border-[#EBE0D3] dark:border-[#5C4E49] flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-300 shadow-xs"
                     title={`Visualize ${item.name}`}
                   >
                     <ArrowRight size={14} className="md:w-4 md:h-4" />

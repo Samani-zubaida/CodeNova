@@ -27,11 +27,11 @@ export default function ActivityHeatmap({ activityLog = [], currentStreak = 0, l
   });
 
   return (
-    <div className="bg-white dark:bg-[#1A1A1A] border border-[#EBE0D3] dark:border-[#333] rounded-xl p-5 mb-6">
+    <div className="bg-white dark:bg-[#423834] border border-[#EBE0D3] dark:border-[#5C4E49] dark:border-[#5C4E49] rounded-xl p-5 mb-6">
       <div className="flex justify-between items-end mb-4">
         <div>
           <h3 className="text-white font-bold text-lg mb-1">Activity Streak</h3>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">Log in daily to keep your streak alive.</p>
+          <p className="text-[#2D1F23]/60 dark:text-[#BCA297] text-sm">Log in daily to keep your streak alive.</p>
         </div>
         <div className="flex gap-4 text-center">
           <div>
@@ -54,7 +54,7 @@ export default function ActivityHeatmap({ activityLog = [], currentStreak = 0, l
               <div 
                 key={day.date} 
                 title={day.date}
-                className={`w-3 h-3 rounded-[2px] ${day.isActive ? 'bg-[#C5CEAE] shadow-[0_0_5px_#C5CEAE80]' : 'bg-[#FDFBF7] dark:bg-[#252525]'}`}
+                className={`w-3 h-3 rounded-[2px] ${day.isActive ? 'bg-[#C5CEAE] shadow-[0_0_5px_#C5CEAE80]' : 'bg-[#FAF7F2] dark:bg-[#5C4E49]'}`}
               ></div>
             ))}
           </div>

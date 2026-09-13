@@ -64,10 +64,14 @@
     "email": "hacker1@local.dev",
     "passwordHash": "mock_local_hash",
     "activityLog": [
-      "2026-09-06"
+      "2026-09-06",
+      "2026-09-07",
+      "2026-09-11",
+      "2026-09-12",
+      "2026-09-13"
     ],
-    "currentStreak": 1,
-    "longestStreak": 1,
+    "currentStreak": 3,
+    "longestStreak": 3,
     "earnedBadges": [
       {
         "badgeId": "welcome",
@@ -76,6 +80,7 @@
     ],
     "xp": 100,
     "createdAt": "2026-09-06T10:57:46.348Z",
-    "_id": "usr_1788692266348_tj1m6"
+    "_id": "usr_1788692266348_tj1m6",
+    "updatedAt": "2026-09-13T07:16:15.570Z"
   }
 ]

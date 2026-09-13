@@ -2,10 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Lock, Unlock, Play, Square, History, Cpu, ArrowRight } from 'lucide-react';
 
-export default function AESVisualizer() {
+export default function AESVisualizer({ mode: propMode }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentStep, setCurrentStep] = useState(-1);
-  const [mode, setMode] = useState('encrypt');
+  const [mode, setMode] = useState(propMode || 'encrypt');
+
+  useEffect(() => {
+    if (propMode && propMode !== mode) {
+      setMode(propMode);
+      setIsPlaying(false);
+      setCurrentStep(-1);
+    }
+  }, [propMode]);
 
   // Pseudo-AES states
   const steps = [

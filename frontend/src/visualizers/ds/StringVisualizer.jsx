@@ -5,12 +5,13 @@ import {
   Play, Pause, SkipForward, SkipBack, RotateCcw, Volume2, VolumeX,
   Search, Compass, Layers, CheckCircle, AlertCircle, Type, Sparkles,
   Hash, ArrowRight, ArrowLeft, RefreshCw, Eye, CornerDownRight, Database,
-  Sliders, Activity, Cpu, Lightbulb, Zap, ShieldCheck, HelpCircle, Key, FileText
+  Sliders, Activity, Cpu, Lightbulb, Zap, ShieldCheck, HelpCircle, Key, FileText, Award, Check, X, Flame
 } from 'lucide-react';
 import ResponsiveVisualizerShell from '../../components/visualizer/ResponsiveVisualizerShell';
 import ComplexityBadge from '../../components/visualizer/ComplexityBadge';
 import CodeInspector from '../../components/visualizer/CodeInspector';
 import VisualizerPlaybackBar from '../../components/visualizer/VisualizerPlaybackBar';
+import DryRunVariableTracker from '../../components/visualizer/DryRunVariableTracker';
 import { STRING_ALGORITHMS } from './StringHub';
 
 // Web Audio Sound Synthesizer
@@ -1400,6 +1401,154 @@ function generateParenthesesSteps(brackets) {
 }
 
 // MAIN EXPORT COMPONENT
+
+// Pedagogical HUD Helper to explain WHY each step happens in String algorithms
+const getStringHUDInfo = (algoId, step, text, pattern, s2) => {
+  const t = text || '';
+  const p = pattern || '';
+  const tChar = step.tIdx !== undefined && step.tIdx < t.length ? t[step.tIdx] : null;
+  const pChar = step.pIdx !== undefined && step.pIdx < p.length ? p[step.pIdx] : null;
+
+  // 1. KMP
+  if (algoId === 'kmp') {
+    if (step.matchFound) {
+      return {
+        badge: '🎯 PATTERN OCCURRENCE FOUND!',
+        bg: 'bg-emerald-500/20 border-emerald-500/60 text-emerald-300',
+        icon: '🎯',
+        why: `The full pattern "${p}" was discovered starting at index ${step.tIdx - p.length + 1}! To find any overlapping occurrences, p jumps to LPS[m-1] = ${step.lps?.[p.length - 1] ?? 0} without resetting text pointer t.`
+      };
+    }
+    if (step.phase === 'lps') {
+      return {
+        badge: '📐 BUILDING LPS (FAILURE) TABLE',
+        bg: 'bg-cyan-500/20 border-cyan-500/60 text-cyan-300',
+        icon: '📐',
+        why: `Precomputing Longest Prefix which is also a Suffix for pattern[0..${step.pIdx}]. When a mismatch occurs during searching, this table dictates the exact number of characters to skip without backtracking text pointer t.`
+      };
+    }
+    if (step.status?.includes('Match:')) {
+      return {
+        badge: '✓ CHARACTER MATCH (t & p++)',
+        bg: 'bg-emerald-500/20 border-emerald-500/60 text-emerald-300',
+        icon: '✓',
+        why: `text[${step.tIdx}] ('${tChar}') matches pattern[${step.pIdx}] ('${pChar}')! Both characters are verified. Increment both text pointer t (${step.tIdx} -> ${step.tIdx + 1}) and pattern pointer p (${step.pIdx} -> ${step.pIdx + 1}).`
+      };
+    }
+    if (step.status?.includes('Mismatch:')) {
+      const prevP = step.pIdx ?? 0;
+      const newP = step.lps?.[Math.max(0, prevP - 1)] ?? 0;
+      return {
+        badge: '⚡ LPS JUMP (NO TEXT BACKTRACK)',
+        bg: 'bg-rose-500/20 border-rose-500/60 text-rose-300',
+        icon: '⚡',
+        why: `Mismatch at text[${step.tIdx}] ('${tChar}') vs pattern[${prevP}] ('${pChar}'). Instead of rewinding text pointer t (which would cause naive O(N*M) worst-case time), KMP jumps pattern pointer p to LPS[${Math.max(0, prevP - 1)}] = ${newP}. We skip ${prevP - newP} redundant re-checks!`
+      };
+    }
+    return {
+      badge: '🔍 KMP SCANNING IN PROGRESS',
+      bg: 'bg-amber-500/20 border-amber-500/60 text-amber-300',
+      icon: '🔍',
+      why: step.status || 'Scanning text characters with KMP non-backtracking automata.'
+    };
+  }
+
+  // 2. Rabin-Karp
+  if (algoId === 'rabin_karp') {
+    if (step.hashMatch) {
+      return {
+        badge: '✓ HASH MATCH! VERIFYING CHARACTERS',
+        bg: 'bg-emerald-500/20 border-emerald-500/60 text-emerald-300',
+        icon: '✓',
+        why: `Window Hash (${step.wHash}) matches Pattern Hash (${step.pHash})! We now verify characters one-by-one to confirm an exact match and rule out spurious hash collisions.`
+      };
+    }
+    return {
+      badge: '🔢 ROLLING HASH RECOMPUTATION (O(1))',
+      bg: 'bg-cyan-500/20 border-cyan-500/60 text-cyan-300',
+      icon: '🔢',
+      why: `Hashes do not match (${step.wHash} !== ${step.pHash}). Using rolling hash math, we drop the exiting character and add the entering character in O(1) time without re-hashing all M characters.`
+    };
+  }
+
+  // 3. Longest Palindrome
+  if (algoId === 'longest_palindrome') {
+    if (step.status?.includes('Symmetry matched')) {
+      const leftChar = t[step.currL];
+      const rightChar = t[step.currR];
+      const spanLen = (step.currR ?? 0) - (step.currL ?? 0) + 1;
+      return {
+        badge: '👑 SYMMETRIC MATCH: EXPANDING WINGS',
+        bg: 'bg-emerald-500/20 border-emerald-500/60 text-emerald-300',
+        icon: '👑',
+        why: `text[${step.currL}] ('${leftChar}') === text[${step.currR}] ('${rightChar}'). Palindromic mirror symmetry holds! Substring "${t.substring(step.currL, step.currR + 1)}" is a valid palindrome of length ${spanLen}. Expand wings outward (left--, right++).`
+      };
+    }
+    if (step.status?.includes('Testing')) {
+      return {
+        badge: '📍 ANCHORING AT NEW CENTER',
+        bg: 'bg-amber-500/20 border-amber-500/60 text-amber-300',
+        icon: '📍',
+        why: `Testing center beacon at index ${step.centerL === step.centerR ? step.centerL : `${step.centerL} and ${step.centerR}`}. Every character and every space between adjacent characters can serve as the center of a palindrome.`
+      };
+    }
+    return {
+      badge: '✨ PALINDROME SEARCH',
+      bg: 'bg-purple-500/20 border-purple-500/60 text-purple-300',
+      icon: '✨',
+      why: step.status || 'Expanding outward around centers.'
+    };
+  }
+
+  // 4. Levenshtein
+  if (algoId === 'levenshtein') {
+    return {
+      badge: '📊 DP EDIT DISTANCE GRID',
+      bg: 'bg-cyan-500/20 border-cyan-500/60 text-cyan-300',
+      icon: '📊',
+      why: step.status || 'Evaluating minimum operations between Insert (+1), Delete (+1), and Replace/Match (+1/+0).'
+    };
+  }
+
+  // 5. LCS
+  if (algoId === 'lcs') {
+    return {
+      badge: '🧬 LONGEST COMMON SUBSEQUENCE',
+      bg: 'bg-emerald-500/20 border-emerald-500/60 text-emerald-300',
+      icon: '🧬',
+      why: step.status || 'If characters match, take 1 + diagonal; otherwise take max of top and left DP cells.'
+    };
+  }
+
+  // 6. Boyer-Moore
+  if (algoId === 'boyer_moore') {
+    return {
+      badge: '⚡ BAD CHARACTER HEURISTIC SCAN',
+      bg: 'bg-amber-500/20 border-amber-500/60 text-amber-300',
+      icon: '⚡',
+      why: step.status || 'Scanning pattern from right-to-left. On mismatch, shift pattern by bad character lookup.'
+    };
+  }
+
+  // 7. Z-Algorithm
+  if (algoId === 'z_algorithm') {
+    return {
+      badge: '📦 Z-BOX [L, R] SEARCH',
+      bg: 'bg-purple-500/20 border-purple-500/60 text-purple-300',
+      icon: '📦',
+      why: step.status || 'Z[i] stores the length of the longest substring starting at i that matches a prefix of S.'
+    };
+  }
+
+  // Default
+  return {
+    badge: '📍 STRING ALGORITHM EXECUTION',
+    bg: 'bg-cyan-500/20 border-cyan-500/60 text-cyan-300',
+    icon: '📍',
+    why: step.status || 'Executing string processing algorithm.'
+  };
+};
+
 export default function StringVisualizer() {
   const { algoId } = useParams();
   const navigate = useNavigate();
@@ -1419,6 +1568,7 @@ export default function StringVisualizer() {
   const [secondTextInput, setSecondTextInput] = useState('sitting');
 
   const [isMuted, setIsMuted] = useState(false);
+  const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
 
   // Playback state
   const [steps, setSteps] = useState([]);
@@ -1504,7 +1654,7 @@ export default function StringVisualizer() {
   // Ticker loop
   useEffect(() => {
     if (isPlaying) {
-      const delay = Math.max(80, Math.round(900 / speed));
+      const delay = Math.max(180, Math.round(1500 / speed));
       timerRef.current = setTimeout(() => {
         if (currentStepIdx < steps.length - 1) {
           const nextIdx = currentStepIdx + 1;
@@ -1560,102 +1710,222 @@ export default function StringVisualizer() {
     playSynthTone('char', isMuted);
   };
 
-  // RENDER CANVASES ACCORDING TO ALGORITHM
+  // RENDER CANVASES ACCORDING TO ALGORITHM WITH EDUCATIONAL ALIGNMENT
   const renderCanvas = () => {
-    // 1. KMP CANVAS
+    // 1. KMP CANVAS (DIRECT SLIDING ALIGNMENT + LASER CONNECTOR + INTERACTIVE LPS)
     if (currentAlgoId === 'kmp') {
+      const cellStride = 46; // 40px cell + 6px gap
+      const pOffset = ((step.tIdx ?? 0) - (step.pIdx ?? 0)) * cellStride;
+      const isCharMatch = step.status?.includes('Match:');
+      const isCharMismatch = step.status?.includes('Mismatch:');
+      const currentTChar = textInput[step.tIdx ?? 0];
+      const currentPChar = patternInput[step.pIdx ?? 0];
+
       return (
         <div className="flex flex-col items-center gap-6 w-full py-4">
-          <div className="w-full flex flex-col items-center">
-            <div className="text-xs uppercase font-mono tracking-wider text-slate-400 mb-2">Text Array (Pointer t = {step.tIdx ?? 0})</div>
-            <div className="flex flex-wrap gap-1.5 justify-center max-w-full overflow-x-auto p-2">
-              {textInput.split('').map((char, idx) => {
-                const isCurrent = step.tIdx === idx;
-                const isMatched = step.matches && step.matches.some(m => idx >= m && idx < m + patternInput.length);
-                return (
-                  <div key={idx} className="flex flex-col items-center">
-                    <span className="text-[10px] font-mono text-slate-500 mb-1">{idx}</span>
-                    <motion.div
-                      animate={{
-                        scale: isCurrent ? 1.15 : 1,
-                        borderColor: isMatched ? '#10b981' : isCurrent ? '#06b6d4' : '#334155',
-                        backgroundColor: isMatched ? 'rgba(16, 185, 129, 0.25)' : isCurrent ? 'rgba(6, 182, 212, 0.25)' : '#0f172a'
-                      }}
-                      className="w-9 h-10 rounded-lg border flex items-center justify-center font-mono font-bold text-slate-100 shadow-sm"
-                    >
-                      {char}
-                    </motion.div>
-                  </div>
-                );
-              })}
+          {/* Active Comparison Laser HUD Callout */}
+          <div className="w-full max-w-xl p-3 bg-white dark:bg-[#423834]/90 border border-cyan-500/40 rounded-2xl shadow-lg flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono font-bold text-gray-500 dark:text-[#BCA297]">Comparing:</span>
+              <span className="px-2.5 py-1 rounded bg-cyan-500/20 border border-cyan-400 text-cyan-200 font-mono text-xs font-bold">
+                Text[t={step.tIdx ?? 0}]: '{currentTChar ?? ''}'
+              </span>
+              <span className="text-xs font-mono text-gray-500 dark:text-[#BCA297] font-extrabold">vs</span>
+              <span className="px-2.5 py-1 rounded bg-amber-500/20 border border-amber-400 text-amber-200 font-mono text-xs font-bold">
+                Pattern[p={step.pIdx ?? 0}]: '{currentPChar ?? ''}'
+              </span>
             </div>
+            {isCharMatch ? (
+              <span className="px-2.5 py-1 rounded-lg bg-emerald-500/20 border border-emerald-400 text-emerald-300 text-xs font-mono font-bold flex items-center gap-1 animate-pulse">
+                <Check className="w-3.5 h-3.5" /> MATCH (Advance t, p)
+              </span>
+            ) : isCharMismatch ? (
+              <span className="px-2.5 py-1 rounded-lg bg-rose-500/20 border border-rose-400 text-rose-300 text-xs font-mono font-bold flex items-center gap-1 animate-pulse">
+                <X className="w-3.5 h-3.5" /> MISMATCH (Consult LPS)
+              </span>
+            ) : (
+              <span className="text-xs font-mono text-slate-500">Aligning...</span>
+            )}
           </div>
 
-          <div className="w-full flex flex-col items-center">
-            <div className="text-xs uppercase font-mono tracking-wider text-slate-400 mb-2">Pattern Alignment (Pointer p = {step.pIdx ?? 0})</div>
-            <div className="flex flex-wrap gap-1.5 justify-center max-w-full overflow-x-auto p-2">
-              {patternInput.split('').map((char, idx) => {
-                const isP = step.pIdx === idx;
-                return (
-                  <div key={idx} className="flex flex-col items-center">
-                    <span className="text-[10px] font-mono text-slate-500 mb-1">{idx}</span>
-                    <motion.div
-                      animate={{
-                        scale: isP ? 1.15 : 1,
-                        borderColor: isP ? '#f59e0b' : '#334155',
-                        backgroundColor: isP ? 'rgba(245, 158, 11, 0.25)' : '#0f172a'
-                      }}
-                      className="w-9 h-10 rounded-lg border flex items-center justify-center font-mono font-bold text-amber-300 shadow-sm"
-                    >
-                      {char}
-                    </motion.div>
-                  </div>
-                );
-              })}
+          {/* Interactive Aligned Canvas Tracks */}
+          <div className="w-full max-w-3xl overflow-x-auto p-4 bg-white dark:bg-[#331921]/80 border border-[#EBE0D3] dark:border-[#5C4E49] rounded-3xl flex flex-col gap-6 relative">
+            {/* Track 1: Text String Array */}
+            <div className="flex flex-col">
+              <div className="text-xs font-mono text-cyan-400 font-bold mb-2 flex items-center justify-between">
+                <span>Text Array (Pointer t = {step.tIdx ?? 0})</span>
+                <span className="text-[10px] text-slate-500">Indices 0 to {textInput.length - 1}</span>
+              </div>
+              <div className="flex gap-1.5 relative">
+                {textInput.split('').map((char, idx) => {
+                  const isCurrent = step.tIdx === idx;
+                  const isMatched = step.matches && step.matches.some(m => idx >= m && idx < m + patternInput.length);
+                  return (
+                    <div key={idx} className="flex flex-col items-center min-w-[40px]">
+                      <span className={`text-[10px] font-mono mb-1 font-semibold ${isCurrent ? 'text-cyan-400 font-bold' : 'text-slate-500'}`}>
+                        {idx}
+                      </span>
+                      <motion.div
+                        animate={{
+                          scale: isCurrent ? 1.15 : 1,
+                          borderColor: isMatched ? '#10b981' : isCurrent ? '#06b6d4' : '#334155',
+                          backgroundColor: isMatched ? 'rgba(16, 185, 129, 0.25)' : isCurrent ? 'rgba(6, 182, 212, 0.25)' : '#423834'
+                        }}
+                        className={`w-10 h-12 rounded-xl border flex items-center justify-center font-mono font-extrabold text-base shadow-md ${
+                          isMatched ? 'text-emerald-200' : isCurrent ? 'text-cyan-200 ring-2 ring-cyan-400/50' : 'text-[#2D1F23] dark:text-[#F4EBC3]'
+                        }`}
+                      >
+                        {char}
+                      </motion.div>
+                      {isCurrent && (
+                        <span className="text-[9px] font-mono text-cyan-400 font-bold mt-1">▲ t</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
 
-          <div className="w-full max-w-xl bg-slate-900/80 border border-slate-800 rounded-xl p-4 flex flex-col items-center">
-            <div className="text-xs font-mono font-bold text-cyan-400 mb-2 flex items-center gap-1.5">
-              <Layers className="w-4 h-4" /> Preprocessed LPS (Longest Prefix Suffix) Table
-            </div>
-            <div className="flex gap-2">
-              {patternInput.split('').map((char, idx) => (
-                <div key={idx} className="flex flex-col items-center">
-                  <span className="text-[11px] font-mono text-slate-400 font-semibold">{char}</span>
-                  <div className={`w-8 h-8 rounded border flex items-center justify-center font-mono text-sm mt-1 font-bold ${
-                    step.pIdx === idx ? 'border-amber-400 bg-amber-500/20 text-amber-200' : 'border-slate-700 bg-slate-800 text-slate-300'
-                  }`}>
-                    {step.lps ? step.lps[idx] : 0}
-                  </div>
+            {/* Vertical Comparison Laser Beam */}
+            {step.phase === 'search' && step.tIdx !== undefined && step.pIdx !== undefined && (
+              <div className="w-full flex items-center justify-center my-[-8px]">
+                <div className={`px-3 py-1 rounded-full text-[10px] font-mono font-extrabold flex items-center gap-1.5 border shadow-lg ${
+                  isCharMatch ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300' : 'bg-rose-500/20 border-rose-400 text-rose-300'
+                }`}>
+                  {isCharMatch ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                  {isCharMatch ? 'Characters Match' : 'Mismatch: Trigger LPS Jump'}
                 </div>
-              ))}
+              </div>
+            )}
+
+            {/* Track 2: Aligned Sliding Pattern Array */}
+            <div className="flex flex-col">
+              <div className="text-xs font-mono text-amber-400 font-bold mb-2 flex items-center justify-between">
+                <span>Pattern Sliding Track (Pointer p = {step.pIdx ?? 0})</span>
+                <span className="text-[10px] text-slate-500">Aligned under Text at offset {pOffset / cellStride} chars</span>
+              </div>
+              <div className="relative overflow-visible" style={{ height: '70px' }}>
+                <motion.div
+                  animate={{ x: pOffset }}
+                  transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+                  className="flex gap-1.5 absolute top-0 left-0"
+                >
+                  {patternInput.split('').map((char, idx) => {
+                    const isP = step.pIdx === idx;
+                    return (
+                      <div key={idx} className="flex flex-col items-center min-w-[40px]">
+                        <span className={`text-[10px] font-mono mb-1 font-semibold ${isP ? 'text-amber-400 font-bold' : 'text-slate-500'}`}>
+                          p={idx}
+                        </span>
+                        <motion.div
+                          animate={{
+                            scale: isP ? 1.15 : 1,
+                            borderColor: isP ? '#f59e0b' : '#475569',
+                            backgroundColor: isP ? 'rgba(245, 158, 11, 0.25)' : '#1e293b'
+                          }}
+                          className={`w-10 h-12 rounded-xl border flex items-center justify-center font-mono font-extrabold text-base shadow-md ${
+                            isP ? 'text-amber-200 ring-2 ring-amber-400/50' : 'text-[#2D1F23] dark:text-[#F0E2A4]'
+                          }`}
+                        >
+                          {char}
+                        </motion.div>
+                        {isP && (
+                          <span className="text-[9px] font-mono text-amber-400 font-bold mt-1">▲ p</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </motion.div>
+              </div>
             </div>
+          </div>
+
+          {/* Preprocessed LPS Table with Interactive Pointer */}
+          <div className="w-full max-w-xl bg-white dark:bg-[#423834]/90 border border-[#EBE0D3] dark:border-[#5C4E49] rounded-2xl p-5 flex flex-col items-center shadow-xl">
+            <div className="text-xs font-mono font-bold text-cyan-400 mb-3 flex items-center justify-between w-full">
+              <span className="flex items-center gap-1.5"><Layers className="w-4 h-4" /> Preprocessed LPS (Longest Prefix Suffix) Table</span>
+              <span className="text-[10px] text-gray-500 dark:text-[#BCA297] font-normal">LPS[p-1] determines jump on mismatch</span>
+            </div>
+            <div className="flex gap-2.5">
+              {patternInput.split('').map((char, idx) => {
+                const isActiveLps = step.pIdx !== undefined && (idx === step.pIdx || idx === step.pIdx - 1);
+                const lpsVal = step.lps ? step.lps[idx] : 0;
+                return (
+                  <div key={idx} className="flex flex-col items-center">
+                    <span className="text-xs font-mono text-[#2D1F23] dark:text-[#F0E2A4] font-bold">{char}</span>
+                    <span className="text-[9px] font-mono text-slate-500">[{idx}]</span>
+                    <motion.div
+                      animate={{
+                        scale: isActiveLps ? 1.15 : 1,
+                        borderColor: isActiveLps ? '#22d3ee' : '#334155',
+                        backgroundColor: isActiveLps ? 'rgba(6, 182, 212, 0.25)' : '#1e293b'
+                      }}
+                      className="w-9 h-9 rounded-xl border flex items-center justify-center font-mono text-sm mt-1 font-extrabold text-[#2D1F23] dark:text-[#F4EBC3] shadow-sm"
+                    >
+                      {lpsVal}
+                    </motion.div>
+                  </div>
+                );
+              })}
+            </div>
+            {isCharMismatch && step.pIdx > 0 && (
+              <div className="mt-3 text-xs font-mono text-amber-300 bg-amber-950/30 border border-amber-500/30 px-3 py-1.5 rounded-lg flex items-center gap-2">
+                <Zap className="w-3.5 h-3.5 text-amber-400" />
+                LPS[{step.pIdx - 1}] = {step.lps?.[step.pIdx - 1] ?? 0} ➔ Slide pattern so prefix matches suffix without rewinding text!
+              </div>
+            )}
           </div>
         </div>
       );
     }
 
-    // 2. RABIN-KARP CANVAS
+    // 2. RABIN-KARP CANVAS (SLIDING WINDOW BRACKET + LIVE ROLLING MATH)
     if (currentAlgoId === 'rabin_karp') {
+      const wStart = step.windowStart ?? 0;
+      const wEnd = wStart + patternInput.length;
+      const currentWinStr = textInput.substring(wStart, wEnd);
+
       return (
         <div className="flex flex-col items-center gap-6 w-full py-4">
-          <div className="w-full flex flex-col items-center">
-            <div className="text-xs uppercase font-mono tracking-wider text-slate-400 mb-2">Rolling Window on Text</div>
-            <div className="flex flex-wrap gap-1.5 justify-center max-w-full overflow-x-auto p-2">
+          {/* Side-by-Side Hash Inspector Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-lg">
+            <div className="p-4 bg-white dark:bg-[#423834]/90 border border-amber-500/40 rounded-2xl flex flex-col items-center shadow-lg">
+              <span className="text-xs font-mono text-gray-500 dark:text-[#BCA297]">Target Pattern Hash ("{patternInput}")</span>
+              <span className="text-2xl font-mono font-extrabold text-amber-400 mt-1">{step.pHash ?? 0}</span>
+            </div>
+            <div className={`p-4 bg-white dark:bg-[#423834]/90 border rounded-2xl flex flex-col items-center shadow-lg transition-all ${
+              step.hashMatch ? 'border-emerald-400 bg-emerald-950/30 ring-2 ring-emerald-500/40' : 'border-cyan-500/40'
+            }`}>
+              <span className="text-xs font-mono text-gray-500 dark:text-[#BCA297]">Current Window Hash ("{currentWinStr}")</span>
+              <span className={`text-2xl font-mono font-extrabold mt-1 ${
+                step.hashMatch ? 'text-emerald-300' : 'text-cyan-400'
+              }`}>{step.wHash ?? 0}</span>
+            </div>
+          </div>
+
+          {/* Text String with Physical Sliding Bracket */}
+          <div className="w-full max-w-3xl overflow-x-auto p-4 bg-white dark:bg-[#331921]/80 border border-[#EBE0D3] dark:border-[#5C4E49] rounded-3xl flex flex-col items-center">
+            <div className="text-xs font-mono text-gray-500 dark:text-[#BCA297] mb-3 font-semibold">
+              Text Array with Sliding Substring Frame [Window {wStart} to {wEnd - 1}]
+            </div>
+            <div className="flex flex-wrap gap-1.5 justify-center max-w-full">
               {textInput.split('').map((char, idx) => {
-                const inWindow = idx >= step.windowStart && idx < step.windowStart + patternInput.length;
-                const isMatch = step.matches && step.matches.includes(step.windowStart);
+                const inWindow = idx >= wStart && idx < wEnd;
+                const isMatch = step.matches && step.matches.includes(wStart);
                 return (
                   <div key={idx} className="flex flex-col items-center">
-                    <span className="text-[10px] font-mono text-slate-500 mb-1">{idx}</span>
+                    <span className={`text-[10px] font-mono mb-1 ${inWindow ? 'text-cyan-400 font-bold' : 'text-slate-500'}`}>
+                      {idx}
+                    </span>
                     <motion.div
                       animate={{
-                        scale: inWindow ? 1.08 : 1,
-                        borderColor: inWindow ? (isMatch ? '#10b981' : '#38bdf8') : '#334155',
-                        backgroundColor: inWindow ? (isMatch ? 'rgba(16, 185, 129, 0.2)' : 'rgba(56, 189, 248, 0.15)') : '#0f172a'
+                        scale: inWindow ? 1.12 : 1,
+                        borderColor: inWindow ? (step.hashMatch ? '#10b981' : '#38bdf8') : '#334155',
+                        backgroundColor: inWindow ? (step.hashMatch ? 'rgba(16, 185, 129, 0.25)' : 'rgba(56, 189, 248, 0.2)') : '#423834'
                       }}
-                      className="w-9 h-10 rounded-lg border flex items-center justify-center font-mono font-bold text-slate-100 shadow-sm"
+                      className={`w-10 h-12 rounded-xl border flex items-center justify-center font-mono font-bold text-base shadow-sm ${
+                        inWindow ? 'text-white' : 'text-[#2D1F23] dark:text-[#F0E2A4]'
+                      }`}
                     >
                       {char}
                     </motion.div>
@@ -1665,23 +1935,14 @@ export default function StringVisualizer() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-md">
-            <div className="p-3 bg-slate-900/90 border border-amber-500/30 rounded-xl flex flex-col items-center">
-              <span className="text-xs font-mono text-slate-400">Pattern Hash ("{patternInput}")</span>
-              <span className="text-2xl font-mono font-extrabold text-amber-400 mt-1">{step.pHash ?? 0}</span>
-            </div>
-            <div className={`p-3 bg-slate-900/90 border rounded-xl flex flex-col items-center ${
-              step.hashMatch ? 'border-emerald-500/50 bg-emerald-950/20' : 'border-cyan-500/30'
-            }`}>
-              <span className="text-xs font-mono text-slate-400">Current Window Hash</span>
-              <span className={`text-2xl font-mono font-extrabold mt-1 ${
-                step.hashMatch ? 'text-emerald-400' : 'text-cyan-400'
-              }`}>{step.wHash ?? 0}</span>
-            </div>
-          </div>
-
-          <div className="text-xs font-mono text-slate-400 bg-slate-900/50 px-4 py-2 rounded-lg border border-slate-800">
-            Polynomial Rolling Hash modulo q = 101, base d = 256
+          {/* Rolling Hash Formula Banner */}
+          <div className="w-full max-w-xl p-3 bg-white dark:bg-[#423834]/80 border border-[#EBE0D3] dark:border-[#5C4E49] rounded-xl flex items-center justify-between text-xs font-mono text-[#2D1F23] dark:text-[#F0E2A4]">
+            <span className="text-cyan-400 font-bold flex items-center gap-1.5">
+              <Cpu className="w-4 h-4" /> Rolling Math:
+            </span>
+            <span className="text-gray-500 dark:text-[#BCA297]">
+              Hash = ((OldHash - OutChar × d<sup>m-1</sup>) × d + InChar) % q
+            </span>
           </div>
         </div>
       );
@@ -1689,24 +1950,25 @@ export default function StringVisualizer() {
 
     // 3. BOYER-MOORE CANVAS
     if (currentAlgoId === 'boyer_moore') {
+      const wStart = step.shift ?? 0;
       return (
         <div className="flex flex-col items-center gap-6 w-full py-4">
           <div className="w-full flex flex-col items-center">
-            <div className="text-xs uppercase font-mono tracking-wider text-slate-400 mb-2">Text (Right-to-Left Scan)</div>
+            <div className="text-xs uppercase font-mono tracking-wider text-gray-500 dark:text-[#BCA297] mb-2">Right-to-Left Scanning Window</div>
             <div className="flex flex-wrap gap-1.5 justify-center max-w-full overflow-x-auto p-2">
               {textInput.split('').map((char, idx) => {
-                const inShift = idx >= step.shift && idx < step.shift + patternInput.length;
-                const isScanning = step.highlightPair && step.highlightPair[0] === idx;
+                const inWin = idx >= wStart && idx < wStart + patternInput.length;
+                const isCheck = step.textIdx === idx;
                 return (
                   <div key={idx} className="flex flex-col items-center">
                     <span className="text-[10px] font-mono text-slate-500 mb-1">{idx}</span>
                     <motion.div
                       animate={{
-                        scale: isScanning ? 1.15 : 1,
-                        borderColor: isScanning ? '#f59e0b' : inShift ? '#06b6d4' : '#334155',
-                        backgroundColor: isScanning ? 'rgba(245, 158, 11, 0.25)' : inShift ? 'rgba(6, 182, 212, 0.15)' : '#0f172a'
+                        scale: isCheck ? 1.15 : inWin ? 1.05 : 1,
+                        borderColor: isCheck ? '#06b6d4' : inWin ? '#f59e0b' : '#334155',
+                        backgroundColor: isCheck ? 'rgba(6, 182, 212, 0.25)' : inWin ? 'rgba(245, 158, 11, 0.15)' : '#423834'
                       }}
-                      className="w-9 h-10 rounded-lg border flex items-center justify-center font-mono font-bold text-slate-100 shadow-sm"
+                      className="w-10 h-11 rounded-xl border flex items-center justify-center font-mono font-bold text-[#2D1F23] dark:text-[#F4EBC3] shadow-sm"
                     >
                       {char}
                     </motion.div>
@@ -1716,14 +1978,14 @@ export default function StringVisualizer() {
             </div>
           </div>
 
-          <div className="w-full max-w-lg bg-slate-900/90 border border-slate-800 rounded-xl p-4">
+          <div className="w-full max-w-lg bg-white dark:bg-[#423834]/90 border border-[#EBE0D3] dark:border-[#5C4E49] rounded-2xl p-4 shadow-md">
             <div className="text-xs font-mono font-bold text-amber-400 mb-2 flex items-center gap-1.5">
-              <Zap className="w-4 h-4" /> Bad Character Skip Table
+              <Zap className="w-4 h-4" /> Bad Character Last Occurrence Table
             </div>
             <div className="flex flex-wrap gap-2">
               {patternInput.split('').map((char, idx) => (
-                <div key={idx} className="flex items-center gap-1 px-2.5 py-1 bg-slate-800 border border-slate-700 rounded text-xs font-mono">
-                  <span className="text-slate-300 font-bold">{char}:</span>
+                <div key={idx} className="flex items-center gap-1.5 px-3 py-1 bg-gray-100 dark:bg-[#5C4E49] border border-[#EBE0D3] dark:border-[#5C4E49] rounded-lg text-xs font-mono">
+                  <span className="text-[#2D1F23] dark:text-[#F0E2A4] font-bold">{char}:</span>
                   <span className="text-cyan-400 font-extrabold">{idx}</span>
                 </div>
               ))}
@@ -1733,43 +1995,74 @@ export default function StringVisualizer() {
       );
     }
 
-    // 4. LONGEST PALINDROME CANVAS
+    // 4. LONGEST PALINDROME CANVAS (EXPANDING WINGS & CHAMPION TROPHY)
     if (currentAlgoId === 'longest_palindrome') {
+      const bestStr = step.longest || textInput[0] || '';
       return (
         <div className="flex flex-col items-center gap-6 w-full py-4">
-          <div className="w-full flex flex-col items-center">
-            <div className="text-xs uppercase font-mono tracking-wider text-slate-400 mb-2">Expansion Around Centers</div>
-            <div className="flex flex-wrap gap-1.5 justify-center max-w-full overflow-x-auto p-2">
-              {textInput.split('').map((char, idx) => {
-                const isCenter = (step.centerL === idx || step.centerR === idx);
-                const isBound = (step.currL === idx || step.currR === idx);
-                const inPalindrome = idx >= step.bestStart && idx <= step.bestEnd;
-                return (
-                  <div key={idx} className="flex flex-col items-center">
-                    <span className="text-[10px] font-mono text-slate-500 mb-1">{idx}</span>
-                    <motion.div
-                      animate={{
-                        scale: isBound ? 1.15 : 1,
-                        borderColor: isBound ? '#f43f5e' : isCenter ? '#e11d48' : inPalindrome ? '#10b981' : '#334155',
-                        backgroundColor: inPalindrome ? 'rgba(16, 185, 129, 0.2)' : isCenter ? 'rgba(225, 29, 72, 0.2)' : '#0f172a'
-                      }}
-                      className="w-9 h-10 rounded-lg border flex items-center justify-center font-mono font-bold text-slate-100 shadow-sm"
-                    >
-                      {char}
-                    </motion.div>
-                  </div>
-                );
-              })}
+          {/* Champion Palindrome Trophy Card */}
+          <div className="p-4 bg-gradient-to-r from-slate-900 via-purple-950/30 to-slate-900 border border-rose-500/40 rounded-2xl flex items-center gap-4 shadow-xl">
+            <div className="p-3 bg-rose-500/20 border border-rose-500/40 rounded-xl text-rose-400">
+              <Award className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="text-xs font-mono text-gray-500 dark:text-[#BCA297]">Current Longest Palindrome</div>
+              <div className="text-2xl font-mono font-extrabold text-rose-300 tracking-wider">
+                "{bestStr}" <span className="text-xs font-mono text-gray-500 dark:text-[#BCA297] font-normal">({bestStr.length} characters)</span>
+              </div>
             </div>
           </div>
 
-          <div className="p-4 bg-slate-900 border border-rose-500/30 rounded-xl flex items-center gap-4">
-            <Sparkles className="w-6 h-6 text-rose-400" />
-            <div>
-              <div className="text-xs font-mono text-slate-400">Current Longest Palindrome</div>
-              <div className="text-xl font-mono font-extrabold text-rose-300 tracking-wider">
-                "{step.longest || textInput[0]}"
-              </div>
+          {/* Text String with Expanding Center & Wings */}
+          <div className="w-full max-w-3xl overflow-x-auto p-4 bg-white dark:bg-[#331921]/80 border border-[#EBE0D3] dark:border-[#5C4E49] rounded-3xl flex flex-col items-center">
+            <div className="text-xs font-mono text-gray-500 dark:text-[#BCA297] mb-3 font-semibold">
+              Expanding Outward from Center [left = {step.currL ?? 0}, right = {step.currR ?? 0}]
+            </div>
+            <div className="flex flex-wrap gap-2 justify-center max-w-full">
+              {textInput.split('').map((char, idx) => {
+                const isCenter = (step.centerL === idx || step.centerR === idx);
+                const isLeftWing = step.currL === idx;
+                const isRightWing = step.currR === idx;
+                const inBestPalindrome = idx >= step.bestStart && idx <= step.bestEnd;
+
+                return (
+                  <div key={idx} className="flex flex-col items-center">
+                    {/* Top Marker Badges */}
+                    <div className="h-5 flex items-center gap-1 mb-1">
+                      {isCenter && (
+                        <span className="px-1.5 py-0.5 bg-rose-500/20 border border-rose-400 rounded text-[9px] font-mono text-rose-300 font-bold">
+                          📍
+                        </span>
+                      )}
+                      {isLeftWing && (
+                        <span className="px-1.5 py-0.5 bg-amber-500/20 border border-amber-400 rounded text-[9px] font-mono text-amber-300 font-bold">
+                          ⇦ L
+                        </span>
+                      )}
+                      {isRightWing && (
+                        <span className="px-1.5 py-0.5 bg-cyan-500/20 border border-cyan-400 rounded text-[9px] font-mono text-cyan-300 font-bold">
+                          R ⇨
+                        </span>
+                      )}
+                    </div>
+
+                    <motion.div
+                      animate={{
+                        scale: (isLeftWing || isRightWing) ? 1.2 : isCenter ? 1.1 : 1,
+                        borderColor: (isLeftWing || isRightWing) ? '#f43f5e' : isCenter ? '#e11d48' : inBestPalindrome ? '#10b981' : '#334155',
+                        backgroundColor: (isLeftWing || isRightWing) ? 'rgba(244, 63, 94, 0.3)' : inBestPalindrome ? 'rgba(16, 185, 129, 0.2)' : isCenter ? 'rgba(225, 29, 72, 0.2)' : '#423834'
+                      }}
+                      className={`w-11 h-12 rounded-xl border flex items-center justify-center font-mono font-extrabold text-base shadow-md ${
+                        (isLeftWing || isRightWing) ? 'text-rose-200' : inBestPalindrome ? 'text-emerald-200' : 'text-[#2D1F23] dark:text-[#F4EBC3]'
+                      }`}
+                    >
+                      {char}
+                    </motion.div>
+
+                    <span className="text-[10px] font-mono text-slate-500 mt-1">{idx}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -1782,7 +2075,7 @@ export default function StringVisualizer() {
       return (
         <div className="flex flex-col items-center gap-6 w-full py-4">
           <div className="w-full flex flex-col items-center">
-            <div className="text-xs uppercase font-mono tracking-wider text-slate-400 mb-2">Concatenated String S = P + "$" + T</div>
+            <div className="text-xs uppercase font-mono tracking-wider text-gray-500 dark:text-[#BCA297] mb-2">Concatenated String S = P + "$" + T</div>
             <div className="flex flex-wrap gap-1.5 justify-center max-w-full overflow-x-auto p-2">
               {s.split('').map((char, idx) => {
                 const inBox = idx >= step.l && idx <= step.r && step.r > 0;
@@ -1794,13 +2087,13 @@ export default function StringVisualizer() {
                       animate={{
                         scale: isI ? 1.15 : 1,
                         borderColor: isI ? '#f59e0b' : inBox ? '#8b5cf6' : '#334155',
-                        backgroundColor: inBox ? 'rgba(139, 92, 246, 0.2)' : '#0f172a'
+                        backgroundColor: inBox ? 'rgba(139, 92, 246, 0.2)' : '#423834'
                       }}
-                      className="w-9 h-10 rounded-lg border flex items-center justify-center font-mono font-bold text-slate-100 shadow-sm"
+                      className="w-12 h-14 sm:w-14 sm:h-16 rounded-xl border-2 text-xl flex items-center justify-center font-mono font-bold text-[#2D1F23] dark:text-[#F4EBC3] shadow-sm"
                     >
                       {char}
                     </motion.div>
-                    <div className="w-8 h-7 mt-1 border border-slate-700 bg-slate-800/80 rounded flex items-center justify-center font-mono text-xs text-purple-300 font-bold">
+                    <div className="w-8 h-7 mt-1 border border-[#EBE0D3] dark:border-[#5C4E49] bg-gray-100 dark:bg-[#5C4E49]/80 rounded flex items-center justify-center font-mono text-xs text-purple-300 font-bold">
                       {step.z ? step.z[idx] : 0}
                     </div>
                   </div>
@@ -1808,45 +2101,45 @@ export default function StringVisualizer() {
               })}
             </div>
           </div>
-          <div className="text-xs font-mono text-slate-400">
+          <div className="text-xs font-mono text-gray-500 dark:text-[#BCA297]">
             Z-Box: [L={step.l ?? 0}, R={step.r ?? 0}] | Purple numbers below characters denote Z[i]
           </div>
         </div>
       );
     }
 
-    // 6. LEVENSHTEIN CANVAS
+    // 6. LEVENSHTEIN CANVAS (2D DP GRID)
     if (currentAlgoId === 'levenshtein') {
       const dp = step.dp || [];
       return (
         <div className="flex flex-col items-center gap-4 w-full py-2 overflow-x-auto">
-          <div className="text-xs uppercase font-mono tracking-wider text-slate-400">2D Dynamic Programming Edit Distance Grid</div>
-          <div className="inline-block border border-slate-800 rounded-xl overflow-hidden bg-slate-950 p-2 shadow-2xl">
+          <div className="text-xs uppercase font-mono tracking-wider text-gray-500 dark:text-[#BCA297]">2D Dynamic Programming Edit Distance Grid</div>
+          <div className="inline-block border border-[#EBE0D3] dark:border-[#5C4E49] rounded-2xl overflow-hidden bg-white dark:bg-[#331921] p-3 shadow-2xl">
             <table className="border-collapse font-mono text-xs">
               <thead>
                 <tr>
-                  <th className="p-2 border border-slate-800 bg-slate-900 text-slate-500"></th>
-                  <th className="p-2 border border-slate-800 bg-slate-900 text-slate-400">Ø</th>
+                  <th className="p-2.5 border border-[#EBE0D3] dark:border-[#5C4E49] bg-white dark:bg-[#423834] text-slate-500"></th>
+                  <th className="p-2.5 border border-[#EBE0D3] dark:border-[#5C4E49] bg-white dark:bg-[#423834] text-gray-500 dark:text-[#BCA297]">ε</th>
                   {secondTextInput.split('').map((c, j) => (
-                    <th key={j} className="p-2 border border-slate-800 bg-slate-900 text-cyan-400 font-bold">{c}</th>
+                    <th key={j} className="p-2.5 border border-[#EBE0D3] dark:border-[#5C4E49] bg-white dark:bg-[#423834] text-cyan-400 font-bold">{c}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {dp.map((row, i) => (
                   <tr key={i}>
-                    <td className="p-2 border border-slate-800 bg-slate-900 text-amber-400 font-bold">
-                      {i === 0 ? 'Ø' : textInput[i - 1]}
+                    <td className="p-2.5 border border-[#EBE0D3] dark:border-[#5C4E49] bg-white dark:bg-[#423834] text-amber-400 font-bold">
+                      {i === 0 ? 'ε' : textInput[i - 1]}
                     </td>
                     {row.map((val, j) => {
                       const isActive = step.activeI === i && step.activeJ === j;
                       return (
                         <td
                           key={j}
-                          className={`p-2 text-center border font-bold ${
+                          className={`p-2.5 text-center border font-bold min-w-[36px] transition-all ${
                             isActive
-                              ? 'border-cyan-400 bg-cyan-500/30 text-white scale-105 transition-transform'
-                              : 'border-slate-800/80 text-slate-300 bg-slate-900/40'
+                              ? 'border-cyan-400 bg-cyan-500/30 text-white scale-110 ring-2 ring-cyan-400/50'
+                              : 'border-[#EBE0D3] dark:border-[#5C4E49]/80 text-[#2D1F23] dark:text-[#F0E2A4] bg-white dark:bg-[#423834]/40'
                           }`}
                         >
                           {val}
@@ -1867,33 +2160,33 @@ export default function StringVisualizer() {
       const dp = step.dp || [];
       return (
         <div className="flex flex-col items-center gap-4 w-full py-2 overflow-x-auto">
-          <div className="text-xs uppercase font-mono tracking-wider text-slate-400">2D LCS Subsequence Grid</div>
-          <div className="inline-block border border-slate-800 rounded-xl overflow-hidden bg-slate-950 p-2 shadow-2xl">
+          <div className="text-xs uppercase font-mono tracking-wider text-gray-500 dark:text-[#BCA297]">Longest Common Subsequence DP Matrix</div>
+          <div className="inline-block border border-[#EBE0D3] dark:border-[#5C4E49] rounded-2xl overflow-hidden bg-white dark:bg-[#331921] p-3 shadow-2xl">
             <table className="border-collapse font-mono text-xs">
               <thead>
                 <tr>
-                  <th className="p-2 border border-slate-800 bg-slate-900 text-slate-500"></th>
-                  <th className="p-2 border border-slate-800 bg-slate-900 text-slate-400">Ø</th>
+                  <th className="p-2.5 border border-[#EBE0D3] dark:border-[#5C4E49] bg-white dark:bg-[#423834] text-slate-500"></th>
+                  <th className="p-2.5 border border-[#EBE0D3] dark:border-[#5C4E49] bg-white dark:bg-[#423834] text-gray-500 dark:text-[#BCA297]">ε</th>
                   {secondTextInput.split('').map((c, j) => (
-                    <th key={j} className="p-2 border border-slate-800 bg-slate-900 text-emerald-400 font-bold">{c}</th>
+                    <th key={j} className="p-2.5 border border-[#EBE0D3] dark:border-[#5C4E49] bg-white dark:bg-[#423834] text-emerald-400 font-bold">{c}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {dp.map((row, i) => (
                   <tr key={i}>
-                    <td className="p-2 border border-slate-800 bg-slate-900 text-indigo-400 font-bold">
-                      {i === 0 ? 'Ø' : textInput[i - 1]}
+                    <td className="p-2.5 border border-[#EBE0D3] dark:border-[#5C4E49] bg-white dark:bg-[#423834] text-cyan-400 font-bold">
+                      {i === 0 ? 'ε' : textInput[i - 1]}
                     </td>
                     {row.map((val, j) => {
                       const isActive = step.activeI === i && step.activeJ === j;
                       return (
                         <td
                           key={j}
-                          className={`p-2 text-center border font-bold ${
+                          className={`p-2.5 text-center border font-bold min-w-[36px] ${
                             isActive
-                              ? 'border-emerald-400 bg-emerald-500/30 text-emerald-200'
-                              : 'border-slate-800/80 text-slate-300 bg-slate-900/40'
+                              ? 'border-emerald-400 bg-emerald-500/30 text-emerald-200 scale-110 ring-2 ring-emerald-400/50'
+                              : 'border-[#EBE0D3] dark:border-[#5C4E49]/80 text-[#2D1F23] dark:text-[#F0E2A4] bg-white dark:bg-[#423834]/40'
                           }`}
                         >
                           {val}
@@ -1905,11 +2198,6 @@ export default function StringVisualizer() {
               </tbody>
             </table>
           </div>
-          {step.lcsResult && (
-            <div className="p-3 bg-slate-900 border border-emerald-500/40 rounded-xl font-mono text-sm text-emerald-300 flex items-center gap-2">
-              <CheckCircle className="w-4 h-4" /> Common Subsequence: <strong>"{step.lcsResult}"</strong>
-            </div>
-          )}
         </div>
       );
     }
@@ -1921,7 +2209,7 @@ export default function StringVisualizer() {
       return (
         <div className="flex flex-col items-center gap-6 w-full py-4">
           <div className="w-full flex flex-col items-center">
-            <div className="text-xs uppercase font-mono tracking-wider text-slate-400 mb-2">Sliding Frequency Window</div>
+            <div className="text-xs uppercase font-mono tracking-wider text-gray-500 dark:text-[#BCA297] mb-2">Sliding Frequency Window</div>
             <div className="flex flex-wrap gap-1.5 justify-center max-w-full overflow-x-auto p-2">
               {textInput.split('').map((char, idx) => {
                 const inWin = idx >= step.windowStart && idx < step.windowStart + patternInput.length;
@@ -1932,9 +2220,9 @@ export default function StringVisualizer() {
                       animate={{
                         scale: inWin ? 1.1 : 1,
                         borderColor: inWin ? (step.isMatch ? '#10b981' : '#f59e0b') : '#334155',
-                        backgroundColor: inWin ? (step.isMatch ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.15)') : '#0f172a'
+                        backgroundColor: inWin ? (step.isMatch ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.15)') : '#423834'
                       }}
-                      className="w-9 h-10 rounded-lg border flex items-center justify-center font-mono font-bold text-slate-100 shadow-sm"
+                      className="w-12 h-14 sm:w-14 sm:h-16 rounded-xl border-2 text-xl flex items-center justify-center font-mono font-bold text-[#2D1F23] dark:text-[#F4EBC3] shadow-sm"
                     >
                       {char}
                     </motion.div>
@@ -1945,21 +2233,21 @@ export default function StringVisualizer() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-md">
-            <div className="p-3 bg-slate-900 border border-slate-800 rounded-xl">
-              <div className="text-xs font-mono text-slate-400 mb-1.5 font-bold">Pattern Frequency:</div>
+            <div className="p-3 bg-white dark:bg-[#423834] border border-[#EBE0D3] dark:border-[#5C4E49] rounded-xl">
+              <div className="text-xs font-mono text-gray-500 dark:text-[#BCA297] mb-1.5 font-bold">Pattern Frequency:</div>
               <div className="flex flex-wrap gap-2">
                 {Object.entries(pMap).map(([k, v]) => (
-                  <span key={k} className="px-2 py-0.5 bg-slate-800 rounded text-xs font-mono text-amber-300">
+                  <span key={k} className="px-2 py-0.5 bg-gray-100 dark:bg-[#5C4E49] rounded text-xs font-mono text-amber-300">
                     {k}: {v}
                   </span>
                 ))}
               </div>
             </div>
-            <div className="p-3 bg-slate-900 border border-slate-800 rounded-xl">
-              <div className="text-xs font-mono text-slate-400 mb-1.5 font-bold">Window Frequency:</div>
+            <div className="p-3 bg-white dark:bg-[#423834] border border-[#EBE0D3] dark:border-[#5C4E49] rounded-xl">
+              <div className="text-xs font-mono text-gray-500 dark:text-[#BCA297] mb-1.5 font-bold">Window Frequency:</div>
               <div className="flex flex-wrap gap-2">
                 {Object.entries(wMap).map(([k, v]) => (
-                  <span key={k} className="px-2 py-0.5 bg-slate-800 rounded text-xs font-mono text-cyan-300">
+                  <span key={k} className="px-2 py-0.5 bg-gray-100 dark:bg-[#5C4E49] rounded text-xs font-mono text-cyan-300">
                     {k}: {v}
                   </span>
                 ))}
@@ -1975,7 +2263,7 @@ export default function StringVisualizer() {
       return (
         <div className="flex flex-col items-center gap-6 w-full py-4">
           <div className="w-full flex flex-col items-center">
-            <div className="text-xs uppercase font-mono tracking-wider text-slate-400 mb-2">Original Character Stream</div>
+            <div className="text-xs uppercase font-mono tracking-wider text-gray-500 dark:text-[#BCA297] mb-2">Original Character Stream</div>
             <div className="flex flex-wrap gap-1.5 justify-center max-w-full overflow-x-auto p-2">
               {textInput.split('').map((char, idx) => {
                 const isCurrent = step.currentIdx === idx;
@@ -1985,9 +2273,9 @@ export default function StringVisualizer() {
                     animate={{
                       scale: isCurrent ? 1.15 : 1,
                       borderColor: isCurrent ? '#06b6d4' : '#334155',
-                      backgroundColor: isCurrent ? 'rgba(6, 182, 212, 0.25)' : '#0f172a'
+                      backgroundColor: isCurrent ? 'rgba(6, 182, 212, 0.25)' : '#423834'
                     }}
-                    className="w-9 h-10 rounded-lg border flex items-center justify-center font-mono font-bold text-slate-100 shadow-sm"
+                    className="w-12 h-14 sm:w-14 sm:h-16 rounded-xl border-2 text-xl flex items-center justify-center font-mono font-bold text-[#2D1F23] dark:text-[#F4EBC3] shadow-sm"
                   >
                     {char}
                   </motion.div>
@@ -1996,10 +2284,10 @@ export default function StringVisualizer() {
             </div>
           </div>
 
-          <div className="w-full max-w-md p-4 bg-slate-900 border border-cyan-500/30 rounded-xl flex flex-col items-center">
-            <div className="text-xs font-mono text-slate-400 mb-1">Compressed Output Stream</div>
+          <div className="w-full max-w-md p-4 bg-white dark:bg-[#423834] border border-cyan-500/30 rounded-xl flex flex-col items-center">
+            <div className="text-xs font-mono text-gray-500 dark:text-[#BCA297] mb-1">Compressed Output Stream</div>
             <div className="text-2xl font-mono font-extrabold text-cyan-400 tracking-wider">
-              {step.encoded || '—'}
+              {step.encoded || '...'}
             </div>
           </div>
         </div>
@@ -2011,7 +2299,7 @@ export default function StringVisualizer() {
       const words = step.words || textInput.trim().split(/\s+/);
       return (
         <div className="flex flex-col items-center gap-6 w-full py-4">
-          <div className="text-xs uppercase font-mono tracking-wider text-slate-400">Two-Pointer Word Reversal</div>
+          <div className="text-xs uppercase font-mono tracking-wider text-gray-500 dark:text-[#BCA297]">Two-Pointer Word Reversal</div>
           <div className="flex flex-wrap gap-3 justify-center p-3">
             {words.map((w, idx) => {
               const isL = step.left === idx;
@@ -2022,9 +2310,9 @@ export default function StringVisualizer() {
                   animate={{
                     scale: (isL || isR) ? 1.1 : 1,
                     borderColor: (isL || isR) ? '#f59e0b' : '#334155',
-                    backgroundColor: (isL || isR) ? 'rgba(245, 158, 11, 0.2)' : '#0f172a'
+                    backgroundColor: (isL || isR) ? 'rgba(245, 158, 11, 0.2)' : '#423834'
                   }}
-                  className="px-4 py-2.5 rounded-xl border font-mono font-bold text-lg text-slate-100 shadow-md"
+                  className="px-4 py-2.5 rounded-xl border font-mono font-bold text-lg text-[#2D1F23] dark:text-[#F4EBC3] shadow-md"
                 >
                   {w}
                   {(isL || isR) && (
@@ -2048,32 +2336,17 @@ export default function StringVisualizer() {
           <div className="flex flex-col items-center gap-2">
             <div className="flex gap-2">
               {textInput.split('').map((c, i) => (
-                <div key={i} className={`w-9 h-9 rounded border flex items-center justify-center font-mono font-bold ${
-                  step.index === i ? 'border-indigo-400 bg-indigo-500/30 text-white' : 'border-slate-700 bg-slate-800 text-slate-200'
-                }`}>
-                  {c}
-                </div>
+                <div key={i} className={`w-12 h-14 sm:w-14 sm:h-16 rounded-xl border-2 text-xl flex items-center justify-center font-mono font-bold ${
+                  step.idx === i ? 'border-amber-400 bg-amber-500/20 text-amber-200' : 'border-[#EBE0D3] dark:border-[#5C4E49] bg-gray-100 dark:bg-[#5C4E49] text-[#2D1F23] dark:text-[#F0E2A4]'
+                }`}>{c}</div>
               ))}
             </div>
-            <ArrowRight className="w-4 h-4 text-slate-500 rotate-90" />
+            <span className="text-slate-500 font-mono text-xs">↕ 1-to-1 bijection</span>
             <div className="flex gap-2">
               {secondTextInput.split('').map((c, i) => (
-                <div key={i} className={`w-9 h-9 rounded border flex items-center justify-center font-mono font-bold ${
-                  step.index === i ? 'border-indigo-400 bg-indigo-500/30 text-white' : 'border-slate-700 bg-slate-800 text-slate-200'
-                }`}>
-                  {c}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="w-full max-w-md p-4 bg-slate-900 border border-slate-800 rounded-xl">
-            <div className="text-xs font-mono font-bold text-indigo-400 mb-2">Registered 1-to-1 Bijection Mappings:</div>
-            <div className="flex flex-wrap gap-2">
-              {Object.entries(mapST).map(([k, v]) => (
-                <span key={k} className="px-3 py-1 bg-slate-800 border border-slate-700 rounded-lg text-xs font-mono text-slate-200">
-                  '{k}' ➔ '{v}'
-                </span>
+                <div key={i} className={`w-12 h-14 sm:w-14 sm:h-16 rounded-xl border-2 text-xl flex items-center justify-center font-mono font-bold ${
+                  step.idx === i ? 'border-cyan-400 bg-cyan-500/20 text-cyan-200' : 'border-[#EBE0D3] dark:border-[#5C4E49] bg-gray-100 dark:bg-[#5C4E49] text-[#2D1F23] dark:text-[#F0E2A4]'
+                }`}>{c}</div>
               ))}
             </div>
           </div>
@@ -2082,56 +2355,195 @@ export default function StringVisualizer() {
     }
 
     // 12. VALID PARENTHESES CANVAS
-    if (currentAlgoId === 'valid_parentheses') {
-      const stack = step.stack || [];
-      return (
-        <div className="flex flex-col items-center gap-6 w-full py-4">
-          <div className="w-full flex flex-col items-center">
-            <div className="text-xs uppercase font-mono tracking-wider text-slate-400 mb-2">Bracket Stream</div>
-            <div className="flex flex-wrap gap-2 justify-center p-2">
-              {textInput.split('').map((c, idx) => (
-                <motion.div
-                  key={idx}
-                  animate={{
-                    scale: step.idx === idx ? 1.2 : 1,
-                    borderColor: step.idx === idx ? '#06b6d4' : '#334155',
-                    backgroundColor: step.idx === idx ? 'rgba(6, 182, 212, 0.25)' : '#0f172a'
-                  }}
-                  className="w-9 h-10 rounded-lg border flex items-center justify-center font-mono font-bold text-slate-100 shadow-sm"
-                >
-                  {c}
-                </motion.div>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex flex-col items-center">
-            <div className="text-xs font-mono text-slate-400 mb-2">LIFO Stack (Top on Top)</div>
-            <div className="w-24 min-h-[140px] border-b-2 border-l-2 border-r-2 border-cyan-500/50 bg-slate-950/80 rounded-b-xl flex flex-col-reverse items-center p-2 gap-1.5 shadow-inner">
-              <AnimatePresence>
-                {stack.map((item, idx) => (
-                  <motion.div
-                    key={idx}
-                    initial={{ y: -20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: -20, opacity: 0 }}
-                    className="w-16 h-8 rounded bg-cyan-600/30 border border-cyan-400 flex items-center justify-center font-mono font-bold text-cyan-200"
-                  >
-                    {item}
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-              {stack.length === 0 && (
-                <span className="text-[11px] font-mono text-slate-600 mt-auto mb-auto">Empty</span>
-              )}
-            </div>
+    const stack = step.stack || [];
+    return (
+      <div className="flex flex-col items-center gap-6 w-full py-4">
+        <div className="flex gap-2 justify-center">
+          {textInput.split('').map((c, i) => (
+            <div key={i} className={`w-12 h-14 sm:w-14 sm:h-16 rounded-xl border-2 text-xl flex items-center justify-center font-mono font-bold ${
+              step.idx === i ? 'border-cyan-400 bg-cyan-500/30 text-white scale-110' : 'border-[#EBE0D3] dark:border-[#5C4E49] bg-gray-100 dark:bg-[#5C4E49] text-[#2D1F23] dark:text-[#F0E2A4]'
+            }`}>{c}</div>
+          ))}
+        </div>
+        <div className="flex flex-col items-center p-4 bg-white dark:bg-[#423834] border border-[#EBE0D3] dark:border-[#5C4E49] rounded-2xl w-48 shadow-lg">
+          <span className="text-xs font-mono text-gray-500 dark:text-[#BCA297] mb-2 font-bold">Stack (LIFO)</span>
+          <div className="flex flex-col-reverse gap-1.5 w-full items-center">
+            {stack.map((c, i) => (
+              <div key={i} className="w-full py-1.5 text-center rounded bg-gray-100 dark:bg-[#5C4E49] border border-[#EBE0D3] dark:border-[#5C4E49] font-mono text-sm text-cyan-300 font-bold">
+                {c}
+              </div>
+            ))}
+            {stack.length === 0 && <span className="text-xs font-mono text-slate-600">Stack Empty</span>}
           </div>
         </div>
-      );
+      </div>
+    );
+  };
+
+  // Live Dry-Run Variables Tracker
+  const trackedVariables = useMemo(() => {
+    const vars = [];
+    
+    if (currentAlgoId === 'kmp') {
+      vars.push({
+        name: 't (text index)',
+        value: step.tIdx !== undefined ? `${step.tIdx} ('${textInput[step.tIdx] ?? ''}')` : '-',
+        type: 'Index',
+        role: 'Current scanner index in Text',
+        isChanged: true
+      });
+      vars.push({
+        name: 'p (pattern index)',
+        value: step.pIdx !== undefined ? `${step.pIdx} ('${patternInput[step.pIdx] ?? ''}')` : '-',
+        type: 'Index',
+        role: 'Current index in Pattern',
+        isChanged: true
+      });
+      if (step.pIdx > 0 && step.lps) {
+        vars.push({
+          name: 'LPS[p-1]',
+          value: step.lps[step.pIdx - 1] ?? 0,
+          type: 'Lookup',
+          role: 'Fallback jump length on mismatch'
+        });
+      }
+      vars.push({
+        name: 'matchesFound',
+        value: step.matches ? step.matches.length : 0,
+        type: 'Count',
+        role: 'Full pattern matches found'
+      });
+    } else if (currentAlgoId === 'rabin_karp') {
+      vars.push({
+        name: 'windowStart',
+        value: step.windowStart ?? 0,
+        type: 'Index',
+        role: 'Left boundary of text sliding frame',
+        isChanged: true
+      });
+      vars.push({
+        name: 'windowString',
+        value: `"${textInput.substring(step.windowStart ?? 0, (step.windowStart ?? 0) + patternInput.length)}"`,
+        type: 'String',
+        role: 'Current M-character text window'
+      });
+      vars.push({
+        name: 'wHash (Window)',
+        value: step.wHash ?? 0,
+        type: 'Hash',
+        role: 'Rolling hash code of current window',
+        isChanged: true
+      });
+      vars.push({
+        name: 'pHash (Pattern)',
+        value: step.pHash ?? 0,
+        type: 'Hash',
+        role: 'Fixed hash code of target pattern'
+      });
+      vars.push({
+        name: 'hashMatch',
+        value: step.hashMatch ? 'TRUE (Hashes Match!)' : 'FALSE',
+        type: 'Boolean',
+        role: 'Whether window and pattern hashes match'
+      });
+    } else if (currentAlgoId === 'longest_palindrome') {
+      vars.push({
+        name: 'left (wing)',
+        value: step.currL !== undefined ? `${step.currL} ('${textInput[step.currL] ?? ''}')` : '-',
+        type: 'Index',
+        role: 'Left expansion pointer',
+        isChanged: true
+      });
+      vars.push({
+        name: 'right (wing)',
+        value: step.currR !== undefined ? `${step.currR} ('${textInput[step.currR] ?? ''}')` : '-',
+        type: 'Index',
+        role: 'Right expansion pointer',
+        isChanged: true
+      });
+      vars.push({
+        name: 'currentSpan',
+        value: (step.currR !== undefined && step.currL !== undefined) ? `${step.currR - step.currL + 1} chars` : '-',
+        type: 'Length',
+        role: 'Length of currently expanded palindrome'
+      });
+      vars.push({
+        name: 'longest',
+        value: `"${step.longest || textInput[0] || ''}" (${(step.longest || textInput[0] || '').length})`,
+        type: 'Result',
+        role: 'Best palindrome discovered so far'
+      });
+    } else if (currentAlgoId === 'levenshtein' || currentAlgoId === 'lcs') {
+      vars.push({
+        name: 'i (row)',
+        value: step.activeI !== undefined ? `${step.activeI} ('${textInput[step.activeI - 1] ?? 'ε'}')` : '-',
+        type: 'Index',
+        role: 'Current char index in String 1'
+      });
+      vars.push({
+        name: 'j (col)',
+        value: step.activeJ !== undefined ? `${step.activeJ} ('${secondTextInput[step.activeJ - 1] ?? 'ε'}')` : '-',
+        type: 'Index',
+        role: 'Current char index in String 2'
+      });
+      if (step.dp && step.activeI !== undefined && step.activeJ !== undefined && step.dp[step.activeI]) {
+        vars.push({
+          name: 'dp[i][j]',
+          value: step.dp[step.activeI][step.activeJ],
+          type: 'Cost',
+          role: 'Optimal cost for subproblem',
+          isChanged: true
+        });
+      }
+    } else {
+      if (step.currentIdx !== undefined || step.idx !== undefined) {
+        vars.push({
+          name: 'index',
+          value: step.currentIdx ?? step.idx,
+          type: 'Index',
+          role: 'Character pointer position',
+          isChanged: true
+        });
+      }
+      if (step.stack) {
+        vars.push({
+          name: 'stackSize',
+          value: step.stack.length,
+          type: 'Stack',
+          role: 'Number of open parentheses in stack'
+        });
+      }
+      vars.push({
+        name: 'textLength',
+        value: textInput.length,
+        type: 'Number',
+        role: 'Length of input string'
+      });
     }
 
-    return null;
-  };
+    return vars;
+  }, [currentAlgoId, step, textInput, patternInput, secondTextInput]);
+
+  // Code Statement for Dry Run trace
+  const currentCodeStatement = useMemo(() => {
+    if (currentAlgoId === 'kmp') {
+      if (step.status?.includes('Match:')) return 'if (pattern[p] === text[t]) { p++; t++; }';
+      if (step.status?.includes('Mismatch:')) return 'if (p !== 0) p = lps[p - 1]; else t++;';
+      if (step.phase === 'lps') return 'lps[i] = len;';
+      return 'while (t < text.length) { ... }';
+    }
+    if (currentAlgoId === 'rabin_karp') {
+      if (step.hashMatch) return 'if (wHash === pHash) verifyCharacters();';
+      return 'wHash = ((wHash - outChar * d) * 256 + inChar) % q;';
+    }
+    if (currentAlgoId === 'longest_palindrome') {
+      return 'while (l >= 0 && r < n && s[l] === s[r]) { l--; r++; }';
+    }
+    if (currentAlgoId === 'levenshtein') {
+      return 'dp[i][j] = min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1][j-1]+cost);';
+    }
+    return 'processNextCharacter();';
+  }, [currentAlgoId, step]);
 
   return (
     <ResponsiveVisualizerShell
@@ -2142,7 +2554,7 @@ export default function StringVisualizer() {
           <select
             value={currentAlgoId}
             onChange={(e) => navigate(`/visualizer/string/${e.target.value}`)}
-            className="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-cyan-500 font-mono"
+            className="bg-gray-100 dark:bg-[#5C4E49] border border-[#EBE0D3] dark:border-[#5C4E49] text-[#2D1F23] dark:text-[#F4EBC3] text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-cyan-500 font-mono"
           >
             {STRING_ALGORITHMS.map(a => (
               <option key={a.id} value={a.id}>{a.name}</option>
@@ -2150,7 +2562,7 @@ export default function StringVisualizer() {
           </select>
           <button
             onClick={() => setIsMuted(!isMuted)}
-            className="p-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 hover:text-white"
+            className="p-1.5 rounded-lg bg-gray-100 dark:bg-[#5C4E49] border border-[#EBE0D3] dark:border-[#5C4E49] text-[#2D1F23] dark:text-[#F0E2A4] hover:text-white"
             title={isMuted ? "Unmute sound" : "Mute sound"}
           >
             {isMuted ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
@@ -2166,7 +2578,7 @@ export default function StringVisualizer() {
       controls={
         <div className="flex flex-col gap-3.5 w-full">
           {/* USER INTERACTION BAR: CUSTOM STRING & PATTERN INPUTS */}
-          <div className="flex flex-col gap-3 p-3.5 bg-slate-900/80 rounded-2xl border border-slate-800 shadow-md">
+          <div className="flex flex-col gap-3 p-3.5 bg-white dark:bg-[#423834]/80 rounded-2xl border border-[#EBE0D3] dark:border-[#5C4E49] shadow-md">
             
             {/* Row 1: Inputs and Compute button */}
             <div className="flex flex-wrap items-center gap-3">
@@ -2180,10 +2592,10 @@ export default function StringVisualizer() {
                   type="text"
                   value={textInput}
                   onChange={(e) => setTextInput(e.target.value)}
-                  className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono text-slate-100 focus:outline-none focus:border-cyan-500 shadow-inner"
+                  className="flex-1 bg-gray-100 dark:bg-[#5C4E49] border border-[#EBE0D3] dark:border-[#5C4E49] rounded-lg px-3 py-1.5 text-xs font-mono text-[#2D1F23] dark:text-[#F4EBC3] focus:outline-none focus:border-cyan-500 shadow-inner"
                   placeholder="Type any custom string..."
                 />
-                <span className="text-[10px] font-mono text-slate-500 bg-slate-800 px-1.5 py-0.5 rounded">
+                <span className="text-[10px] font-mono text-slate-500 bg-gray-100 dark:bg-[#5C4E49] px-1.5 py-0.5 rounded">
                   {textInput.length} chars
                 </span>
               </div>
@@ -2198,10 +2610,10 @@ export default function StringVisualizer() {
                     type="text"
                     value={patternInput}
                     onChange={(e) => setPatternInput(e.target.value)}
-                    className="w-36 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono text-amber-300 focus:outline-none focus:border-amber-500 shadow-inner"
+                    className="w-36 bg-gray-100 dark:bg-[#5C4E49] border border-[#EBE0D3] dark:border-[#5C4E49] rounded-lg px-3 py-1.5 text-xs font-mono text-amber-300 focus:outline-none focus:border-amber-500 shadow-inner"
                     placeholder="Search pattern..."
                   />
-                  <span className="text-[10px] font-mono text-slate-500 bg-slate-800 px-1.5 py-0.5 rounded">
+                  <span className="text-[10px] font-mono text-slate-500 bg-gray-100 dark:bg-[#5C4E49] px-1.5 py-0.5 rounded">
                     {patternInput.length}
                   </span>
                 </div>
@@ -2214,7 +2626,7 @@ export default function StringVisualizer() {
                     type="text"
                     value={secondTextInput}
                     onChange={(e) => setSecondTextInput(e.target.value)}
-                    className="w-36 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono text-cyan-300 focus:outline-none focus:border-cyan-500 shadow-inner"
+                    className="w-36 bg-gray-100 dark:bg-[#5C4E49] border border-[#EBE0D3] dark:border-[#5C4E49] rounded-lg px-3 py-1.5 text-xs font-mono text-cyan-300 focus:outline-none focus:border-cyan-500 shadow-inner"
                     placeholder="Second string..."
                   />
                 </div>
@@ -2229,65 +2641,65 @@ export default function StringVisualizer() {
             </div>
 
             {/* Row 2: Quick Presets Bar */}
-            <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-800/80">
+            <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-[#EBE0D3] dark:border-[#5C4E49]/80">
               <span className="text-[11px] font-mono text-slate-500">Quick Presets:</span>
               {currentAlgoId === 'kmp' && (
                 <>
-                  <button onClick={() => applyPreset('ABABDABACDABABCABAB', 'ABABCABAB')} className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[11px] font-mono text-slate-300 border border-slate-700">Default LPS</button>
-                  <button onClick={() => applyPreset('ATCGATCGAATCGATCG', 'AATC')} className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[11px] font-mono text-slate-300 border border-slate-700">DNA Sequence</button>
-                  <button onClick={() => applyPreset('AAAAABAAAAAB', 'AAAAB')} className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[11px] font-mono text-slate-300 border border-slate-700">Repeated Prefix</button>
+                  <button onClick={() => applyPreset('ABABDABACDABABCABAB', 'ABABCABAB')} className="px-2 py-0.5 rounded bg-gray-100 dark:bg-[#5C4E49] hover:bg-slate-700 text-[11px] font-mono text-[#2D1F23] dark:text-[#F0E2A4] border border-[#EBE0D3] dark:border-[#5C4E49]">Default LPS</button>
+                  <button onClick={() => applyPreset('ATCGATCGAATCGATCG', 'AATC')} className="px-2 py-0.5 rounded bg-gray-100 dark:bg-[#5C4E49] hover:bg-slate-700 text-[11px] font-mono text-[#2D1F23] dark:text-[#F0E2A4] border border-[#EBE0D3] dark:border-[#5C4E49]">DNA Sequence</button>
+                  <button onClick={() => applyPreset('AAAAABAAAAAB', 'AAAAB')} className="px-2 py-0.5 rounded bg-gray-100 dark:bg-[#5C4E49] hover:bg-slate-700 text-[11px] font-mono text-[#2D1F23] dark:text-[#F0E2A4] border border-[#EBE0D3] dark:border-[#5C4E49]">Repeated Prefix</button>
                 </>
               )}
               {currentAlgoId === 'rabin_karp' && (
                 <>
-                  <button onClick={() => applyPreset('GEEKS FOR GEEKS', 'GEEK')} className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[11px] font-mono text-slate-300 border border-slate-700">Geeks</button>
-                  <button onClick={() => applyPreset('ALGOVERSE IS AWESOME', 'ALGO')} className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[11px] font-mono text-slate-300 border border-slate-700">Algoverse</button>
+                  <button onClick={() => applyPreset('GEEKS FOR GEEKS', 'GEEK')} className="px-2 py-0.5 rounded bg-gray-100 dark:bg-[#5C4E49] hover:bg-slate-700 text-[11px] font-mono text-[#2D1F23] dark:text-[#F0E2A4] border border-[#EBE0D3] dark:border-[#5C4E49]">Geeks</button>
+                  <button onClick={() => applyPreset('ALGOVERSE IS AWESOME', 'ALGO')} className="px-2 py-0.5 rounded bg-gray-100 dark:bg-[#5C4E49] hover:bg-slate-700 text-[11px] font-mono text-[#2D1F23] dark:text-[#F0E2A4] border border-[#EBE0D3] dark:border-[#5C4E49]">Algoverse</button>
                 </>
               )}
               {currentAlgoId === 'boyer_moore' && (
                 <>
-                  <button onClick={() => applyPreset('FINDINAHAYSTACKNEEDLE', 'NEEDLE')} className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[11px] font-mono text-slate-300 border border-slate-700">Needle in Haystack</button>
-                  <button onClick={() => applyPreset('MICROPROCESSOR ARCHITECTURE', 'ROC')} className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[11px] font-mono text-slate-300 border border-slate-700">Microprocessor</button>
+                  <button onClick={() => applyPreset('FINDINAHAYSTACKNEEDLE', 'NEEDLE')} className="px-2 py-0.5 rounded bg-gray-100 dark:bg-[#5C4E49] hover:bg-slate-700 text-[11px] font-mono text-[#2D1F23] dark:text-[#F0E2A4] border border-[#EBE0D3] dark:border-[#5C4E49]">Needle in Haystack</button>
+                  <button onClick={() => applyPreset('MICROPROCESSOR ARCHITECTURE', 'ROC')} className="px-2 py-0.5 rounded bg-gray-100 dark:bg-[#5C4E49] hover:bg-slate-700 text-[11px] font-mono text-[#2D1F23] dark:text-[#F0E2A4] border border-[#EBE0D3] dark:border-[#5C4E49]">Microprocessor</button>
                 </>
               )}
               {currentAlgoId === 'longest_palindrome' && (
                 <>
-                  <button onClick={() => applyPreset('babad')} className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[11px] font-mono text-slate-300 border border-slate-700">babad</button>
-                  <button onClick={() => applyPreset('racecar')} className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[11px] font-mono text-slate-300 border border-slate-700">racecar</button>
-                  <button onClick={() => applyPreset('cbbd')} className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[11px] font-mono text-slate-300 border border-slate-700">cbbd</button>
-                  <button onClick={() => applyPreset('deified')} className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[11px] font-mono text-slate-300 border border-slate-700">deified</button>
+                  <button onClick={() => applyPreset('babad')} className="px-2 py-0.5 rounded bg-gray-100 dark:bg-[#5C4E49] hover:bg-slate-700 text-[11px] font-mono text-[#2D1F23] dark:text-[#F0E2A4] border border-[#EBE0D3] dark:border-[#5C4E49]">babad</button>
+                  <button onClick={() => applyPreset('racecar')} className="px-2 py-0.5 rounded bg-gray-100 dark:bg-[#5C4E49] hover:bg-slate-700 text-[11px] font-mono text-[#2D1F23] dark:text-[#F0E2A4] border border-[#EBE0D3] dark:border-[#5C4E49]">racecar</button>
+                  <button onClick={() => applyPreset('cbbd')} className="px-2 py-0.5 rounded bg-gray-100 dark:bg-[#5C4E49] hover:bg-slate-700 text-[11px] font-mono text-[#2D1F23] dark:text-[#F0E2A4] border border-[#EBE0D3] dark:border-[#5C4E49]">cbbd</button>
+                  <button onClick={() => applyPreset('deified')} className="px-2 py-0.5 rounded bg-gray-100 dark:bg-[#5C4E49] hover:bg-slate-700 text-[11px] font-mono text-[#2D1F23] dark:text-[#F0E2A4] border border-[#EBE0D3] dark:border-[#5C4E49]">deified</button>
                 </>
               )}
               {currentAlgoId === 'levenshtein' && (
                 <>
-                  <button onClick={() => applyPreset('kitten', '', 'sitting')} className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[11px] font-mono text-slate-300 border border-slate-700">kitten ➔ sitting</button>
-                  <button onClick={() => applyPreset('sunday', '', 'saturday')} className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[11px] font-mono text-slate-300 border border-slate-700">sunday ➔ saturday</button>
+                  <button onClick={() => applyPreset('kitten', '', 'sitting')} className="px-2 py-0.5 rounded bg-gray-100 dark:bg-[#5C4E49] hover:bg-slate-700 text-[11px] font-mono text-[#2D1F23] dark:text-[#F0E2A4] border border-[#EBE0D3] dark:border-[#5C4E49]">kitten ➔ sitting</button>
+                  <button onClick={() => applyPreset('sunday', '', 'saturday')} className="px-2 py-0.5 rounded bg-gray-100 dark:bg-[#5C4E49] hover:bg-slate-700 text-[11px] font-mono text-[#2D1F23] dark:text-[#F0E2A4] border border-[#EBE0D3] dark:border-[#5C4E49]">sunday ➔ saturday</button>
                 </>
               )}
               {currentAlgoId === 'lcs' && (
                 <>
-                  <button onClick={() => applyPreset('AGGTAB', '', 'GXTXAYB')} className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[11px] font-mono text-slate-300 border border-slate-700">AGGTAB vs GXTXAYB</button>
-                  <button onClick={() => applyPreset('ABCDE', '', 'ACE')} className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[11px] font-mono text-slate-300 border border-slate-700">ABCDE vs ACE</button>
+                  <button onClick={() => applyPreset('AGGTAB', '', 'GXTXAYB')} className="px-2 py-0.5 rounded bg-gray-100 dark:bg-[#5C4E49] hover:bg-slate-700 text-[11px] font-mono text-[#2D1F23] dark:text-[#F0E2A4] border border-[#EBE0D3] dark:border-[#5C4E49]">AGGTAB vs GXTXAYB</button>
+                  <button onClick={() => applyPreset('ABCDE', '', 'ACE')} className="px-2 py-0.5 rounded bg-gray-100 dark:bg-[#5C4E49] hover:bg-slate-700 text-[11px] font-mono text-[#2D1F23] dark:text-[#F0E2A4] border border-[#EBE0D3] dark:border-[#5C4E49]">ABCDE vs ACE</button>
                 </>
               )}
               {currentAlgoId === 'valid_parentheses' && (
                 <>
-                  <button onClick={() => applyPreset('{[()]}')} className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[11px] font-mono text-slate-300 border border-slate-700">Valid: &#123;[()]&#125;</button>
-                  <button onClick={() => applyPreset('()[]{}')} className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[11px] font-mono text-slate-300 border border-slate-700">Pairs: ()[]&#123;&#125;</button>
-                  <button onClick={() => applyPreset('(]')} className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[11px] font-mono text-slate-300 border border-slate-700">Invalid: (]</button>
-                  <button onClick={() => applyPreset('([)]')} className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[11px] font-mono text-slate-300 border border-slate-700">Crossed: ([)]</button>
+                  <button onClick={() => applyPreset('{[()]}')} className="px-2 py-0.5 rounded bg-gray-100 dark:bg-[#5C4E49] hover:bg-slate-700 text-[11px] font-mono text-[#2D1F23] dark:text-[#F0E2A4] border border-[#EBE0D3] dark:border-[#5C4E49]">Valid: &#123;[()]&#125;</button>
+                  <button onClick={() => applyPreset('()[]{}')} className="px-2 py-0.5 rounded bg-gray-100 dark:bg-[#5C4E49] hover:bg-slate-700 text-[11px] font-mono text-[#2D1F23] dark:text-[#F0E2A4] border border-[#EBE0D3] dark:border-[#5C4E49]">Pairs: ()[]&#123;&#125;</button>
+                  <button onClick={() => applyPreset('(]')} className="px-2 py-0.5 rounded bg-gray-100 dark:bg-[#5C4E49] hover:bg-slate-700 text-[11px] font-mono text-[#2D1F23] dark:text-[#F0E2A4] border border-[#EBE0D3] dark:border-[#5C4E49]">Invalid: (]</button>
+                  <button onClick={() => applyPreset('([)]')} className="px-2 py-0.5 rounded bg-gray-100 dark:bg-[#5C4E49] hover:bg-slate-700 text-[11px] font-mono text-[#2D1F23] dark:text-[#F0E2A4] border border-[#EBE0D3] dark:border-[#5C4E49]">Crossed: ([)]</button>
                 </>
               )}
               {currentAlgoId === 'run_length' && (
                 <>
-                  <button onClick={() => applyPreset('WWWWWWAAAAAABBBCCCC')} className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[11px] font-mono text-slate-300 border border-slate-700">Run Heavy</button>
-                  <button onClick={() => applyPreset('AAABBAAAACCCC')} className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[11px] font-mono text-slate-300 border border-slate-700">Alternating</button>
+                  <button onClick={() => applyPreset('WWWWWWAAAAAABBBCCCC')} className="px-2 py-0.5 rounded bg-gray-100 dark:bg-[#5C4E49] hover:bg-slate-700 text-[11px] font-mono text-[#2D1F23] dark:text-[#F0E2A4] border border-[#EBE0D3] dark:border-[#5C4E49]">Run Heavy</button>
+                  <button onClick={() => applyPreset('AAABBAAAACCCC')} className="px-2 py-0.5 rounded bg-gray-100 dark:bg-[#5C4E49] hover:bg-slate-700 text-[11px] font-mono text-[#2D1F23] dark:text-[#F0E2A4] border border-[#EBE0D3] dark:border-[#5C4E49]">Alternating</button>
                 </>
               )}
               {currentAlgoId === 'reverse_words' && (
                 <>
-                  <button onClick={() => applyPreset('the sky is blue')} className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[11px] font-mono text-slate-300 border border-slate-700">the sky is blue</button>
-                  <button onClick={() => applyPreset('algoverse makes dsa visual')} className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[11px] font-mono text-slate-300 border border-slate-700">algoverse makes dsa visual</button>
+                  <button onClick={() => applyPreset('the sky is blue')} className="px-2 py-0.5 rounded bg-gray-100 dark:bg-[#5C4E49] hover:bg-slate-700 text-[11px] font-mono text-[#2D1F23] dark:text-[#F0E2A4] border border-[#EBE0D3] dark:border-[#5C4E49]">the sky is blue</button>
+                  <button onClick={() => applyPreset('algoverse makes dsa visual')} className="px-2 py-0.5 rounded bg-gray-100 dark:bg-[#5C4E49] hover:bg-slate-700 text-[11px] font-mono text-[#2D1F23] dark:text-[#F0E2A4] border border-[#EBE0D3] dark:border-[#5C4E49]">algoverse makes dsa visual</button>
                 </>
               )}
             </div>
@@ -2306,62 +2718,37 @@ export default function StringVisualizer() {
             currentStep={currentStepIdx}
             totalSteps={steps.length}
             stepDescription={step.status || ''}
+            isVoiceEnabled={isVoiceEnabled}
+            onToggleVoice={() => setIsVoiceEnabled(!isVoiceEnabled)}
+          />
+        </div>
+      }
+      rightPanel={
+        <div className="flex flex-col gap-3">
+          <DryRunVariableTracker
+            title={`${currentAlgo.name} — Dry Run`}
+            stepNumber={currentStepIdx + 1}
+            totalSteps={Math.max(1, steps.length)}
+            actionBadge={(() => {
+              const h = getStringHUDInfo(currentAlgoId, step, textInput, patternInput, secondTextInput);
+              return { label: h.badge, icon: h.icon, bg: h.bg };
+            })()}
+            codeStatement={currentCodeStatement}
+            explanation={(() => {
+              const h = getStringHUDInfo(currentAlgoId, step, textInput, patternInput, secondTextInput);
+              return h.why;
+            })()}
+            variables={trackedVariables}
+            isVoiceEnabled={isVoiceEnabled}
+            onToggleVoice={() => setIsVoiceEnabled(!isVoiceEnabled)}
           />
         </div>
       }
     >
-      <div className="flex flex-col gap-6 w-full">
-        {/* Step Explanation Callout */}
-        <div className="p-3.5 bg-slate-900/90 border border-cyan-500/30 rounded-xl flex items-start gap-3 shadow-lg">
-          <Activity className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
-          <div className="flex flex-col">
-            <span className="text-xs font-mono text-cyan-400 font-bold uppercase tracking-wider">
-              Step {currentStepIdx + 1} of {Math.max(1, steps.length)}
-            </span>
-            <span className="text-sm font-mono text-slate-200 mt-0.5 leading-relaxed">
-              {step.status || "Click Play or Step Forward to begin simulation."}
-            </span>
-          </div>
-        </div>
-
-        {/* Live Canvas */}
-        <div className="min-h-[280px] flex items-center justify-center bg-slate-950/60 border border-slate-800/80 rounded-2xl p-6 relative overflow-hidden backdrop-blur-sm">
+      <div className="w-full h-full flex-1 flex flex-col p-3 sm:p-5 overflow-hidden">
+        <div className="w-full h-full flex-1 min-h-[560px] flex items-center justify-center bg-white/80 dark:bg-[#423834] dark:bg-[#331921] border border-[#EBE0D3] dark:border-[#5C4E49]/80 rounded-3xl p-6 relative overflow-x-auto shadow-2xl backdrop-blur-sm">
           {renderCanvas()}
         </div>
-
-        {/* Intuition (ELI5) Card */}
-        {INTUITIONS[currentAlgoId] && (
-          <div className="p-5 bg-gradient-to-br from-slate-900/90 to-slate-950/90 border border-slate-800 rounded-2xl shadow-xl flex flex-col gap-4">
-            <div className="flex items-center gap-2 text-amber-400 font-mono font-bold text-sm">
-              <Lightbulb className="w-5 h-5" /> Intuition & ELI5: {currentAlgo.name}
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-3.5 bg-slate-900/60 border border-slate-800/80 rounded-xl">
-                <span className="text-xs font-mono font-bold text-cyan-400 block mb-1">How To Think About It</span>
-                <p className="text-xs text-slate-300 leading-relaxed">{INTUITIONS[currentAlgoId].concept}</p>
-              </div>
-              <div className="p-3.5 bg-slate-900/60 border border-slate-800/80 rounded-xl">
-                <span className="text-xs font-mono font-bold text-emerald-400 block mb-1">Why It Works</span>
-                <p className="text-xs text-slate-300 leading-relaxed">{INTUITIONS[currentAlgoId].whyItWorks}</p>
-              </div>
-              <div className="p-3.5 bg-slate-900/60 border border-slate-800/80 rounded-xl">
-                <span className="text-xs font-mono font-bold text-amber-400 block mb-1">Real-World Metaphor</span>
-                <p className="text-xs text-slate-300 leading-relaxed">{INTUITIONS[currentAlgoId].analogy}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Complexity Badges */}
-        <div className="flex flex-wrap gap-4 items-center">
-          <ComplexityBadge type="time" complexity={currentAlgo.complexity?.time?.average || currentAlgo.tag} />
-          <ComplexityBadge type="space" complexity={currentAlgo.complexity?.space || "O(1)"} />
-        </div>
-
-        {/* Code Inspector */}
-        {CODE_SNIPPETS[currentAlgoId] && (
-          <CodeInspector snippets={CODE_SNIPPETS[currentAlgoId]} />
-        )}
       </div>
     </ResponsiveVisualizerShell>
   );

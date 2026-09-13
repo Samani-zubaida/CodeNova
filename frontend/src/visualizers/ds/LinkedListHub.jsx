@@ -23,7 +23,7 @@ const SinglyGraphic = () => (
       <path d="M56 8 L68 8" stroke="#333" strokeWidth="1.5"/>
       <polygon points="66,6 70,8 66,10" fill="#333"/>
 
-      <rect x="72" y="2" width="16" height="12" rx="2" fill="#BC4A54"/>
+      <rect x="72" y="2" width="16" height="12" rx="2" fill="#AB526B"/>
       <text x="80" y="10.5" fontSize="6" fill="#fff" textAnchor="middle" fontWeight="bold" fontFamily="monospace">NULL</text>
     </g>
     <text x="50" y="76" fontSize="8" fill="#333" textAnchor="middle" fontFamily="monospace">Head ➔ Next ➔ NULL</text>
@@ -42,8 +42,8 @@ const DoublyGraphic = () => (
       {/* Dual Arrows */}
       <path d="M26 6 L52 6" stroke="#06B6D4" strokeWidth="1.2"/>
       <polygon points="50,4.5 54,6 50,7.5" fill="#06B6D4"/>
-      <path d="M52 12 L26 12" stroke="#BC4A54" strokeWidth="1.2"/>
-      <polygon points="28,10.5 24,12 28,13.5" fill="#BC4A54"/>
+      <path d="M52 12 L26 12" stroke="#AB526B" strokeWidth="1.2"/>
+      <polygon points="28,10.5 24,12 28,13.5" fill="#AB526B"/>
 
       <rect x="54" y="0" width="26" height="18" rx="3" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
       <text x="67" y="12" fontSize="8" fill="#333" fontWeight="bold" textAnchor="middle" fontFamily="monospace">B</text>
@@ -58,7 +58,7 @@ const CircularGraphic = () => (
   <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="100" height="100" rx="16" fill="#E8D1CB"/>
     <circle cx="50" cy="50" r="26" stroke="#333" strokeWidth="1.5" strokeDasharray="3 3"/>
-    <circle cx="50" cy="24" r="8" fill="#BC4A54" stroke="#333" strokeWidth="1"/>
+    <circle cx="50" cy="24" r="8" fill="#AB526B" stroke="#333" strokeWidth="1"/>
     <text x="50" y="27" fontSize="7" fill="#fff" textAnchor="middle" fontWeight="bold">H</text>
     <circle cx="76" cy="50" r="8" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
     <circle cx="50" cy="76" r="8" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
@@ -74,18 +74,18 @@ const ReverseGraphic = () => (
     <g transform="translate(10, 32)">
       <rect x="0" y="0" width="18" height="16" rx="2" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
       <text x="9" y="11" fontSize="8" fill="#333" textAnchor="middle" fontWeight="bold">1</text>
-      <path d="M30 8 L18 8" stroke="#BC4A54" strokeWidth="2"/>
-      <polygon points="20,6 16,8 20,10" fill="#BC4A54"/>
+      <path d="M30 8 L18 8" stroke="#AB526B" strokeWidth="2"/>
+      <polygon points="20,6 16,8 20,10" fill="#AB526B"/>
       
-      <rect x="32" y="0" width="18" height="16" rx="2" fill="#BC4A54"/>
+      <rect x="32" y="0" width="18" height="16" rx="2" fill="#AB526B"/>
       <text x="41" y="11" fontSize="8" fill="#fff" textAnchor="middle" fontWeight="bold">2</text>
-      <path d="M62 8 L50 8" stroke="#BC4A54" strokeWidth="2"/>
-      <polygon points="52,6 48,8 52,10" fill="#BC4A54"/>
+      <path d="M62 8 L50 8" stroke="#AB526B" strokeWidth="2"/>
+      <polygon points="52,6 48,8 52,10" fill="#AB526B"/>
 
       <rect x="64" y="0" width="18" height="16" rx="2" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
       <text x="73" y="11" fontSize="8" fill="#333" textAnchor="middle" fontWeight="bold">3</text>
     </g>
-    <text x="50" y="74" fontSize="8" fill="#BC4A54" textAnchor="middle" fontWeight="bold" fontFamily="monospace">curr.next = prev</text>
+    <text x="50" y="74" fontSize="8" fill="#AB526B" textAnchor="middle" fontWeight="bold" fontFamily="monospace">curr.next = prev</text>
   </svg>
 );
 
@@ -99,9 +99,9 @@ const FloydCycleGraphic = () => (
     <text x="45" y="40" fontSize="6" fill="#06B6D4" textAnchor="middle" fontWeight="bold">SLOW</text>
 
     {/* Cycle loop */}
-    <circle cx="68" cy="50" r="18" stroke="#BC4A54" strokeWidth="1.8" fill="none"/>
-    <circle cx="78" cy="36" r="6" fill="#BC4A54" stroke="#333" strokeWidth="1.2"/>
-    <text x="78" y="27" fontSize="6" fill="#BC4A54" textAnchor="middle" fontWeight="bold">FAST</text>
+    <circle cx="68" cy="50" r="18" stroke="#AB526B" strokeWidth="1.8" fill="none"/>
+    <circle cx="78" cy="36" r="6" fill="#AB526B" stroke="#333" strokeWidth="1.2"/>
+    <text x="78" y="27" fontSize="6" fill="#AB526B" textAnchor="middle" fontWeight="bold">FAST</text>
     <text x="50" y="82" fontSize="8" fill="#333" textAnchor="middle" fontFamily="monospace">2x speed collision</text>
   </svg>
 );
@@ -115,8 +115,8 @@ const MiddleNodeGraphic = () => (
       <circle cx="46" cy="10" r="8" fill="#10B981" stroke="#333" strokeWidth="1.5"/>
       <text x="46" y="13" fontSize="8" fill="#fff" textAnchor="middle" fontWeight="bold">MID</text>
       <circle cx="64" cy="10" r="6" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
-      <circle cx="82" cy="10" r="6" fill="#BC4A54" stroke="#333" strokeWidth="1"/>
-      <text x="82" y="2" fontSize="6" fill="#BC4A54" textAnchor="middle" fontWeight="bold">END</text>
+      <circle cx="82" cy="10" r="6" fill="#AB526B" stroke="#333" strokeWidth="1"/>
+      <text x="82" y="2" fontSize="6" fill="#AB526B" textAnchor="middle" fontWeight="bold">END</text>
     </g>
     <text x="50" y="74" fontSize="8" fill="#333" textAnchor="middle" fontFamily="monospace">Fast at End ➔ Slow at Mid</text>
   </svg>
@@ -132,9 +132,9 @@ const MergeSortedGraphic = () => (
       <text x="36" y="13" fontSize="7" fill="#fff" textAnchor="middle">4</text>
     </g>
     <g transform="translate(12, 42)">
-      <circle cx="23" cy="10" r="6" fill="#BC4A54" stroke="#333" strokeWidth="1"/>
+      <circle cx="23" cy="10" r="6" fill="#AB526B" stroke="#333" strokeWidth="1"/>
       <text x="23" y="13" fontSize="7" fill="#fff" textAnchor="middle">2</text>
-      <circle cx="49" cy="10" r="6" fill="#BC4A54" stroke="#333" strokeWidth="1"/>
+      <circle cx="49" cy="10" r="6" fill="#AB526B" stroke="#333" strokeWidth="1"/>
       <text x="49" y="13" fontSize="7" fill="#fff" textAnchor="middle">5</text>
     </g>
     <path d="M22 32 L35 52 L48 32 L61 52" stroke="#333" strokeWidth="1.2" strokeDasharray="2 2" fill="none"/>
@@ -190,7 +190,7 @@ const IntersectionGraphic = () => (
       <circle cx="28" cy="10" r="6" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
       <line x1="34" y1="10" x2="48" y2="-5" stroke="#333" strokeWidth="1.5"/>
     </g>
-    <circle cx="58" cy="45" r="8" fill="#BC4A54" stroke="#333" strokeWidth="1.5"/>
+    <circle cx="58" cy="45" r="8" fill="#AB526B" stroke="#333" strokeWidth="1.5"/>
     <text x="58" y="48" fontSize="7" fill="#fff" textAnchor="middle" fontWeight="bold">X</text>
     <circle cx="78" cy="45" r="6" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
     <text x="50" y="80" fontSize="8" fill="#333" textAnchor="middle" fontFamily="monospace">Shared Node Confluence</text>
@@ -221,7 +221,7 @@ const LRUCacheGraphic = () => (
       <line x1="22" y1="8" x2="32" y2="8" stroke="#333" strokeWidth="1.5"/>
       <rect x="32" y="0" width="20" height="16" rx="2" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
       <line x1="52" y1="8" x2="62" y2="8" stroke="#333" strokeWidth="1.5"/>
-      <rect x="62" y="0" width="22" height="16" rx="2" fill="#BC4A54"/>
+      <rect x="62" y="0" width="22" height="16" rx="2" fill="#AB526B"/>
       <text x="73" y="11" fontSize="7" fill="#fff" textAnchor="middle" fontWeight="bold">LRU</text>
     </g>
     <text x="50" y="72" fontSize="8" fill="#333" textAnchor="middle" fontFamily="monospace">Hash Map + Doubly List</text>
@@ -353,7 +353,7 @@ export default function LinkedListHub() {
   });
 
   return (
-    <div className="min-h-[calc(100vh-76px)] bg-[#FDFBF7] dark:bg-[#121212] relative overflow-hidden flex flex-col transition-colors duration-300 pb-16">
+    <div className="min-h-[calc(100vh-76px)] bg-[#FDFBF7] dark:bg-[#331921] relative overflow-hidden flex flex-col transition-colors duration-300 pb-16">
       
       {/* Background Ambient Gradients */}
       <div className="absolute top-0 right-0 w-[60vw] h-[60vw] bg-teal-500/10 rounded-full blur-[120px] pointer-events-none -translate-y-1/4 translate-x-1/4" />
@@ -380,7 +380,7 @@ export default function LinkedListHub() {
               placeholder="Search 12 linked list algorithms..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-white dark:bg-[#1A1A1A] border border-[#EBE0D3] dark:border-[#333] rounded-full text-xs font-medium focus:outline-none focus:ring-2 focus:ring-teal-500 shadow-xs text-gray-800 dark:text-gray-200"
+              className="w-full pl-9 pr-4 py-2 bg-white dark:bg-[#423834] border border-[#EBE0D3] dark:border-[#5C4E49] rounded-full text-xs font-medium focus:outline-none focus:ring-2 focus:ring-teal-500 shadow-xs text-gray-800 dark:text-gray-200"
             />
           </div>
         </div>
@@ -410,11 +410,11 @@ export default function LinkedListHub() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ delay: i * 0.03 }}
-                className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-4 md:p-5 shadow-sm border border-[#EBE0D3]/50 dark:border-[#333] hover:shadow-md transition-all duration-300 group flex flex-col h-full cursor-pointer"
+                className="bg-white dark:bg-[#423834] rounded-2xl p-4 md:p-5 shadow-sm border border-[#EBE0D3]/50 dark:border-[#5C4E49] hover:shadow-md transition-all duration-300 group flex flex-col h-full cursor-pointer"
               >
                 <Link to={`/visualizer/linkedlist/${item.id}`} className="block group/head flex-1 flex flex-col">
                   {/* Top Graphic Box */}
-                  <div className="w-full h-24 md:h-28 mb-3 rounded-xl overflow-hidden bg-gray-50 dark:bg-[#252525] flex items-center justify-center transform group-hover/head:scale-[1.02] transition-transform duration-300">
+                  <div className="w-full h-24 md:h-28 mb-3 rounded-xl overflow-hidden bg-gray-50 dark:bg-[#5C4E49] flex items-center justify-center transform group-hover/head:scale-[1.02] transition-transform duration-300">
                     {item.graphic}
                   </div>
 
@@ -438,7 +438,7 @@ export default function LinkedListHub() {
                 <div className="flex justify-end mt-auto pt-2">
                   <Link 
                     to={`/visualizer/linkedlist/${item.id}`}
-                    className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white dark:bg-[#1A1A1A] border border-[#EBE0D3] dark:border-[#333] flex items-center justify-center text-teal-600 dark:text-teal-400 group-hover:bg-teal-600 group-hover:text-white transition-colors duration-300 shadow-xs"
+                    className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white dark:bg-[#423834] border border-[#EBE0D3] dark:border-[#5C4E49] flex items-center justify-center text-teal-600 dark:text-teal-400 group-hover:bg-teal-600 group-hover:text-white transition-colors duration-300 shadow-xs"
                     title={`Visualize ${item.name}`}
                   >
                     <ArrowRight size={14} className="md:w-4 md:h-4" />

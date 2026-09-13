@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
 import VisualizerDashboard from './pages/VisualizerDashboard';
 import Sandbox from './pages/Sandbox';
@@ -12,6 +12,7 @@ import Array3DVisualizer from './visualizers/ds/Array3DVisualizer';
 import StringHub from './visualizers/ds/StringHub';
 import StringVisualizer from './visualizers/ds/StringVisualizer';
 import StackVisualizer from './visualizers/ds/StackVisualizer';
+import QueueHub from './visualizers/ds/QueueHub';
 import QueueVisualizer from './visualizers/ds/QueueVisualizer';
 import LinkedListHub from './visualizers/ds/LinkedListHub';
 import LinkedListVisualizer from './visualizers/ds/LinkedListVisualizer';
@@ -22,26 +23,9 @@ import GraphVisualizer from './visualizers/ds/GraphVisualizer';
 import HeapVisualizer from './visualizers/ds/HeapVisualizer';
 import MapVisualizer from './visualizers/ds/MapVisualizer';
 
-// OOP
-import EncapsulationVisualizer from './visualizers/oop/EncapsulationVisualizer';
-import AbstractionVisualizer from './visualizers/oop/AbstractionVisualizer';
-import InheritanceVisualizer from './visualizers/oop/InheritanceVisualizer';
-import PolymorphismVisualizer from './visualizers/oop/PolymorphismVisualizer';
-
-// Cryptography
-import CaesarCipherVisualizer from './visualizers/crypto/CaesarCipherVisualizer';
-import VigenereCipherVisualizer from './visualizers/crypto/VigenereCipherVisualizer';
-import PlayfairCipherVisualizer from './visualizers/crypto/PlayfairCipherVisualizer';
-import RailFenceVisualizer from './visualizers/crypto/RailFenceVisualizer';
-import ColumnarVisualizer from './visualizers/crypto/ColumnarVisualizer';
-import AESVisualizer from './visualizers/crypto/AESVisualizer';
-import RSAVIsualizer from "./visualizers/crypto/RSAVIsualizer";
-import SHA256Visualizer from './visualizers/crypto/SHA256Visualizer';
-import DigitalSignatureVisualizer from './visualizers/crypto/DigitalSignatureVisualizer';
-import SteganographyVisualizer from './visualizers/crypto/SteganographyVisualizer';
-import EnigmaVisualizer from './visualizers/crypto/EnigmaVisualizer';
-import HackerModeVisualizer from './visualizers/crypto/HackerModeVisualizer';
-import DHVisualizer from './visualizers/crypto/DHVisualizer';
+// OOP & Cryptography Studios (Code-Split)
+import OopHub from './visualizers/oop/OopHub';
+import CryptoHub from './visualizers/crypto/CryptoHub';
 
 import Auth from './pages/Auth';
 import useAppStore from './store/useAppStore';
@@ -54,13 +38,32 @@ const PrivateRoute = ({ children }) => {
   return children;
 };
 
-function App() {
+function AppContent() {
+  const location = useLocation();
+  const isDashboard = location.pathname === '/visualizer' || location.pathname === '/';
+  const { theme } = useAppStore();
+
+  React.useEffect(() => {
+    const root = document.documentElement;
+    const body = document.body;
+    root.classList.remove('dark', 'warm');
+    body.classList.remove('dark', 'warm');
+    if (theme === 'dark') {
+      root.classList.add('dark');
+      body.classList.add('dark');
+    } else if (theme === 'warm') {
+      root.classList.add('warm');
+      body.classList.add('warm');
+    }
+  }, [theme]);
+
+  const themeClass = theme === 'dark' ? 'dark bg-[#331921] text-[#F4EBC3]' : theme === 'warm' ? 'warm bg-[#F4EBC3] text-[#2D1F23]' : 'bg-[#FAF7F2] text-[#2D1F23]';
+
   return (
-    <Router>
-      <div className="min-h-screen bg-gray-50 dark:bg-[#09090b] text-gray-900 dark:text-gray-100 font-sans transition-colors duration-300">
-        <Navbar />
-        
-        <main className="pt-16 min-h-screen">
+    <div className={`min-h-screen ${themeClass} font-sans transition-colors duration-300`}>
+      {!isDashboard && <Navbar />}
+      
+      <main className={!isDashboard ? "pt-16 min-h-screen" : "min-h-screen"}>
           <Routes>
             <Route path="/" element={<Navigate to="/visualizer" replace />} />
             <Route path="/auth" element={<Auth />} />
@@ -88,30 +91,35 @@ function App() {
             <Route path="/visualizer/tree/:algoId" element={<TreeGraphVisualizer />} />
 
             <Route path="/visualizer/stack" element={<StackVisualizer />} />
-            <Route path="/visualizer/queue" element={<QueueVisualizer />} />
+            <Route path="/visualizer/queue" element={<QueueHub />} />
+        <Route path="/visualizer/queue/:algoId" element={<QueueHub />} />
             <Route path="/visualizer/heap" element={<HeapVisualizer />} />
             <Route path="/visualizer/map" element={<MapVisualizer />} />
 
             {/* OOP Routes */}
-            <Route path="/visualizer/encapsulation" element={<EncapsulationVisualizer />} />
-            <Route path="/visualizer/abstraction" element={<AbstractionVisualizer />} />
-            <Route path="/visualizer/inheritance" element={<InheritanceVisualizer />} />
-            <Route path="/visualizer/polymorphism" element={<PolymorphismVisualizer />} />
+            <Route path="/visualizer/oop" element={<OopHub />} />
+            <Route path="/visualizer/oops" element={<OopHub />} />
+            <Route path="/visualizer/encapsulation" element={<OopHub defaultConcept="encapsulation" />} />
+            <Route path="/visualizer/abstraction" element={<OopHub defaultConcept="abstraction" />} />
+            <Route path="/visualizer/inheritance" element={<OopHub defaultConcept="inheritance" />} />
+            <Route path="/visualizer/polymorphism" element={<OopHub defaultConcept="polymorphism" />} />
 
             {/* Crypto Routes */}
-            <Route path="/visualizer/caesar" element={<div className="p-8"><CaesarCipherVisualizer /></div>} />
-            <Route path="/visualizer/vigenere" element={<div className="p-8"><VigenereCipherVisualizer /></div>} />
-            <Route path="/visualizer/playfair" element={<div className="p-8"><PlayfairCipherVisualizer /></div>} />
-            <Route path="/visualizer/railfence" element={<div className="p-8"><RailFenceVisualizer /></div>} />
-            <Route path="/visualizer/columnar" element={<div className="p-8"><ColumnarVisualizer /></div>} />
-            <Route path="/visualizer/aes" element={<div className="p-8"><AESVisualizer /></div>} />
-            <Route path="/visualizer/rsa" element={<div className="p-8"><RSAVIsualizer /></div>} />
-            <Route path="/visualizer/hash" element={<div className="p-8"><SHA256Visualizer /></div>} />
-            <Route path="/visualizer/signature" element={<div className="p-8"><DigitalSignatureVisualizer /></div>} />
-            <Route path="/visualizer/steg" element={<div className="p-8"><SteganographyVisualizer /></div>} />
-            <Route path="/visualizer/enigma" element={<div className="p-8"><EnigmaVisualizer /></div>} />
-            <Route path="/visualizer/hacker" element={<div className="p-8"><HackerModeVisualizer /></div>} />
-            <Route path="/visualizer/dh" element={<div className="p-8"><DHVisualizer /></div>} />
+            <Route path="/visualizer/crypto" element={<CryptoHub />} />
+            <Route path="/visualizer/cryptography" element={<CryptoHub />} />
+            <Route path="/visualizer/caesar" element={<CryptoHub defaultAlgo="caesar" />} />
+            <Route path="/visualizer/vigenere" element={<CryptoHub defaultAlgo="vigenere" />} />
+            <Route path="/visualizer/playfair" element={<CryptoHub defaultAlgo="playfair" />} />
+            <Route path="/visualizer/railfence" element={<CryptoHub defaultAlgo="railfence" />} />
+            <Route path="/visualizer/columnar" element={<CryptoHub defaultAlgo="columnar" />} />
+            <Route path="/visualizer/aes" element={<CryptoHub defaultAlgo="aes" />} />
+            <Route path="/visualizer/rsa" element={<CryptoHub defaultAlgo="rsa" />} />
+            <Route path="/visualizer/hash" element={<CryptoHub defaultAlgo="hash" />} />
+            <Route path="/visualizer/signature" element={<CryptoHub defaultAlgo="signature" />} />
+            <Route path="/visualizer/steg" element={<CryptoHub defaultAlgo="steg" />} />
+            <Route path="/visualizer/enigma" element={<CryptoHub defaultAlgo="enigma" />} />
+            <Route path="/visualizer/hacker" element={<CryptoHub defaultAlgo="hacker" />} />
+            <Route path="/visualizer/dh" element={<CryptoHub defaultAlgo="dh" />} />
 
             <Route path="/game" element={<PrivateRoute><GameWorld /></PrivateRoute>} />
             <Route path="/host" element={<PrivateRoute><HostDashboard /></PrivateRoute>} />
@@ -120,7 +128,14 @@ function App() {
             <Route path="/sandbox" element={<PrivateRoute><Sandbox /></PrivateRoute>} />
           </Routes>
         </main>
-      </div>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 }

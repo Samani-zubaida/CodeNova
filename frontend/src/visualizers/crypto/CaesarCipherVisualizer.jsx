@@ -2,10 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Lock, Unlock, Play, Square, History, ArrowRight, ArrowLeft } from 'lucide-react';
 
-export default function CaesarCipherVisualizer() {
+export default function CaesarCipherVisualizer({ mode: propMode }) {
   const [text, setText] = useState("CODE");
   const [shift, setShift] = useState(3);
-  const [mode, setMode] = useState('encrypt'); // 'encrypt' or 'decrypt'
+  const [mode, setMode] = useState(propMode || 'encrypt'); // 'encrypt' or 'decrypt'
+
+  useEffect(() => {
+    if (propMode && propMode !== mode) {
+      setMode(propMode);
+      setIsPlaying(false);
+      setCurrentStep(-1);
+      setResult(Array(text.length).fill(''));
+    }
+  }, [propMode]);
   
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentStep, setCurrentStep] = useState(-1);

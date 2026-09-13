@@ -22,7 +22,7 @@ export default function Town1({ unlockedLevel, onCityEnter }) {
   };
 
   // Helper to get color based on lock state
-  const getColor = (levelId, activeColor, lockedColor = "#222222") => {
+  const getColor = (levelId, activeColor, lockedColor = "#5C4E49") => {
     return isLevelUnlocked(levelId) ? activeColor : lockedColor;
   };
 
@@ -32,7 +32,7 @@ export default function Town1({ unlockedLevel, onCityEnter }) {
       <RigidBody type="fixed" friction={2}>
         <mesh position={[0, -0.5, 0]} receiveShadow>
           <cylinderGeometry args={[5, 5, 1, 32]} />
-          <meshStandardMaterial color="#0f172a" roughness={0.2} metalness={0.8} />
+          <meshStandardMaterial color="#331921" roughness={0.2} metalness={0.8} />
           <Edges linewidth={2} color="#22d3ee" />
         </mesh>
       </RigidBody>
@@ -47,7 +47,7 @@ export default function Town1({ unlockedLevel, onCityEnter }) {
         />
         <mesh position={[0, 1, -10]} receiveShadow castShadow>
           <boxGeometry args={[4, 1, 4]} />
-          <meshStandardMaterial color={getColor(1, "#1e1b4b")} roughness={0.1} metalness={0.8} />
+          <meshStandardMaterial color={getColor(1, "#423834")} roughness={0.1} metalness={0.8} />
           <Edges linewidth={2} color={getColor(1, "#d946ef", "#555555")} threshold={15} />
         </mesh>
         <Text
@@ -71,7 +71,7 @@ export default function Town1({ unlockedLevel, onCityEnter }) {
         />
         <mesh position={[0, 3, -18]} receiveShadow castShadow>
           <boxGeometry args={[3, 1, 3]} />
-          <meshStandardMaterial color={getColor(2, "#1e1b4b")} roughness={0.1} />
+          <meshStandardMaterial color={getColor(2, "#423834")} roughness={0.1} />
           <Edges linewidth={2} color={getColor(2, "#22d3ee", "#555555")} threshold={15} />
         </mesh>
         <Text
@@ -95,7 +95,7 @@ export default function Town1({ unlockedLevel, onCityEnter }) {
         />
         <mesh position={[-6, 5, -24]} receiveShadow castShadow>
           <boxGeometry args={[3, 1, 3]} />
-          <meshStandardMaterial color={getColor(3, "#1e1b4b")} />
+          <meshStandardMaterial color={getColor(3, "#423834")} />
           <Edges linewidth={2} color={getColor(3, "#22d3ee", "#555555")} threshold={15} />
         </mesh>
         <Text
@@ -122,7 +122,7 @@ export default function Town1({ unlockedLevel, onCityEnter }) {
             <octahedronGeometry args={[2]} />
             <meshStandardMaterial 
               color={getColor(4, "#22d3ee", "#222222")} 
-              emissive={getColor(4, "#22d3ee", "#000000")} 
+              emissive={getColor(4, "#22d3ee", "#331921")} 
               emissiveIntensity={isLevelUnlocked(4) ? 2 : 0} 
               toneMapped={false} 
             />

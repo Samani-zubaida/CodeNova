@@ -10,7 +10,7 @@ import { ArrowRight, Search, ArrowLeft, Network, Waypoints, Compass } from 'luci
 const BFSGraphic = () => (
   <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="100" height="100" rx="16" fill="#D3DFC8"/>
-    <circle cx="50" cy="24" r="9" fill="#BC4A54" stroke="#333" strokeWidth="1.5"/>
+    <circle cx="50" cy="24" r="9" fill="#AB526B" stroke="#333" strokeWidth="1.5"/>
     <text x="50" y="27.5" fontSize="9" fill="#fff" textAnchor="middle" fontWeight="bold" fontFamily="monospace">A</text>
     
     <line x1="44" y1="30" x2="30" y2="48" stroke="#333" strokeWidth="1.5"/>
@@ -34,15 +34,15 @@ const BFSGraphic = () => (
 const DFSGraphic = () => (
   <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="100" height="100" rx="16" fill="#E8D1CB"/>
-    <circle cx="25" cy="25" r="9" fill="#BC4A54" stroke="#333" strokeWidth="1.5"/>
+    <circle cx="25" cy="25" r="9" fill="#AB526B" stroke="#333" strokeWidth="1.5"/>
     <text x="25" y="28.5" fontSize="9" fill="#fff" textAnchor="middle" fontWeight="bold" fontFamily="monospace">1</text>
     
-    <line x1="25" y1="34" x2="25" y2="52" stroke="#BC4A54" strokeWidth="2.5"/>
-    <circle cx="25" cy="58" r="8" fill="#BC4A54" stroke="#333" strokeWidth="1.5"/>
+    <line x1="25" y1="34" x2="25" y2="52" stroke="#AB526B" strokeWidth="2.5"/>
+    <circle cx="25" cy="58" r="8" fill="#AB526B" stroke="#333" strokeWidth="1.5"/>
     <text x="25" y="61" fontSize="8" fill="#fff" textAnchor="middle" fontWeight="bold" fontFamily="monospace">2</text>
 
-    <line x1="25" y1="66" x2="25" y2="82" stroke="#BC4A54" strokeWidth="2.5"/>
-    <circle cx="25" cy="88" r="7" fill="#BC4A54" stroke="#333" strokeWidth="1.5"/>
+    <line x1="25" y1="66" x2="25" y2="82" stroke="#AB526B" strokeWidth="2.5"/>
+    <circle cx="25" cy="88" r="7" fill="#AB526B" stroke="#333" strokeWidth="1.5"/>
     <text x="25" y="90.5" fontSize="7" fill="#fff" textAnchor="middle" fontWeight="bold" fontFamily="monospace">3</text>
 
     <line x1="33" y1="28" x2="60" y2="45" stroke="#888" strokeWidth="1.2" strokeDasharray="2 2"/>
@@ -52,7 +52,7 @@ const DFSGraphic = () => (
     {/* Stack HUD */}
     <g transform="translate(60, 65)">
       <rect x="0" y="0" width="30" height="28" rx="3" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
-      <rect x="3" y="3" width="24" height="6" fill="#BC4A54"/>
+      <rect x="3" y="3" width="24" height="6" fill="#AB526B"/>
       <text x="15" y="8" fontSize="5" fill="#fff" textAnchor="middle" fontWeight="bold">Top: [3]</text>
       <rect x="3" y="11" width="24" height="6" fill="#A855F7" opacity="0.6"/>
       <text x="15" y="16" fontSize="5" fill="#fff" textAnchor="middle" fontWeight="bold">[2]</text>
@@ -65,9 +65,9 @@ const DFSGraphic = () => (
 const DijkstraGraphic = () => (
   <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="100" height="100" rx="16" fill="#F4E9D4"/>
-    <circle cx="22" cy="50" r="9" fill="#BC4A54" stroke="#333" strokeWidth="1.5"/>
+    <circle cx="22" cy="50" r="9" fill="#AB526B" stroke="#333" strokeWidth="1.5"/>
     <text x="22" y="53.5" fontSize="9" fill="#fff" textAnchor="middle" fontWeight="bold" fontFamily="monospace">A</text>
-    <text x="22" y="35" fontSize="8" fill="#BC4A54" textAnchor="middle" fontWeight="bold">d=0</text>
+    <text x="22" y="35" fontSize="8" fill="#AB526B" textAnchor="middle" fontWeight="bold">d=0</text>
 
     <line x1="30" y1="46" x2="68" y2="28" stroke="#10B981" strokeWidth="2.5"/>
     <rect x="46" y="31" width="14" height="10" rx="3" fill="#FDFBF7" stroke="#333" strokeWidth="0.8"/>
@@ -90,9 +90,9 @@ const DijkstraGraphic = () => (
 const TopoSortGraphic = () => (
   <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="100" height="100" rx="16" fill="#D3DFC8"/>
-    <circle cx="20" cy="35" r="8" fill="#BC4A54" stroke="#333" strokeWidth="1.5"/>
+    <circle cx="20" cy="35" r="8" fill="#AB526B" stroke="#333" strokeWidth="1.5"/>
     <text x="20" y="38" fontSize="8" fill="#fff" textAnchor="middle" fontWeight="bold">0</text>
-    <text x="20" y="22" fontSize="7" fill="#BC4A54" textAnchor="middle" fontWeight="bold">in:0</text>
+    <text x="20" y="22" fontSize="7" fill="#AB526B" textAnchor="middle" fontWeight="bold">in:0</text>
 
     <path d="M28 35 L48 35" stroke="#333" strokeWidth="1.5"/>
     <polygon points="48,32 54,35 48,38" fill="#333"/>
@@ -115,7 +115,7 @@ const AStarGraphic = () => (
   <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="100" height="100" rx="16" fill="#E8D1CB"/>
     <g transform="translate(18, 20)">
-      <rect x="0" y="0" width="16" height="16" fill="#BC4A54" stroke="#333" rx="3"/>
+      <rect x="0" y="0" width="16" height="16" fill="#AB526B" stroke="#333" rx="3"/>
       <text x="8" y="11" fontSize="8" fill="#fff" textAnchor="middle" fontWeight="bold">S</text>
       
       <rect x="24" y="0" width="16" height="16" fill="#D3DFC8" stroke="#333" rx="3"/>
@@ -143,7 +143,7 @@ const PrimMSTGraphic = () => (
     <line x1="38" y1="30" x2="62" y2="30" stroke="#10B981" strokeWidth="3"/>
     <line x1="35" y1="37" x2="46" y2="63" stroke="#10B981" strokeWidth="3"/>
     <line x1="65" y1="37" x2="54" y2="63" stroke="#CBD5E1" strokeWidth="1.5" strokeDasharray="3 3"/>
-    <line x1="57" y1="71" x2="78" y2="74" stroke="#BC4A54" strokeWidth="2" strokeDasharray="2 2"/>
+    <line x1="57" y1="71" x2="78" y2="74" stroke="#AB526B" strokeWidth="2" strokeDasharray="2 2"/>
 
     <text x="50" y="90" fontSize="8" fill="#10B981" textAnchor="middle" fontWeight="bold" fontFamily="monospace">MST Cost: 6</text>
   </svg>
@@ -158,8 +158,8 @@ const KruskalGraphic = () => (
     <line x1="50" y1="70" x2="80" y2="70" stroke="#10B981" strokeWidth="3"/>
     <text x="65" y="65" fontSize="7" fill="#10B981" fontWeight="bold">w:2</text>
 
-    <line x1="50" y1="20" x2="50" y2="70" stroke="#BC4A54" strokeWidth="2" strokeDasharray="3 3"/>
-    <text x="55" y="45" fontSize="7" fill="#BC4A54" fontWeight="bold">w:3 (Union)</text>
+    <line x1="50" y1="20" x2="50" y2="70" stroke="#AB526B" strokeWidth="2" strokeDasharray="3 3"/>
+    <text x="55" y="45" fontSize="7" fill="#AB526B" fontWeight="bold">w:3 (Union)</text>
 
     <circle cx="20" cy="30" r="7" fill="#3B82F6" stroke="#333"/>
     <circle cx="50" cy="20" r="7" fill="#3B82F6" stroke="#333"/>
@@ -183,10 +183,10 @@ const CycleDetectionGraphic = () => (
     <line x1="70" y1="43" x2="50" y2="65" stroke="#333" strokeWidth="2"/>
     <circle cx="50" cy="70" r="8" fill="#64748B" stroke="#333" strokeWidth="1.5"/>
 
-    <path d="M43 68 Q 20 60 27 42" stroke="#BC4A54" strokeWidth="2.5" fill="none" strokeDasharray="3 2"/>
-    <polygon points="27,42 22,46 30,47" fill="#BC4A54"/>
+    <path d="M43 68 Q 20 60 27 42" stroke="#AB526B" strokeWidth="2.5" fill="none" strokeDasharray="3 2"/>
+    <polygon points="27,42 22,46 30,47" fill="#AB526B"/>
 
-    <text x="50" y="90" fontSize="8" fill="#BC4A54" textAnchor="middle" fontWeight="bold">⚠️ Back-Edge = Cycle!</text>
+    <text x="50" y="90" fontSize="8" fill="#AB526B" textAnchor="middle" fontWeight="bold">⚠️ Back-Edge = Cycle!</text>
   </svg>
 );
 
@@ -213,14 +213,14 @@ const BipartiteGraphic = () => (
 const BellmanFordGraphic = () => (
   <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="100" height="100" rx="16" fill="#D3DFC8"/>
-    <circle cx="25" cy="50" r="8" fill="#BC4A54" stroke="#333"/>
+    <circle cx="25" cy="50" r="8" fill="#AB526B" stroke="#333"/>
     <circle cx="75" cy="50" r="8" fill="#10B981" stroke="#333"/>
 
-    <line x1="33" y1="46" x2="67" y2="46" stroke="#BC4A54" strokeWidth="2"/>
-    <text x="50" y="40" fontSize="8" fill="#BC4A54" textAnchor="middle" fontWeight="bold">w: -3</text>
+    <line x1="33" y1="46" x2="67" y2="46" stroke="#AB526B" strokeWidth="2"/>
+    <text x="50" y="40" fontSize="8" fill="#AB526B" textAnchor="middle" fontWeight="bold">w: -3</text>
 
     <text x="50" y="75" fontSize="8" fill="#333" textAnchor="middle" fontFamily="monospace">|V| - 1 Relaxations</text>
-    <text x="50" y="88" fontSize="7" fill="#BC4A54" textAnchor="middle" fontWeight="bold">Detects -ve Cycles</text>
+    <text x="50" y="88" fontSize="7" fill="#AB526B" textAnchor="middle" fontWeight="bold">Detects -ve Cycles</text>
   </svg>
 );
 
@@ -239,7 +239,7 @@ const FloydWarshallGraphic = () => (
       <text x="8" y="28" fontSize="8" textAnchor="middle">∞</text>
       <rect x="17" y="17" width="16" height="16" fill="#FDFBF7" stroke="#333"/>
       <text x="25" y="28" fontSize="8" textAnchor="middle">0</text>
-      <rect x="34" y="17" width="16" height="16" fill="#BC4A54" stroke="#333"/>
+      <rect x="34" y="17" width="16" height="16" fill="#AB526B" stroke="#333"/>
       <text x="42" y="28" fontSize="8" fill="#fff" fontWeight="bold" textAnchor="middle">1</text>
 
       <rect x="0" y="34" width="16" height="16" fill="#FDFBF7" stroke="#333"/>
@@ -256,18 +256,18 @@ const FloydWarshallGraphic = () => (
 const TarjanSCCGraphic = () => (
   <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="100" height="100" rx="16" fill="#F4E9D4"/>
-    <circle cx="30" cy="30" r="7" fill="#BC4A54" stroke="#333"/>
-    <circle cx="60" cy="30" r="7" fill="#BC4A54" stroke="#333"/>
-    <circle cx="45" cy="55" r="7" fill="#BC4A54" stroke="#333"/>
+    <circle cx="30" cy="30" r="7" fill="#AB526B" stroke="#333"/>
+    <circle cx="60" cy="30" r="7" fill="#AB526B" stroke="#333"/>
+    <circle cx="45" cy="55" r="7" fill="#AB526B" stroke="#333"/>
 
-    <path d="M36 28 L54 28" stroke="#BC4A54" strokeWidth="2"/>
-    <path d="M60 37 L48 50" stroke="#BC4A54" strokeWidth="2"/>
-    <path d="M42 50 L32 37" stroke="#BC4A54" strokeWidth="2"/>
+    <path d="M36 28 L54 28" stroke="#AB526B" strokeWidth="2"/>
+    <path d="M60 37 L48 50" stroke="#AB526B" strokeWidth="2"/>
+    <path d="M42 50 L32 37" stroke="#AB526B" strokeWidth="2"/>
 
-    <rect x="20" y="18" width="50" height="46" rx="8" fill="none" stroke="#BC4A54" strokeWidth="1.5" strokeDasharray="3 3"/>
+    <rect x="20" y="18" width="50" height="46" rx="8" fill="none" stroke="#AB526B" strokeWidth="1.5" strokeDasharray="3 3"/>
 
     <text x="50" y="82" fontSize="8" fill="#333" textAnchor="middle" fontWeight="bold">Low-Link on Stack</text>
-    <text x="50" y="92" fontSize="7" fill="#BC4A54" textAnchor="middle">Strongly Connected</text>
+    <text x="50" y="92" fontSize="7" fill="#AB526B" textAnchor="middle">Strongly Connected</text>
   </svg>
 );
 
@@ -280,8 +280,8 @@ const KosarajuGraphic = () => (
     <path d="M37 38 L63 38" stroke="#333" strokeWidth="1.5"/>
     <polygon points="63,35 68,38 63,41" fill="#333"/>
 
-    <path d="M63 45 L37 45" stroke="#BC4A54" strokeWidth="1.5" strokeDasharray="2 2"/>
-    <polygon points="37,42 32,45 37,48" fill="#BC4A54"/>
+    <path d="M63 45 L37 45" stroke="#AB526B" strokeWidth="1.5" strokeDasharray="2 2"/>
+    <polygon points="37,42 32,45 37,48" fill="#AB526B"/>
 
     <text x="50" y="70" fontSize="8" fill="#333" textAnchor="middle" fontWeight="bold">G ➔ G^T (Transpose)</text>
     <text x="50" y="85" fontSize="7" fill="#666" textAnchor="middle">2-Pass DFS</text>
@@ -297,13 +297,13 @@ const BridgesGraphic = () => (
     <line x1="27" y1="50" x2="33" y2="50" stroke="#10B981" strokeWidth="2"/>
 
     {/* The Bridge Edge */}
-    <line x1="47" y1="50" x2="63" y2="50" stroke="#BC4A54" strokeWidth="3" strokeDasharray="3 2"/>
+    <line x1="47" y1="50" x2="63" y2="50" stroke="#AB526B" strokeWidth="3" strokeDasharray="3 2"/>
 
     <circle cx="70" cy="50" r="7" fill="#3B82F6" stroke="#333"/>
     <circle cx="90" cy="50" r="7" fill="#3B82F6" stroke="#333"/>
     <line x1="77" y1="50" x2="83" y2="50" stroke="#3B82F6" strokeWidth="2"/>
 
-    <text x="55" y="38" fontSize="8" fill="#BC4A54" textAnchor="middle" fontWeight="bold">✂️ Cut Edge</text>
+    <text x="55" y="38" fontSize="8" fill="#AB526B" textAnchor="middle" fontWeight="bold">✂️ Cut Edge</text>
     <text x="50" y="85" fontSize="8" fill="#333" textAnchor="middle" fontWeight="bold">Critical Bottlenecks</text>
   </svg>
 );
@@ -311,10 +311,10 @@ const BridgesGraphic = () => (
 const EulerianGraphic = () => (
   <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="100" height="100" rx="16" fill="#F4E9D4"/>
-    <polygon points="50,20 20,50 80,50" fill="none" stroke="#BC4A54" strokeWidth="2"/>
-    <rect x="20" y="50" width="60" height="30" fill="none" stroke="#BC4A54" strokeWidth="2"/>
-    <line x1="20" y1="50" x2="80" y2="80" stroke="#BC4A54" strokeWidth="2"/>
-    <line x1="80" y1="50" x2="20" y2="80" stroke="#BC4A54" strokeWidth="2"/>
+    <polygon points="50,20 20,50 80,50" fill="none" stroke="#AB526B" strokeWidth="2"/>
+    <rect x="20" y="50" width="60" height="30" fill="none" stroke="#AB526B" strokeWidth="2"/>
+    <line x1="20" y1="50" x2="80" y2="80" stroke="#AB526B" strokeWidth="2"/>
+    <line x1="80" y1="50" x2="20" y2="80" stroke="#AB526B" strokeWidth="2"/>
 
     <text x="50" y="93" fontSize="8" fill="#333" textAnchor="middle" fontWeight="bold">Every Edge Visited Once</text>
   </svg>
@@ -521,18 +521,18 @@ export default function GraphHub() {
       <div className="max-w-7xl mx-auto space-y-8">
         
         {/* Navigation & Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#EBE0D3] dark:border-[#262626] pb-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#EBE0D3] dark:border-[#5C4E49] pb-6">
           <div className="space-y-1">
             <Link 
               to="/dashboard" 
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-[#BC4A54] transition-colors uppercase tracking-wider mb-2"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-[#AB526B] transition-colors uppercase tracking-wider mb-2"
             >
               <ArrowLeft size={14} />
               <span>Back to Dashboard</span>
             </Link>
             <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-gray-900 dark:text-white flex items-center gap-3">
               <span>Graph Suite</span>
-              <span className="text-xs px-2.5 py-1 rounded-full bg-[#BC4A54]/10 dark:bg-[#BC4A54]/20 text-[#BC4A54] font-mono font-bold">
+              <span className="text-xs px-2.5 py-1 rounded-full bg-[#AB526B]/10 dark:bg-[#AB526B]/20 text-[#AB526B] font-mono font-bold">
                 16 Algorithms
               </span>
             </h1>
@@ -549,7 +549,7 @@ export default function GraphHub() {
               placeholder="Search graph algorithms..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 text-xs font-medium rounded-xl bg-white dark:bg-[#161616] border border-[#EBE0D3] dark:border-[#2A2A2A] focus:outline-hidden focus:ring-2 focus:ring-[#BC4A54] transition-all shadow-xs"
+              className="w-full pl-9 pr-4 py-2.5 text-xs font-medium rounded-xl bg-white dark:bg-[#423834] border border-[#EBE0D3] dark:border-[#2A2A2A] focus:outline-hidden focus:ring-2 focus:ring-[#AB526B] transition-all shadow-xs"
             />
           </div>
         </div>
@@ -562,8 +562,8 @@ export default function GraphHub() {
               onClick={() => setActiveCategory(cat)}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 activeCategory === cat
-                  ? 'bg-[#BC4A54] text-white shadow-xs'
-                  : 'bg-white dark:bg-[#161616] border border-[#EBE0D3] dark:border-[#2A2A2A] text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#202020]'
+                  ? 'bg-[#AB526B] text-white shadow-xs'
+                  : 'bg-white dark:bg-[#423834] border border-[#EBE0D3] dark:border-[#2A2A2A] text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#202020]'
               }`}
             >
               {cat}
@@ -582,11 +582,11 @@ export default function GraphHub() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.2, delay: index * 0.03 }}
-                className="group relative bg-white dark:bg-[#141414] rounded-2xl border border-[#EBE0D3] dark:border-[#262626] overflow-hidden hover:shadow-xl hover:border-gray-400 dark:hover:border-gray-600 transition-all duration-300 flex flex-col justify-between"
+                className="group relative bg-white dark:bg-[#423834] rounded-2xl border border-[#EBE0D3] dark:border-[#5C4E49] overflow-hidden hover:shadow-xl hover:border-gray-400 dark:hover:border-gray-600 transition-all duration-300 flex flex-col justify-between"
               >
                 <div>
                   {/* Top Pastel SVG Graphic Area */}
-                  <div className="w-full h-36 border-b border-[#EBE0D3] dark:border-[#262626] overflow-hidden p-2 flex items-center justify-center bg-gray-50/50 dark:bg-black/20 group-hover:scale-[1.02] transition-transform duration-300">
+                  <div className="w-full h-36 border-b border-[#EBE0D3] dark:border-[#5C4E49] overflow-hidden p-2 flex items-center justify-center bg-gray-50/50 dark:bg-black/20 group-hover:scale-[1.02] transition-transform duration-300">
                     <div className="w-full h-full max-w-[130px] flex items-center justify-center">
                       {item.graphic}
                     </div>
@@ -598,12 +598,12 @@ export default function GraphHub() {
                       <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-gray-100 dark:bg-[#202020] text-gray-600 dark:text-gray-300">
                         {item.category}
                       </span>
-                      <span className="text-xs font-mono font-bold text-[#BC4A54] bg-[#BC4A54]/10 dark:bg-[#BC4A54]/20 px-2 py-0.5 rounded-full">
+                      <span className="text-xs font-mono font-bold text-[#AB526B] bg-[#AB526B]/10 dark:bg-[#AB526B]/20 px-2 py-0.5 rounded-full">
                         {item.tag}
                       </span>
                     </div>
 
-                    <h2 className="text-base font-bold text-gray-900 dark:text-white group-hover:text-[#BC4A54] transition-colors line-clamp-1">
+                    <h2 className="text-base font-bold text-gray-900 dark:text-white group-hover:text-[#AB526B] transition-colors line-clamp-1">
                       {item.name}
                     </h2>
 
@@ -620,7 +620,7 @@ export default function GraphHub() {
                   </span>
                   <Link
                     to={`/visualizer/graph/${item.id}`}
-                    className="w-8 h-8 rounded-full bg-gray-100 dark:bg-[#202020] group-hover:bg-[#BC4A54] text-gray-600 dark:text-gray-300 group-hover:text-white flex items-center justify-center transition-all duration-300 shadow-xs"
+                    className="w-8 h-8 rounded-full bg-gray-100 dark:bg-[#202020] group-hover:bg-[#AB526B] text-gray-600 dark:text-gray-300 group-hover:text-white flex items-center justify-center transition-all duration-300 shadow-xs"
                     title={`Launch ${item.name} Visualizer`}
                   >
                     <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />

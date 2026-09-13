@@ -1,9 +1,21 @@
 import { create } from 'zustand';
 
+const initialTheme = localStorage.getItem('nova_theme') || 'light';
+
+// Ensure root class matches initial theme
+if (typeof document !== 'undefined') {
+  document.documentElement.classList.remove('dark', 'warm');
+  if (initialTheme === 'dark') {
+    document.documentElement.classList.add('dark');
+  } else if (initialTheme === 'warm') {
+    document.documentElement.classList.add('warm');
+  }
+}
+
 const useAppStore = create((set) => ({
-  user: JSON.parse(localStorage.getItem('nova_user')) || null,
+  user: JSON.parse(localStorage.getItem('nova_user')) || { username: 'DemoExplorer', email: 'demo@codenova.dev' },
   token: localStorage.getItem('nova_token') || null,
-  theme: 'light',
+  theme: initialTheme,
   currentCodeOutput: '',
   isPlayingVisualizer: false,
   totalXP: 0,
@@ -26,7 +38,34 @@ const useAppStore = create((set) => ({
     localStorage.setItem('nova_user', JSON.stringify(user));
     set({ user });
   },
-  toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
+  
+  setTheme: (newTheme) => {
+    localStorage.setItem('nova_theme', newTheme);
+    if (typeof document !== 'undefined') {
+      document.documentElement.classList.remove('dark', 'warm');
+      if (newTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else if (newTheme === 'warm') {
+        document.documentElement.classList.add('warm');
+      }
+    }
+    set({ theme: newTheme });
+  },
+
+  toggleTheme: () => set((state) => {
+    const next = state.theme === 'light' ? 'warm' : state.theme === 'warm' ? 'dark' : 'light';
+    localStorage.setItem('nova_theme', next);
+    if (typeof document !== 'undefined') {
+      document.documentElement.classList.remove('dark', 'warm');
+      if (next === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else if (next === 'warm') {
+        document.documentElement.classList.add('warm');
+      }
+    }
+    return { theme: next };
+  }),
+
   setExecutionOutput: (output) => set({ currentCodeOutput: output }),
   setPlayingVisualizer: (isPlaying) => set({ isPlayingVisualizer: isPlaying }),
   addXP: (amount) => set((state) => ({ totalXP: state.totalXP + amount })),
@@ -42,4 +81,3 @@ const useAppStore = create((set) => ({
 }));
 
 export default useAppStore;
-

@@ -692,7 +692,7 @@ export default function ArrayVisualizer() {
       {/* ======================================================== */}
       {/* ARRAY VISUALIZATION CANVAS                               */}
       {/* ======================================================== */}
-      <div className="flex flex-col items-center justify-center gap-6 w-full max-w-4xl py-6">
+      <div className="w-full h-full flex-1 flex flex-col items-center justify-center p-4 sm:p-6 min-h-[550px] gap-8">
         
         {/* Dynamic Window Banner */}
         {activeWindow && (
@@ -703,7 +703,7 @@ export default function ArrayVisualizer() {
         )}
 
         {/* The Memory Array Blocks */}
-        <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 p-4 bg-white/70 dark:bg-[#141414]/70 backdrop-blur-md rounded-3xl border border-[#EBE0D3]/80 dark:border-[#2A2A2A] shadow-lg max-w-full overflow-x-auto">
+        <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 p-6 sm:p-8 bg-white/70 dark:bg-[#141414]/70 backdrop-blur-md rounded-3xl border border-[#EBE0D3]/80 dark:border-[#2A2A2A] shadow-2xl max-w-full overflow-x-auto">
           <AnimatePresence mode="popLayout">
             {array.map((val, idx) => {
               const isHighlighted = highlightedIndices.includes(idx);
@@ -741,7 +741,7 @@ export default function ArrayVisualizer() {
                   </div>
 
                   <div
-                    className={`w-12 h-14 sm:w-14 sm:h-16 md:w-16 md:h-20 rounded-2xl flex flex-col items-center justify-center font-mono font-bold text-lg sm:text-xl shadow-md border-2 transition-all duration-300 ${
+                    className={`w-16 h-20 sm:w-20 sm:h-24 md:w-24 md:h-28 rounded-2xl flex flex-col items-center justify-center font-mono font-black text-2xl sm:text-3xl shadow-xl border-2 transition-all duration-300 ${
                       isSorted
                         ? 'bg-emerald-500 text-white border-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.5)]'
                         : isSwapping
@@ -759,7 +759,7 @@ export default function ArrayVisualizer() {
                   </div>
 
                   <div className="mt-2 text-center">
-                    <span className="text-[10px] font-mono text-gray-400 font-bold">
+                    <span className="text-xs font-mono text-gray-400 font-extrabold">
                       [{idx}]
                     </span>
                   </div>

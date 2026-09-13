@@ -1,222 +1,182 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Terminal, ChevronDown, ChevronUp, Play, Settings, CreditCard, ShieldAlert, Database, Banknote, ShieldCheck, ChevronLeft, ChevronRight } from 'lucide-react';
+import { 
+  Smartphone, Cpu, Camera, Send, Wifi, Layers, Activity, Sparkles, CheckCircle2, Zap, Eye, EyeOff, Sliders
+} from 'lucide-react';
 import VisualizerNav from '../../components/layout/VisualizerNav';
 
-export default function AbstractionVisualizer() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [amount, setAmount] = useState(50);
-  
-  const [isRunning, setIsRunning] = useState(false);
-  const [internalState, setInternalState] = useState(0); // 0: Idle, 1: Auth, 2: Fraud, 3: Ledger, 4: Dispense
+export default function AbstractionVisualizer({ isEmbedded = false }) {
+  const [showInternalHardware, setShowInternalHardware] = useState(false);
+  const [activeAction, setActiveAction] = useState(null); // 'photo' | 'message' | 'pay'
+  const [logMessage, setLogMessage] = useState("Abstraction Studio: Tap any button on the smartphone to execute a complex task without worrying about microchip circuitry!");
 
-  // Console Output State
-  const [outputLines, setOutputLines] = useState([{msg: "> BankAccount API Initialized.", isError: false}]);
-  const [isConsoleOpen, setIsConsoleOpen] = useState(true);
+  const handlePhoneAction = async (actionType, title, codeSnippet) => {
+    if (activeAction) return;
+    setActiveAction(actionType);
+    setLogMessage(`📱 EXECUTING PUBLIC METHOD: phone.${actionType}() [${title}]`);
 
-  const logOutput = (msg, isError = false) => {
-    setOutputLines(prev => [...prev, { msg, isError }].slice(-8));
+    await new Promise(r => setTimeout(r, 1600));
+    setActiveAction(null);
+    setLogMessage(`✅ COMPLETED: ${title}. Abstraction hid 10,000+ lines of microchip assembly code!`);
   };
-
-  const triggerWithdraw = () => {
-    if (isRunning) return;
-    setIsRunning(true);
-    setInternalState(1);
-    logOutput(`> account.withdraw(${amount})`, false);
-    logOutput(`  User triggered simple withdraw interface.`, false);
-  };
-
-  useEffect(() => {
-    let timer;
-    if (isRunning) {
-      if (internalState === 1) {
-        logOutput(`  [Abstracted] Verifying Account Balance...`);
-        timer = setTimeout(() => setInternalState(2), 1500);
-      } else if (internalState === 2) {
-        logOutput(`  [Abstracted] Running Fraud Detection Algorithms...`);
-        timer = setTimeout(() => setInternalState(3), 1500);
-      } else if (internalState === 3) {
-        logOutput(`  [Abstracted] Updating Ledger Database (ACID Transaction)...`);
-        timer = setTimeout(() => setInternalState(4), 1500);
-      } else if (internalState === 4) {
-        logOutput(`  [Abstracted] Triggering Hardware Dispenser...`);
-        timer = setTimeout(() => {
-          logOutput(`> Cash dispensed! Return control to user.`, false);
-          setInternalState(0);
-          setIsRunning(false);
-        }, 1500);
-      }
-    }
-    return () => clearTimeout(timer);
-  }, [isRunning, internalState]);
 
   return (
-    <div className="fixed top-[64px] bottom-0 left-0 right-0 bg-gray-50 dark:bg-[#09090b] flex flex-col lg:flex-row overflow-hidden">
-      
-      {/* Left Sidebar: Controls & Output */}
-      <div className={`w-full lg:w-[350px] xl:w-[400px] h-1/2 lg:h-full bg-white/80 dark:bg-black/40 backdrop-blur-xl border-r border-b lg:border-b-0 border-gray-200 dark:border-white/10 shadow-2xl flex flex-col z-10 shrink-0 overflow-y-auto transition-all duration-300 ${isSidebarOpen ? "ml-0" : "-ml-[100%] lg:-ml-[400px]"}`}>
-        <div className="p-4 lg:p-6 flex flex-col gap-6 lg:gap-8 h-full">
-          
-          <VisualizerNav currentPath="/visualizer/abstraction" />
+    <div className="w-full flex-1 flex flex-col items-center justify-between text-[#FAF7F2] font-sans select-none space-y-3">
+      {!isEmbedded && <VisualizerNav title="Abstraction: Smartphone & Microchip Studio" />}
 
+      {/* TOP HEADER */}
+      <div className="w-full max-w-6xl bg-[#331921]/90 backdrop-blur-xl border-2 border-[#F0E2A4] rounded-2xl p-4 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-3 rounded-2xl bg-[#F0E2A4] text-[#331921] font-extrabold shadow-lg">
+            <Smartphone size={26} />
+          </div>
           <div>
-            <h1 className="text-2xl lg:text-3xl font-black text-[var(--color-nova-red)] tracking-tight mb-2">Abstraction</h1>
-            <p className="text-xs lg:text-sm text-gray-500 font-medium">Hiding complex implementation details behind a simple interface so the user doesn't need to understand the underlying logic.</p>
+            <h3 className="text-base font-mono font-extrabold text-[#F0E2A4] uppercase tracking-wider">
+              ABSTRACTION: SIMPLE INTERFACE VS COMPLEX INTERNALS
+            </h3>
+            <p className="text-xs text-[#BCA297]">
+              Abstraction hides unnecessary background complexity and shows ONLY essential features to the user.
+            </p>
           </div>
-
-          <div className="flex flex-col gap-4">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-200 dark:border-white/10 pb-2">The Interface (User View)</h3>
-            <p className="text-xs text-gray-500">The user only interacts with a simple ATM screen. They don't need to know how banking regulations or databases work.</p>
-            
-            <div className="bg-blue-900 text-white p-6 rounded-xl shadow-inner border-4 border-gray-300 dark:border-gray-700 flex flex-col items-center gap-4 relative overflow-hidden">
-              <div className="absolute top-0 left-0 right-0 h-4 bg-gray-800"></div>
-              <h2 className="text-xl font-bold mt-2">NOVA BANK ATM</h2>
-              
-              <div className="flex items-center gap-2 bg-blue-950 p-2 rounded">
-                <span className="font-bold text-lg">$</span>
-                <input 
-                  type="number" 
-                  value={amount}
-                  onChange={(e) => setAmount(Number(e.target.value))}
-                  disabled={isRunning}
-                  className="bg-transparent text-white font-mono text-xl w-24 outline-none text-center disabled:opacity-50"
-                />
-              </div>
-
-              <button 
-                disabled={isRunning}
-                onClick={triggerWithdraw}
-                className={`w-full py-3 rounded-lg flex items-center justify-center gap-3 transition-all duration-300 shadow-md font-bold ${isRunning ? 'bg-gray-500 text-white cursor-not-allowed' : 'bg-green-500 text-white hover:bg-green-600 hover:scale-[1.02]'}`}
-              >
-                <Banknote size={20} /> WITHDRAW CASH
-              </button>
-            </div>
-          </div>
-          
-          <div className="mt-auto pt-8"></div>
         </div>
-      </div>
 
-      {/* Right Canvas: Visualization & Console */}
-      <div className="w-full lg:flex-1 h-1/2 lg:h-full flex flex-col relative overflow-hidden bg-gray-50/50 dark:bg-black/20">
-        {/* Sidebar Toggle Button */}
-        <button 
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="absolute top-4 left-4 z-50 p-2 bg-white/80 dark:bg-black/40 backdrop-blur border border-gray-200 dark:border-white/10 rounded shadow-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+        {/* X-Ray Circuit Toggle */}
+        <button
+          onClick={() => setShowInternalHardware(!showInternalHardware)}
+          className={`px-4 py-2.5 rounded-xl font-mono text-xs font-extrabold shadow-xl transition-all flex items-center gap-2 ${
+            showInternalHardware 
+              ? 'bg-[#AB526B] text-white ring-2 ring-white scale-105' 
+              : 'bg-[#C5CEAE] text-[#331921] hover:bg-[#A8B48D]'
+          }`}
         >
-          {isSidebarOpen ? <ChevronLeft size={20} className="text-gray-600 dark:text-gray-300" /> : <ChevronRight size={20} className="text-gray-600 dark:text-gray-300" />}
+          {showInternalHardware ? <EyeOff size={16} /> : <Eye size={16} />}
+          <span>{showInternalHardware ? "Hide Hardware Complexity" : "🔍 Reveal Microchip Complexity"}</span>
         </button>
+      </div>
 
+      {/* TELEMETRY LOG BANNER */}
+      <div className="w-full max-w-6xl py-3 px-6 rounded-2xl bg-[#423834] border-2 border-[#5C4E49] text-center font-mono text-xs md:text-sm font-bold shadow-xl text-[#F0E2A4] flex items-center justify-center gap-3">
+        <Activity size={18} className="text-[#C5CEAE] animate-pulse" />
+        <span>{logMessage}</span>
+      </div>
+
+      {/* MAIN CANVAS: SMARTPHONE & HARDWARE CIRCUIT */}
+      <div className="w-full max-w-6xl bg-gradient-to-b from-[#140D0F] via-[#1E1417] to-[#2B1B21] border-2 border-[#5C4E49] rounded-3xl p-6 md:p-8 shadow-[0_0_90px_rgba(0,0,0,0.9)] relative overflow-hidden flex-1 flex items-center justify-center min-h-[460px]">
         
-        {/* Main Visualization Area */}
-        <div className="flex-1 flex flex-col p-8 lg:p-12 overflow-y-auto overflow-x-auto relative items-center justify-center min-h-[400px]">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center w-full max-w-4xl z-10">
           
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[var(--color-nova-red)] opacity-5 blur-[100px] rounded-full pointer-events-none"></div>
+          {/* SMARTPHONE USER INTERFACE (ABSTRACTED FRONT END) */}
+          <div className="flex flex-col items-center">
+            <div className="w-72 h-[380px] bg-[#140D0F] border-4 border-[#F0E2A4] rounded-[40px] p-4 shadow-[0_0_60px_rgba(240,226,164,0.4)] flex flex-col justify-between relative">
+              {/* Phone Speaker Notch */}
+              <div className="w-20 h-4 bg-[#331921] rounded-full mx-auto mb-2 flex items-center justify-center">
+                <div className="w-6 h-1 bg-[#5C4E49] rounded-full" />
+              </div>
 
-          <div className="w-full max-w-3xl bg-white/60 dark:bg-black/60 backdrop-blur border-4 border-dashed border-gray-300 dark:border-gray-700 rounded-3xl p-8 shadow-lg relative z-10 flex flex-col items-center">
-            
-            <div className="absolute -top-4 bg-gray-800 text-white px-6 py-1.5 rounded-full font-bold shadow-md tracking-wider text-sm flex items-center gap-2">
-              <Settings size={14}/> Abstracted Internal Implementation (Hidden from User)
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full mt-4">
-              
-              {/* Balance Check */}
-              <div className={`border-2 rounded-xl p-4 flex flex-col items-center justify-center gap-4 transition-all duration-500 ${internalState === 1 ? 'border-blue-500 bg-blue-500/20 scale-110 shadow-[0_0_30px_rgba(59,130,246,0.4)]' : 'border-gray-200 dark:border-gray-800 bg-black/5 dark:bg-white/5 opacity-50'}`}>
-                <CreditCard size={32} className={internalState === 1 ? 'text-blue-500' : 'text-gray-400'} />
-                <div className="text-center font-mono text-xs font-bold leading-tight">
-                  1. Balance<br/><span className="text-[10px] text-gray-500 font-normal">Verification</span>
+              {/* Screen Content */}
+              <div className="flex-1 bg-[#331921] rounded-2xl p-4 flex flex-col items-center justify-between border border-white/10 font-mono">
+                <div className="text-center">
+                  <span className="text-xs font-bold text-[#F0E2A4] block">Abstracted Phone Interface</span>
+                  <span className="text-[10px] text-[#BCA297]">Simple Public Methods</span>
                 </div>
-              </div>
 
-              {/* Fraud Check */}
-              <div className={`border-2 rounded-xl p-4 flex flex-col items-center justify-center gap-4 transition-all duration-500 ${internalState === 2 ? 'border-orange-500 bg-orange-500/20 scale-110 shadow-[0_0_30px_rgba(249,115,22,0.4)]' : 'border-gray-200 dark:border-gray-800 bg-black/5 dark:bg-white/5 opacity-50'}`}>
-                <ShieldAlert size={32} className={internalState === 2 ? 'text-orange-500' : 'text-gray-400'} />
-                <div className="text-center font-mono text-xs font-bold leading-tight">
-                  2. Fraud<br/><span className="text-[10px] text-gray-500 font-normal">Detection ML</span>
-                </div>
-              </div>
-
-              {/* Ledger DB */}
-              <div className={`border-2 rounded-xl p-4 flex flex-col items-center justify-center gap-4 transition-all duration-500 ${internalState === 3 ? 'border-purple-500 bg-purple-500/20 scale-110 shadow-[0_0_30px_rgba(168,85,247,0.4)]' : 'border-gray-200 dark:border-gray-800 bg-black/5 dark:bg-white/5 opacity-50'}`}>
-                <Database size={32} className={internalState === 3 ? 'text-purple-500' : 'text-gray-400'} />
-                <div className="text-center font-mono text-xs font-bold leading-tight">
-                  3. Ledger<br/><span className="text-[10px] text-gray-500 font-normal">ACID Transaction</span>
-                </div>
-              </div>
-              
-              {/* Hardware API */}
-              <div className={`border-2 rounded-xl p-4 flex flex-col items-center justify-center gap-4 transition-all duration-500 ${internalState === 4 ? 'border-green-500 bg-green-500/20 scale-110 shadow-[0_0_30px_rgba(34,197,94,0.4)]' : 'border-gray-200 dark:border-gray-800 bg-black/5 dark:bg-white/5 opacity-50'}`}>
-                <Settings size={32} className={internalState === 4 ? 'text-green-500' : 'text-gray-400'} />
-                <div className="text-center font-mono text-xs font-bold leading-tight">
-                  4. Hardware<br/><span className="text-[10px] text-gray-500 font-normal">Dispense API</span>
-                </div>
-              </div>
-
-            </div>
-
-            {/* Connecting Data Flow */}
-            <div className="w-full mt-12 space-y-2 relative">
-              <div className="h-2 w-full bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden relative">
-                <motion.div 
-                  initial={{ x: '-100%' }}
-                  animate={{ x: isRunning ? '100%' : '-100%' }}
-                  transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
-                  className="absolute inset-0 w-1/3 bg-gradient-to-r from-transparent via-[var(--color-nova-red)] to-transparent"
-                />
-              </div>
-              
-              {/* Highlight Overlay to emphasize "Abstraction" */}
-              <AnimatePresence>
-                {isRunning && (
-                  <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="absolute -inset-8 border-2 border-[var(--color-nova-red)]/50 rounded-3xl bg-[var(--color-nova-red)]/5 pointer-events-none flex items-center justify-center -z-10"
+                {/* Interactive Touch Buttons */}
+                <div className="w-full space-y-3">
+                  <button
+                    onClick={() => handlePhoneAction('takePhoto', 'Capture 48MP Photo', 'phone.takePhoto()')}
+                    className={`w-full py-3 px-4 rounded-xl font-bold text-xs flex items-center justify-between transition-all ${
+                      activeAction === 'takePhoto'
+                        ? 'bg-[#F0E2A4] text-[#331921] scale-105 shadow-[0_0_25px_#F0E2A4]'
+                        : 'bg-[#423834] text-[#FAF7F2] hover:bg-[#5C4E49]'
+                    }`}
                   >
-                    <span className="absolute top-2 right-4 text-[var(--color-nova-red)] font-bold tracking-widest uppercase text-xs opacity-70">
-                      Abstracted Layer
-                    </span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    <span className="flex items-center gap-2"><Camera size={16} /> phone.takePhoto()</span>
+                    <Zap size={14} />
+                  </button>
+
+                  <button
+                    onClick={() => handlePhoneAction('sendMessage', 'Transmit Encrypted SMS', 'phone.sendMessage()')}
+                    className={`w-full py-3 px-4 rounded-xl font-bold text-xs flex items-center justify-between transition-all ${
+                      activeAction === 'sendMessage'
+                        ? 'bg-[#C5CEAE] text-[#331921] scale-105 shadow-[0_0_25px_#C5CEAE]'
+                        : 'bg-[#423834] text-[#FAF7F2] hover:bg-[#5C4E49]'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2"><Send size={16} /> phone.sendMessage()</span>
+                    <Zap size={14} />
+                  </button>
+
+                  <button
+                    onClick={() => handlePhoneAction('payNFC', 'Process NFC Payment', 'phone.payNFC()')}
+                    className={`w-full py-3 px-4 rounded-xl font-bold text-xs flex items-center justify-between transition-all ${
+                      activeAction === 'payNFC'
+                        ? 'bg-[#AB526B] text-white scale-105 shadow-[0_0_25px_#AB526B]'
+                        : 'bg-[#423834] text-[#FAF7F2] hover:bg-[#5C4E49]'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2"><Wifi size={16} /> phone.payNFC()</span>
+                    <Zap size={14} />
+                  </button>
+                </div>
+
+                <div className="text-[9px] text-[#BCA297] text-center">
+                  Click any button to trigger the operation!
+                </div>
+              </div>
             </div>
-
           </div>
 
-        </div>
+          {/* HARDWARE MICROCHIP CIRCUITRY (COMPLEXITY HIDDEN BY ABSTRACTION) */}
+          <div className="flex flex-col items-center">
+            <motion.div 
+              animate={{ 
+                borderColor: showInternalHardware ? '#AB526B' : '#5C4E49',
+                scale: activeAction ? [1, 1.03, 1] : 1
+              }}
+              className={`w-full p-6 rounded-3xl bg-[#331921] border-4 shadow-2xl font-mono flex flex-col space-y-4 relative ${
+                showInternalHardware ? 'shadow-[0_0_60px_rgba(171,82,107,0.6)]' : 'opacity-60'
+              }`}
+            >
+              <div className="flex items-center justify-between border-b border-white/20 pb-2">
+                <span className="text-sm font-extrabold text-[#AB526B] flex items-center gap-2">
+                  <Cpu size={20} /> Microchip Hardware Circuitry
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded bg-[#AB526B] text-white font-bold">
+                  {showInternalHardware ? "VISIBLE" : "HIDDEN BY ABSTRACTION"}
+                </span>
+              </div>
 
-        {/* Output Console Panel */}
-        <div className={`w-full bg-[#0d1117] border-t border-white/10 flex flex-col shrink-0 font-mono shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-20 transition-all duration-300 ${isConsoleOpen ? 'h-48 lg:h-56' : 'h-10'}`}>
-          <div 
-            onClick={() => setIsConsoleOpen(!isConsoleOpen)}
-            className="flex items-center justify-between px-4 py-2 bg-[#161b22] border-b border-white/5 cursor-pointer hover:bg-[#1f2630] transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <Terminal size={14} className="text-gray-400" />
-              <span className="text-xs text-gray-400 font-bold tracking-wider">CONSOLE OUTPUT</span>
-            </div>
-            {isConsoleOpen ? <ChevronDown size={14} className="text-gray-400" /> : <ChevronUp size={14} className="text-gray-400" />}
+              {/* Hardware Circuit Nodes */}
+              <div className="grid grid-cols-2 gap-3 py-2">
+                {[
+                  { name: 'CMOS Sensor Matrix', status: activeAction === 'takePhoto' ? 'FIRING' : 'IDLE' },
+                  { name: '5G Baseband Modem', status: activeAction === 'sendMessage' ? 'TRANSMITTING' : 'IDLE' },
+                  { name: 'Secure Element NFC Chip', status: activeAction === 'payNFC' ? 'ENCRYPTING' : 'IDLE' },
+                  { name: 'Octa-Core Neural Engine', status: activeAction ? 'PROCESSING' : 'IDLE' }
+                ].map((chip, i) => (
+                  <div 
+                    key={chip.name}
+                    className={`p-3 rounded-xl border text-center text-xs transition-all ${
+                      chip.status !== 'IDLE' 
+                        ? 'bg-[#F0E2A4] text-[#331921] border-white font-black animate-pulse' 
+                        : 'bg-[#423834] text-[#BCA297] border-[#5C4E49]'
+                    }`}
+                  >
+                    <div className="font-bold">{chip.name}</div>
+                    <div className="text-[9px] mt-1 font-mono">{chip.status}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="p-3 rounded-xl bg-[#423834] border border-[#5C4E49] text-[11px] text-[#F0E2A4] font-bold text-center">
+                💡 Abstraction Principle: The user ONLY sees 3 simple buttons on the phone screen while 1,000+ hardware signals fire under the hood!
+              </div>
+            </motion.div>
           </div>
-          <div className="p-4 overflow-y-auto flex-1 flex flex-col gap-1 text-sm">
-            <AnimatePresence initial={false}>
-              {outputLines.map((line, i) => (
-                <motion.div 
-                  key={`${i}-${line.msg}`}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className={`${line.msg.startsWith('>') ? 'text-[#7ee787]' : (line.isError ? 'text-red-400 ml-4 font-bold' : 'text-[#c9d1d9] ml-4 opacity-80')}`}
-                >
-                  {line.msg}
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
+
         </div>
 
       </div>
-
     </div>
   );
 }

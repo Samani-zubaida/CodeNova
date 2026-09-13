@@ -1,130 +1,118 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { flushSync } from 'react-dom';
-import { Moon, Sun, Code2, Gamepad2, Blocks, LogOut, LogIn, User, Sparkles } from 'lucide-react';
+import { Moon, Sun, Circle, Sparkles, LogOut, LogIn, ChevronDown } from 'lucide-react';
 import useAppStore from '../../store/useAppStore';
 
 export default function Navbar() {
-  const { theme, toggleTheme, user, logout } = useAppStore();
-
-  useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [theme]);
+  const { theme, setTheme, user, logout } = useAppStore();
 
   const navLinkClass = ({ isActive }) =>
-    `flex items-center gap-2 px-6 py-2 rounded-full text-sm font-medium transition-colors ${
+    `flex items-center gap-2 px-5 py-2 rounded-full text-xs md:text-sm font-semibold transition-all ${
       isActive
-        ? 'bg-[#BC4A54] text-white shadow-md'
-        : 'text-gray-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10'
+        ? 'bg-[#AB526B] text-white shadow-xs'
+        : 'text-[#2D1F23]/70 dark:text-[#F4EBC3]/70 hover:text-[#AB526B] dark:hover:text-[#F0E2A4] hover:bg-black/5 dark:hover:bg-white/5'
     }`;
 
-  const handleThemeToggle = async (e) => {
-    if (!document.startViewTransition) {
-      toggleTheme();
-      return;
-    }
-
-    const x = e.clientX;
-    const y = e.clientY;
-    const endRadius = Math.hypot(
-      Math.max(x, window.innerWidth - x),
-      Math.max(y, window.innerHeight - y)
-    );
-
-    document.documentElement.classList.add('view-transition-active');
-    
-    const transition = document.startViewTransition(() => {
-      flushSync(() => {
-        toggleTheme();
-      });
-    });
-
-    transition.ready.then(() => {
-      document.documentElement.animate(
-        {
-          clipPath: [
-            `circle(0px at ${x}px ${y}px)`,
-            `circle(${endRadius}px at ${x}px ${y}px)`
-          ]
-        },
-        {
-          duration: 700,
-          easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
-          pseudoElement: '::view-transition-new(root)'
-        }
-      );
-    });
-    
-    transition.finished.then(() => {
-      document.documentElement.classList.remove('view-transition-active');
-    });
-  };
-
   return (
-    <nav className="sticky top-0 z-50 w-full bg-[#FDFBF7] dark:bg-[#121212] transition-colors duration-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <nav className="sticky top-0 z-50 w-full bg-[#FAF7F2]/90 dark:bg-[#331921]/90 backdrop-blur-md border-b border-[#EBE0D3] dark:border-[#5C4E49] transition-colors duration-300">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
         <div className="flex justify-between items-center">
           
-          <div className="flex items-center gap-2">
-            <Sparkles size={24} className="text-[#BC4A54] fill-[#BC4A54]" />
-            <span className="text-2xl font-extrabold text-[#BC4A54]">
+          {/* Logo */}
+          <NavLink to="/visualizer" className="flex items-center gap-2.5 group">
+            <div className="w-8 h-8 rounded-lg bg-[#AB526B] flex items-center justify-center text-white font-mono font-bold text-sm shadow-xs group-hover:opacity-90 transition-opacity">
+              &lt;/&gt;
+            </div>
+            <span className="text-xl font-bold tracking-tight text-[#2D1F23] dark:text-[#F4EBC3] group-hover:text-[#AB526B] transition-colors">
               Code Nova
             </span>
-          </div>
+          </NavLink>
 
-          <div className="hidden md:flex items-center bg-[#FDFBF7] dark:bg-[#1A1A1A] border border-[#EBE0D3] dark:border-[#333] rounded-full p-1 shadow-sm transition-colors duration-300">
+          {/* Navigation Links */}
+          <div className="hidden md:flex items-center bg-white/70 dark:bg-[#423834]/70 border border-[#EBE0D3] dark:border-[#5C4E49] rounded-full p-1 shadow-xs transition-colors duration-300">
             <NavLink to="/visualizer" className={navLinkClass}>
               <span>Visualizers</span>
+            </NavLink>
+            <NavLink to="/visualizer/oop" className={navLinkClass}>
+              <span>OOP</span>
+            </NavLink>
+            <NavLink to="/visualizer/crypto" className={navLinkClass}>
+              <span>Cryptography</span>
             </NavLink>
             <NavLink to="/sandbox" className={navLinkClass}>
               <span>Sandbox</span>
             </NavLink>
-            <div className="w-px h-6 bg-[#EBE0D3] dark:bg-[#333] mx-2"></div>
+            <div className="w-px h-5 bg-[#EBE0D3] dark:bg-[#54323E] mx-1"></div>
             <NavLink to="/game" className={navLinkClass}>
               <span>3D Game</span>
             </NavLink>
           </div>
 
-          <div className="flex items-center gap-6">
-            <div 
-              onClick={handleThemeToggle}
-              className="flex items-center gap-2 cursor-pointer bg-white dark:bg-[#1A1A1A] border border-[#EBE0D3] dark:border-[#333] rounded-full px-3 py-1.5 shadow-sm transition-colors duration-300"
-              aria-label="Toggle Dark Mode"
-            >
-              <Sun size={14} className={theme === 'light' ? 'text-[#BC4A54]' : 'text-gray-500'} />
-              <div className="w-8 h-4 rounded-full bg-[#EBE0D3] dark:bg-[#333] relative flex items-center p-0.5 transition-colors duration-300">
-                <div className={`w-3 h-3 rounded-full bg-[#BC4A54] shadow-sm transform transition-transform duration-300 ${theme === 'dark' ? 'translate-x-4' : 'translate-x-0'}`}></div>
-              </div>
-              <Moon size={14} className={theme === 'dark' ? 'text-[#BC4A54]' : 'text-gray-400'} />
+          {/* Right Controls: 3-mode theme toggle + Profile */}
+          <div className="flex items-center gap-3 md:gap-4">
+            {/* 3-Mode Theme Switcher */}
+            <div className="flex items-center gap-1 bg-white/70 dark:bg-[#423834]/70 border border-[#EBE0D3] dark:border-[#5C4E49] p-1 rounded-full shadow-xs">
+              <button
+                onClick={() => setTheme('light')}
+                title="Light mode"
+                className={`p-1.5 rounded-full transition-all ${
+                  theme === 'light'
+                    ? 'bg-[#AB526B] text-white shadow-xs'
+                    : 'text-[#2D1F23]/60 dark:text-[#F4EBC3]/60 hover:text-[#AB526B]'
+                }`}
+              >
+                <Sun size={14} />
+              </button>
+              <button
+                onClick={() => setTheme('warm')}
+                title="Warm Sepia mode"
+                className={`p-1.5 rounded-full transition-all ${
+                  theme === 'warm'
+                    ? 'bg-[#AB526B] text-[#F0E2A4] shadow-xs'
+                    : 'text-[#2D1F23]/60 dark:text-[#F4EBC3]/60 hover:text-[#AB526B]'
+                }`}
+              >
+                <Circle size={14} className="fill-[#F0E2A4] stroke-[#BCA297]" />
+              </button>
+              <button
+                onClick={() => setTheme('dark')}
+                title="Warm Dark mode"
+                className={`p-1.5 rounded-full transition-all ${
+                  theme === 'dark'
+                    ? 'bg-[#AB526B] text-white shadow-xs'
+                    : 'text-[#2D1F23]/60 dark:text-[#F4EBC3]/60 hover:text-[#AB526B]'
+                }`}
+              >
+                <Moon size={14} />
+              </button>
             </div>
 
+            {/* Profile Pill */}
             {user ? (
-              <div className="flex items-center gap-3 bg-white dark:bg-[#1A1A1A] border border-[#EBE0D3] dark:border-[#333] px-1 py-1 rounded-full shadow-sm transition-colors duration-300">
-                <div className="w-8 h-8 bg-[#A8988B] dark:bg-[#BC4A54] rounded-full flex items-center justify-center text-white text-xs font-bold">
-                  {user.username.charAt(0).toUpperCase()}
+              <div className="flex items-center gap-2 bg-white/70 dark:bg-[#423834]/70 border border-[#EBE0D3] dark:border-[#5C4E49] pl-1 pr-3 py-1 rounded-full shadow-xs transition-colors duration-300">
+                <div className="w-7 h-7 rounded-full bg-[#AB526B] flex items-center justify-center text-white text-xs font-bold shrink-0">
+                  {user.username ? user.username.charAt(0).toUpperCase() : 'D'}
                 </div>
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 pl-1 pr-3">{user.username}</span>
+                <span className="text-xs font-semibold text-[#2D1F23] dark:text-[#F4EBC3] hidden sm:inline">
+                  {user.username || 'DemoExplorer'}
+                </span>
                 <button
                   onClick={() => {
                     logout();
                     window.location.href = '/auth';
                   }}
-                  className="pr-4 text-gray-400 hover:text-red-500 transition-colors"
+                  className="text-gray-400 hover:text-[#AB526B] transition-colors ml-1"
                   title="Logout"
                 >
-                  <LogOut size={16} />
+                  <LogOut size={14} />
                 </button>
               </div>
             ) : (
               <NavLink 
                 to="/auth" 
-                className="flex items-center gap-2 px-6 py-2 rounded-full font-bold bg-[#BC4A54] text-white hover:bg-[#8e4257] transition-colors text-sm"
+                className="flex items-center gap-1.5 px-4 py-1.5 rounded-full font-bold bg-[#AB526B] text-white hover:bg-[#8E3B53] transition-colors text-xs shadow-xs"
               >
-                <LogIn size={16} />
+                <LogIn size={13} />
                 <span>Sign In</span>
               </NavLink>
             )}

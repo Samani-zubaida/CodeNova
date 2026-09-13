@@ -30,17 +30,17 @@ export default function ComplexityBadge({
   };
 
   return (
-    <div className={`w-full bg-white/90 dark:bg-[#1A1A1A]/90 backdrop-blur-sm border border-[#EBE0D3] dark:border-[#2E2E2E] rounded-xl p-3 shadow-xs flex flex-col gap-2 ${className}`}>
+    <div className={`w-full bg-white/90 dark:bg-[#423834]/90 backdrop-blur-sm border border-[#EBE0D3] dark:border-[#2E2E2E] rounded-xl p-3 shadow-xs flex flex-col gap-2 ${className}`}>
       
       {/* Header with quick info toggle */}
       <div className="flex items-center justify-between text-xs">
         <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 text-[10px]">
-          <Zap size={13} className="text-[#BC4A54]" />
+          <Zap size={13} className="text-[#AB526B]" />
           <span>Algorithm Performance</span>
         </div>
         
         {activeOperation && (
-          <span className="text-[10px] font-semibold text-[#BC4A54] truncate max-w-[150px]">
+          <span className="text-[10px] font-semibold text-[#AB526B] truncate max-w-[150px]">
             {activeOperation}
           </span>
         )}
@@ -85,8 +85,8 @@ export default function ComplexityBadge({
 
       {/* Notes / Explanation Banner if provided */}
       {notes && (
-        <div className="text-[11px] text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-[#202020] p-2 rounded-lg border border-gray-200 dark:border-[#333] flex items-start gap-1.5 leading-relaxed">
-          <Info size={12} className="shrink-0 mt-0.5 text-[#BC4A54]" />
+        <div className="text-[11px] text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-[#202020] p-2 rounded-lg border border-gray-200 dark:border-[#5C4E49] flex items-start gap-1.5 leading-relaxed">
+          <Info size={12} className="shrink-0 mt-0.5 text-[#AB526B]" />
           <span>{notes}</span>
         </div>
       )}

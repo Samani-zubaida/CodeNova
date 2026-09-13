@@ -1,339 +1,343 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Terminal, ChevronDown, ChevronUp, Lock, ShieldAlert, Key, Eye, ShieldCheck, Database, ChevronLeft, ChevronRight } from 'lucide-react';
+import { 
+  Play, Pause, RotateCcw, Lock, Unlock, ShieldAlert, ShieldCheck, Flame, Zap, Sparkles, Activity, Gauge, Ban, CheckCircle2, Sliders, Volume2, ArrowRight
+} from 'lucide-react';
 import VisualizerNav from '../../components/layout/VisualizerNav';
 
-export default function EncapsulationVisualizer() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  // Config
-  const [className] = useState('UserAuth');
-  
-  // Interactive State
-  const [passwordInput, setPasswordInput] = useState('');
-  const [activeOperation, setActiveOperation] = useState(null); // 'login', 'direct', 'inspect'
-  const [isError, setIsError] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  
-  // Internal (Encapsulated) State
-  const [passwordHash, setPasswordHash] = useState('null');
-  const [sessionToken, setSessionToken] = useState('null');
-  const [showInternal, setShowInternal] = useState(false);
-  
-  // Console Output State
-  const [outputLines, setOutputLines] = useState([{msg: "> UserAuth System Initialized.", isError: false}]);
-  const [isConsoleOpen, setIsConsoleOpen] = useState(true);
+export default function EncapsulationVisualizer({ isEmbedded = false }) {
+  const [isEngineOn, setIsEngineOn] = useState(false);
+  const [gasPedal, setGasPedal] = useState(30); // 0 to 100
+  const [speed, setSpeed] = useState(0);
+  const [rpm, setRpm] = useState(0);
+  const [gear, setGear] = useState(1);
+  const [viewMode, setViewMode] = useState('cockpit'); // 'cockpit' | 'xray' | 'shield'
+  const [hackAttempt, setHackAttempt] = useState(false);
+  const [logMessage, setLogMessage] = useState("Encapsulation Studio Ready. Turn key to start engine.");
 
-  const logOutput = (msg, isError = false) => {
-    setOutputLines(prev => [...prev, { msg, isError }].slice(-8));
-  };
+  // Engine Physics & Telemetry Engine Loop
+  useEffect(() => {
+    let timer;
+    if (isEngineOn) {
+      timer = setInterval(() => {
+        const targetRpm = 1000 + Math.round(gasPedal * 50);
+        setRpm(prev => Math.round(prev + (targetRpm - prev) * 0.25));
 
-  const handleDirectAccess = () => {
-    setIsError(true);
-    setActiveOperation('direct');
-    logOutput(`> console.log(${className.toLowerCase()}._passwordHash)`, false);
-    logOutput(`  Error: Property '_passwordHash' is strictly private.`, true);
-    setTimeout(() => {
-      setIsError(false);
-      setActiveOperation(null);
-    }, 2000);
-  };
+        const targetSpeed = Math.round(gasPedal * 1.2);
+        setSpeed(prev => Math.round(Math.max(0, prev + (targetSpeed - prev) * 0.2)));
 
-  const handleInspect = () => {
-    setActiveOperation('inspect');
-    setShowInternal(true);
-    logOutput(`> Visualizing encapsulated memory space...`, false);
-    logOutput(`  Internal state is securely hidden from external access.`, false);
-    setTimeout(() => {
-      setActiveOperation(null);
-      setShowInternal(false);
-    }, 3000);
-  };
+        // Automatic Gear Shifting based on speed
+        if (targetSpeed < 15) setGear(1);
+        else if (targetSpeed < 35) setGear(2);
+        else if (targetSpeed < 65) setGear(3);
+        else if (targetSpeed < 90) setGear(4);
+        else setGear(5);
+      }, 50);
+    } else {
+      setRpm(0);
+      setSpeed(0);
+      setGear(1);
+    }
+    return () => clearInterval(timer);
+  }, [isEngineOn, gasPedal]);
 
-  const handleLogin = async () => {
-    if (!passwordInput) return;
-    
-    setActiveOperation('login');
-    logOutput(`> ${className.toLowerCase()}.login("****")`, false);
-    logOutput(`  Encrypting payload...`, false);
-    
-    // Simulate hashing
+  // Handle Direct Access Hack Attempt (account.#engineRpm = 9999)
+  const handleIllegalHack = async () => {
+    if (hackAttempt) return;
+    setHackAttempt(true);
+    setLogMessage("⛔ DIRECT HACK ATTEMPT: Executing car.#engineRpm = 9999...");
+
     await new Promise(r => setTimeout(r, 600));
-    const mockHash = "0x" + Math.random().toString(16).slice(2, 10).toUpperCase();
-    const mockToken = "JWT_" + Math.random().toString(36).slice(2, 12).toUpperCase();
-    
-    setPasswordHash(mockHash);
-    setSessionToken(mockToken);
-    
-    logOutput(`  Authentication Success!`, false);
-    logOutput(`  Session token generated and securely stored.`, false);
-    
-    setIsLoggedIn(true);
-    
-    setTimeout(() => {
-      setActiveOperation(null);
-    }, 1000);
+    setLogMessage("🛡️ ENCAPSULATION DEFENSE TRIGGERED! Error: Cannot write private property #engineRpm");
+
+    await new Promise(r => setTimeout(r, 1800));
+    setHackAttempt(false);
+    setLogMessage("System safe. Encapsulation protected private engine variables.");
   };
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setPasswordHash('null');
-    setSessionToken('null');
-    logOutput(`> ${className.toLowerCase()}.logout()`, false);
-    logOutput(`  Session cleared.`, false);
+  // Toggle Ignition
+  const handleToggleIgnition = () => {
+    const nextState = !isEngineOn;
+    setIsEngineOn(nextState);
+    if (nextState) {
+      setLogMessage("🔑 PUBLIC METHOD CALL: car.start() -> Engine started smoothly!");
+    } else {
+      setLogMessage("🔑 PUBLIC METHOD CALL: car.stop() -> Engine shut down.");
+    }
   };
 
   return (
-    <div className="fixed top-[64px] bottom-0 left-0 right-0 bg-gray-50 dark:bg-[#09090b] flex flex-col lg:flex-row overflow-hidden">
-      
-      {/* Left Sidebar: Controls & Output */}
-      <div className={`w-full lg:w-[350px] xl:w-[400px] h-1/2 lg:h-full bg-white/80 dark:bg-black/40 backdrop-blur-xl border-r border-b lg:border-b-0 border-gray-200 dark:border-white/10 shadow-2xl flex flex-col z-10 shrink-0 overflow-y-auto transition-all duration-300 ${isSidebarOpen ? "ml-0" : "-ml-[100%] lg:-ml-[400px]"}`}>
-        <div className="p-4 lg:p-6 flex flex-col gap-6 lg:gap-8 h-full">
-          
-          <VisualizerNav currentPath="/visualizer/encapsulation" />
+    <div className="w-full flex-1 flex flex-col items-center justify-between text-[#FAF7F2] font-sans select-none space-y-3">
+      {!isEmbedded && <VisualizerNav title="Encapsulation: Interactive Driving Laboratory" />}
 
+      {/* TOP CONTROL HUB BANNER */}
+      <div className="w-full max-w-5xl bg-[#331921]/90 backdrop-blur-xl border-2 border-[#F0E2A4] rounded-2xl p-4 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-3 rounded-2xl bg-[#F0E2A4] text-[#331921] font-extrabold shadow-lg">
+            <Gauge size={24} />
+          </div>
           <div>
-            <h1 className="text-2xl lg:text-3xl font-black text-[var(--color-nova-brown)] tracking-tight mb-2">Encapsulation</h1>
-            <p className="text-xs lg:text-sm text-gray-500 font-medium">Bundling data with methods that operate on it, and restricting direct access to internal state.</p>
+            <h3 className="text-sm font-mono font-extrabold text-[#F0E2A4] uppercase tracking-wider">
+              INTERACTIVE ENCAPSULATION CAR LABORATORY
+            </h3>
+            <p className="text-xs text-[#BCA297]">
+              Drive the car using public methods (<span className="text-[#C5CEAE] font-bold">start(), accelerate()</span>). Switch to X-Ray mode or test illegal direct hacks!
+            </p>
           </div>
+        </div>
 
-          {/* External Interface Form */}
-          <div className="flex flex-col gap-4">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-200 dark:border-white/10 pb-2">Client Application</h3>
-            
-            <div className="flex flex-col gap-4 bg-white dark:bg-[#161b22] p-6 rounded-xl border border-gray-200 dark:border-white/5 shadow-md">
-              <div className="text-center font-bold text-lg border-b border-gray-100 dark:border-white/5 pb-2 mb-2">
-                User Login
-              </div>
-              
-              {!isLoggedIn ? (
-                <>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs text-gray-500 font-bold">Password</label>
-                    <input 
-                      type="password" 
-                      value={passwordInput}
-                      onChange={(e) => setPasswordInput(e.target.value)}
-                      placeholder="Enter password..."
-                      className="bg-gray-50 dark:bg-black border border-gray-300 dark:border-gray-800 rounded px-3 py-2 text-sm w-full font-mono focus:border-[var(--color-nova-brown)] outline-none"
-                    />
-                  </div>
-                  
-                  <button 
-                    disabled={activeOperation !== null || !passwordInput} 
-                    onClick={handleLogin} 
-                    className="w-full bg-[var(--color-nova-brown)] text-white py-2 rounded text-sm font-bold shadow-sm hover:brightness-110 flex items-center justify-center gap-2 disabled:opacity-50 mt-2 transition-all"
-                  >
-                    <Key size={16} /> Authenticate
-                  </button>
-                </>
-              ) : (
-                <div className="flex flex-col items-center gap-4 py-4">
-                  <ShieldCheck size={48} className="text-green-500" />
-                  <span className="font-bold text-green-500">Authenticated successfully</span>
-                  <button 
-                    onClick={handleLogout}
-                    className="px-4 py-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded text-sm font-bold transition-colors"
-                  >
-                    Logout
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Operations */}
-          <div className="flex flex-col gap-4">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-200 dark:border-white/10 pb-2">Encapsulation Tests</h3>
-            
-            <div className="flex flex-col gap-2">
-              <button disabled={activeOperation !== null} onClick={handleInspect} className="bg-blue-500/10 border border-blue-500/30 text-blue-600 dark:text-blue-400 py-2 rounded text-sm font-bold shadow-sm hover:bg-blue-500/20 transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
-                <Eye size={16} /> Inspect Encapsulated Data
-              </button>
-              
-              <button disabled={activeOperation !== null} onClick={handleDirectAccess} className="bg-red-500/10 border border-red-500/50 text-red-600 dark:text-red-400 py-2 rounded text-sm font-bold shadow-sm hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 mt-2">
-                <ShieldAlert size={16} /> Force Access obj._passwordHash
-              </button>
-            </div>
-          </div>
-          
-          <div className="mt-auto pt-8"></div>
+        {/* View Selector Buttons */}
+        <div className="flex items-center gap-2 font-mono text-xs">
+          {[
+            { id: 'cockpit', label: '🚗 Driver Cockpit' },
+            { id: 'xray', label: '🔍 Under-The-Hood X-Ray' },
+            { id: 'shield', label: '🛡️ Vault Protection' }
+          ].map(v => (
+            <button
+              key={v.id}
+              onClick={() => setViewMode(v.id)}
+              className={`px-3 py-2 rounded-xl font-bold transition-all ${
+                viewMode === v.id 
+                  ? 'bg-[#F0E2A4] text-[#331921] shadow-lg scale-105 ring-2 ring-white' 
+                  : 'bg-[#423834] text-[#BCA297] hover:bg-[#5C4E49]'
+              }`}
+            >
+              {v.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Right Canvas: Visualization & Console */}
-      <div className="w-full lg:flex-1 h-1/2 lg:h-full flex flex-col relative overflow-hidden bg-gray-50/50 dark:bg-black/20">
-        {/* Sidebar Toggle Button */}
-        <button 
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="absolute top-4 left-4 z-50 p-2 bg-white/80 dark:bg-black/40 backdrop-blur border border-gray-200 dark:border-white/10 rounded shadow-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-        >
-          {isSidebarOpen ? <ChevronLeft size={20} className="text-gray-600 dark:text-gray-300" /> : <ChevronRight size={20} className="text-gray-600 dark:text-gray-300" />}
-        </button>
+      {/* DYNAMIC TELEMETRY LOG BAR */}
+      <div className="w-full max-w-5xl py-2.5 px-6 rounded-2xl bg-[#423834] border border-[#5C4E49] text-center font-mono text-xs md:text-sm font-bold shadow-lg text-[#F0E2A4] flex items-center justify-center gap-2">
+        <Activity size={16} className={hackAttempt ? 'text-[#AB526B] animate-bounce' : 'text-[#C5CEAE]'} />
+        <span className={hackAttempt ? 'text-[#AB526B]' : 'text-[#F0E2A4]'}>{logMessage}</span>
+      </div>
 
+      {/* MAIN VISUAL DRIVE ARENA */}
+      <div className="w-full max-w-5xl bg-gradient-to-b from-[#140D0F] via-[#1E1417] to-[#2B1B21] border-2 border-[#5C4E49] rounded-3xl p-6 md:p-8 shadow-[0_0_90px_rgba(0,0,0,0.9)] relative overflow-hidden flex-1 flex flex-col justify-between min-h-[460px]">
         
-        {/* Main Visualization Area */}
-        <div className="flex-1 flex flex-col p-8 lg:p-12 overflow-y-auto overflow-x-auto relative items-center justify-center min-h-[400px]">
-          
-          {/* Aesthetic glow */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[var(--color-nova-brown)] opacity-5 blur-[100px] rounded-full pointer-events-none"></div>
-
-          {/* Data Flow Animation */}
-          <div className="absolute top-1/4 w-full flex justify-center pointer-events-none">
-            <AnimatePresence>
-              {activeOperation === 'login' && (
-                <motion.div 
-                  initial={{ y: -50, opacity: 0, scale: 0.8 }} 
-                  animate={{ y: 80, opacity: 1, scale: 1 }} 
-                  exit={{ y: 150, opacity: 0, scale: 0.8 }}
-                  transition={{ duration: 1 }}
-                  className="bg-white dark:bg-gray-800 px-4 py-2 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 font-mono text-sm flex items-center gap-2 z-50 text-[var(--color-nova-brown)]"
-                >
-                  <Key size={14} /> Encrypting payload...
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* The Class Instance Vault */}
+        {/* Animated Highway Background Lines */}
+        <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden">
           <motion.div 
-            animate={{ 
-              scale: isError ? [1, 1.05, 0.95, 1.05, 0.95, 1] : 1,
-              borderColor: isError ? 'rgb(239, 68, 68)' : (activeOperation === 'inspect' ? 'rgba(59, 130, 246, 0.6)' : 'rgba(217, 119, 87, 0.4)'),
-              boxShadow: activeOperation === 'inspect' ? '0 0 40px rgba(59, 130, 246, 0.2)' : '0 20px 60px rgba(0,0,0,0.1)'
-            }}
-            transition={{ duration: 0.4 }}
-            className={`w-full max-w-lg bg-white/60 dark:bg-black/60 backdrop-blur border-4 rounded-[40px] p-8 relative z-10 flex flex-col items-center`}
+            animate={{ x: isEngineOn && speed > 0 ? [-200, 0] : 0 }}
+            transition={{ repeat: Infinity, duration: Math.max(0.2, 1.5 - speed / 80), ease: 'linear' }}
+            className="absolute bottom-12 left-0 w-[200%] h-12 border-t-2 border-b-2 border-dashed border-[#F0E2A4]/40 flex items-center justify-around"
           >
-            {/* Class Header */}
-            <div className="absolute -top-4 bg-[var(--color-nova-brown)] text-white px-6 py-1.5 rounded-full font-bold shadow-md tracking-wider flex items-center gap-2">
-              <Database size={16} /> Instance of {className}
-            </div>
+            <div className="w-24 h-1 bg-[#F0E2A4]" />
+            <div className="w-24 h-1 bg-[#F0E2A4]" />
+            <div className="w-24 h-1 bg-[#F0E2A4]" />
+            <div className="w-24 h-1 bg-[#F0E2A4]" />
+          </motion.div>
+        </div>
 
-            {/* Public Interface */}
-            <div className="w-full border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl p-6 mt-6 flex flex-col items-center relative">
-              <div className="absolute -top-3 bg-gray-100 dark:bg-gray-800 text-gray-500 text-xs px-2 py-0.5 rounded uppercase tracking-widest font-bold">Public Interface</div>
-              
-              <div className="flex gap-4 w-full justify-center mb-6 text-sm font-mono font-bold">
-                <motion.span 
-                  animate={{ 
-                    backgroundColor: activeOperation === 'login' ? 'var(--color-nova-green)' : 'rgba(217, 119, 87, 0.1)',
-                    color: activeOperation === 'login' ? 'black' : 'var(--color-nova-brown)'
-                  }}
-                  className="px-3 py-1 rounded-md border border-[var(--color-nova-brown)]/20 transition-colors"
-                >
-                  + login(password)
-                </motion.span>
-                <span className="px-3 py-1 rounded-md border border-[var(--color-nova-brown)]/20 bg-[var(--color-nova-brown)]/10 text-[var(--color-nova-brown)]">
-                  + logout()
-                </span>
-              </div>
-
-              {/* Encapsulated Private Core */}
+        {/* ========================================================================= */}
+        {/* VIEW 1: DRIVER COCKPIT & DASHBOARD INSTRUMENTS */}
+        {/* ========================================================================= */}
+        {viewMode === 'cockpit' && (
+          <div className="my-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-center z-10 w-full">
+            
+            {/* Animated Car Visual */}
+            <div className="flex flex-col items-center justify-center">
               <motion.div 
-                animate={{
-                  borderColor: activeOperation === 'inspect' ? 'rgba(59, 130, 246, 0.8)' : (isError ? 'rgba(239, 68, 68, 0.8)' : 'rgba(252, 165, 165, 0.2)'),
-                  backgroundColor: activeOperation === 'inspect' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(239, 68, 68, 0.05)'
-                }}
-                className="w-full border-2 rounded-xl p-8 flex flex-col gap-4 relative overflow-hidden transition-all duration-300"
+                animate={{ y: isEngineOn ? [0, -3, 0] : 0 }}
+                transition={{ repeat: Infinity, duration: Math.max(0.1, 0.5 - rpm / 10000) }}
+                className="relative w-80 md:w-[380px] h-44 bg-gradient-to-r from-[#AB526B] to-[#9E455E] rounded-3xl border-4 border-white/90 shadow-[0_0_60px_rgba(171,82,107,0.7)] flex items-center justify-between px-6"
               >
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-red-100 dark:bg-red-900/80 text-red-600 dark:text-red-400 text-xs px-3 py-1 rounded-b-md flex items-center gap-1 uppercase font-bold tracking-widest border-x border-b border-red-200 dark:border-red-800">
-                  <Lock size={12} /> Encapsulated Private Data
+                {/* Driver Cockpit Windshield */}
+                <div className="w-48 h-24 bg-[#FAF7F2]/20 border-2 border-white/70 rounded-t-full rounded-br-2xl flex items-center justify-center backdrop-blur-sm relative">
+                  <span className="text-4xl">😎</span>
+                  <div className="ml-2 font-mono text-xs text-[#F0E2A4] font-bold">
+                    {isEngineOn ? `GEAR ${gear}` : "PARKED"}
+                  </div>
                 </div>
 
-                <div className="flex justify-between items-center z-10 mt-4 border-b border-black/5 dark:border-white/5 pb-2">
-                  <span className="font-mono text-red-500 font-semibold text-sm">- _passwordHash</span>
-                  <motion.span 
-                    animate={{ filter: showInternal ? 'blur(0px)' : 'blur(5px)', opacity: showInternal ? 1 : 0.5 }}
-                    className="font-mono font-bold text-gray-800 dark:text-gray-200 text-xs bg-black/5 dark:bg-white/5 px-2 py-1 rounded"
-                  >
-                    {passwordHash}
-                  </motion.span>
-                </div>
-                
-                <div className="flex justify-between items-center z-10">
-                  <span className="font-mono text-red-500 font-semibold text-sm">- _sessionToken</span>
-                  <motion.span 
-                    animate={{ filter: showInternal ? 'blur(0px)' : 'blur(5px)', opacity: showInternal ? 1 : 0.5 }}
-                    className="font-mono font-bold text-gray-800 dark:text-gray-200 text-xs bg-black/5 dark:bg-white/5 px-2 py-1 rounded"
-                  >
-                    {sessionToken}
-                  </motion.span>
-                </div>
+                {/* Headlight */}
+                <div className={`w-5 h-12 rounded-r-xl shadow-2xl transition-all ${
+                  isEngineOn ? 'bg-[#F0E2A4] shadow-[0_0_35px_#F0E2A4] animate-pulse' : 'bg-[#423834]'
+                }`} />
 
-                {/* Direct Access Attack Line */}
-                <AnimatePresence>
-                  {activeOperation === 'direct' && (
-                    <motion.div 
-                      initial={{ opacity: 0, scaleY: 0 }}
-                      animate={{ opacity: 1, scaleY: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="absolute -top-12 left-1/4 w-2 h-24 bg-red-500 origin-top z-40 shadow-[0_0_15px_rgba(239,68,68,1)]"
-                    >
-                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 text-white bg-red-500 rounded-full p-1"><ShieldAlert size={16}/></div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                {/* Spinning Alloy Wheels */}
+                <motion.div 
+                  animate={{ rotate: isEngineOn ? 360 : 0 }}
+                  transition={{ repeat: Infinity, duration: Math.max(0.1, 1 - speed / 60), ease: 'linear' }}
+                  className="absolute -bottom-6 left-8 w-16 h-16 rounded-full bg-[#140D0F] border-4 border-[#F0E2A4] flex items-center justify-center shadow-2xl"
+                >
+                  <div className="w-6 h-6 rounded-full border-2 border-dashed border-white bg-[#423834]" />
+                </motion.div>
 
-                {/* Error Pulse Effect */}
-                <AnimatePresence>
-                  {isError && (
-                    <motion.div 
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="absolute inset-0 bg-red-500/20 z-0"
-                    />
-                  )}
-                </AnimatePresence>
-                
-                {/* Inspect Scan Effect */}
-                <AnimatePresence>
-                  {activeOperation === 'inspect' && (
-                    <motion.div 
-                      initial={{ top: '-20%' }}
-                      animate={{ top: '120%' }}
-                      transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                      className="absolute left-0 right-0 h-8 bg-gradient-to-b from-transparent via-blue-400/30 to-transparent z-0"
-                    />
-                  )}
-                </AnimatePresence>
-
+                <motion.div 
+                  animate={{ rotate: isEngineOn ? 360 : 0 }}
+                  transition={{ repeat: Infinity, duration: Math.max(0.1, 1 - speed / 60), ease: 'linear' }}
+                  className="absolute -bottom-6 right-12 w-16 h-16 rounded-full bg-[#140D0F] border-4 border-[#F0E2A4] flex items-center justify-center shadow-2xl"
+                >
+                  <div className="w-6 h-6 rounded-full border-2 border-dashed border-white bg-[#423834]" />
+                </motion.div>
               </motion.div>
             </div>
-          </motion.div>
 
-        </div>
+            {/* Dashboard Telemetry Gauges */}
+            <div className="bg-[#331921] p-6 rounded-3xl border-2 border-[#C5CEAE] shadow-2xl flex flex-col space-y-4">
+              <div className="flex items-center justify-between border-b border-white/20 pb-2 font-mono text-xs">
+                <span className="text-[#C5CEAE] font-extrabold uppercase">Public Telemetry Dashboard</span>
+                <span className="text-[#F0E2A4] font-bold">Public Methods Only</span>
+              </div>
 
-        {/* Output Console Panel */}
-        <div className={`w-full bg-[#0d1117] border-t border-white/10 flex flex-col shrink-0 font-mono shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-20 transition-all duration-300 ${isConsoleOpen ? 'h-48 lg:h-56' : 'h-10'}`}>
-          <div 
-            onClick={() => setIsConsoleOpen(!isConsoleOpen)}
-            className="flex items-center justify-between px-4 py-2 bg-[#161b22] border-b border-white/5 cursor-pointer hover:bg-[#1f2630] transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <Terminal size={14} className="text-gray-400" />
-              <span className="text-xs text-gray-400 font-bold tracking-wider">CONSOLE OUTPUT</span>
+              {/* Speedometer & RPM Gauges */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-[#423834] p-4 rounded-2xl border border-[#5C4E49] text-center font-mono">
+                  <span className="text-[10px] text-[#BCA297] uppercase block font-bold">Speedometer</span>
+                  <span className="text-3xl font-extrabold text-[#F0E2A4]">{speed}</span>
+                  <span className="text-[10px] text-[#C5CEAE] block">MPH</span>
+                </div>
+
+                <div className="bg-[#423834] p-4 rounded-2xl border border-[#5C4E49] text-center font-mono">
+                  <span className="text-[10px] text-[#BCA297] uppercase block font-bold">Tachometer</span>
+                  <span className="text-3xl font-extrabold text-[#AB526B]">{rpm}</span>
+                  <span className="text-[10px] text-[#AB526B] block">RPM</span>
+                </div>
+              </div>
+
+              {/* Gas Pedal Controls */}
+              <div className="bg-[#423834] p-4 rounded-2xl border border-[#5C4E49] flex flex-col space-y-2 font-mono">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-[#BCA297]">Gas Pedal (Public Method):</span>
+                  <span className="text-[#F0E2A4] font-extrabold">car.accelerate({gasPedal}%)</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  disabled={!isEngineOn}
+                  value={gasPedal}
+                  onChange={e => setGasPedal(Number(e.target.value))}
+                  className="w-full accent-[#C5CEAE] cursor-pointer disabled:opacity-30"
+                />
+              </div>
             </div>
-            {isConsoleOpen ? <ChevronDown size={14} className="text-gray-400" /> : <ChevronUp size={14} className="text-gray-400" />}
+
           </div>
-          <div className="p-4 overflow-y-auto flex-1 flex flex-col gap-1 text-sm">
-            <AnimatePresence initial={false}>
-              {outputLines.map((line, i) => (
-                <motion.div 
-                  key={`${i}-${line.msg}`}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className={`${line.msg.startsWith('>') ? 'text-[#7ee787]' : (line.isError ? 'text-red-400 ml-4 font-bold' : 'text-[#c9d1d9] ml-4 opacity-80')}`}
+        )}
+
+        {/* ========================================================================= */}
+        {/* VIEW 2: UNDER THE HOOD X-RAY ENGINE MECHANICAL DETAILS */}
+        {/* ========================================================================= */}
+        {viewMode === 'xray' && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="my-auto bg-[#331921] p-6 md:p-8 rounded-3xl border-4 border-[#AB526B] shadow-[0_0_80px_rgba(171,82,107,0.7)] flex flex-col items-center space-y-6 z-10 w-full max-w-2xl"
+          >
+            <div className="w-full flex items-center justify-between border-b border-white/20 pb-3 font-mono text-xs">
+              <span className="text-[#AB526B] font-extrabold flex items-center gap-2 text-sm">
+                <Flame size={20} /> Internal Implementation (#private variables)
+              </span>
+              <span className="text-[#F0E2A4] font-extrabold">{rpm} RPM</span>
+            </div>
+
+            {/* 4 Piston Cylinders */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
+              {[1, 2, 3, 4].map(p => (
+                <motion.div
+                  key={p}
+                  animate={{ y: isEngineOn ? [0, -18, 0] : 0 }}
+                  transition={{ repeat: Infinity, duration: Math.max(0.15, 0.6 - rpm / 8000), delay: p * 0.08 }}
+                  className="p-4 rounded-2xl bg-[#423834] border-2 border-[#AB526B] flex flex-col items-center text-center shadow-xl font-mono"
                 >
-                  {line.msg}
+                  <Flame size={22} className={isEngineOn ? "text-[#AB526B] animate-bounce" : "text-[#5C4E49]"} />
+                  <span className="text-[10px] font-bold text-[#F0E2A4] mt-2">#piston{p}</span>
+                  <span className="text-[9px] text-[#BCA297]">{isEngineOn ? `${rpm} RPM` : 'STOPPED'}</span>
                 </motion.div>
               ))}
-            </AnimatePresence>
+            </div>
+
+            <div className="w-full p-3 rounded-2xl bg-[#423834] border border-[#AB526B] font-mono text-xs text-[#F0E2A4] text-center font-bold">
+              🔒 Internal engine complexity is encapsulated. Outside code cannot see or tamper with #piston fields directly!
+            </div>
+          </motion.div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* VIEW 3: ENCAPSULATION VAULT PROTECTION & HACK DEFENSE */}
+        {/* ========================================================================= */}
+        {viewMode === 'shield' && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="my-auto bg-[#331921] p-6 md:p-8 rounded-3xl border-4 border-[#C5CEAE] shadow-[0_0_80px_rgba(197,206,174,0.6)] flex flex-col items-center space-y-6 z-10 w-full max-w-2xl text-center"
+          >
+            <div className="w-full flex items-center justify-between border-b border-white/20 pb-3 font-mono text-xs">
+              <span className="text-[#C5CEAE] font-extrabold flex items-center gap-2 text-sm">
+                <ShieldCheck size={20} /> Encapsulation Vault Protection
+              </span>
+              <span className="text-[#C5CEAE] font-bold">ACCESS CONTROL</span>
+            </div>
+
+            <motion.div 
+              animate={{ 
+                scale: hackAttempt ? [1, 1.1, 1] : 1,
+                borderColor: hackAttempt ? '#AB526B' : '#C5CEAE'
+              }}
+              className={`w-full py-8 px-6 rounded-3xl border-4 bg-[#423834] flex flex-col items-center space-y-3 transition-all ${
+                hackAttempt ? 'bg-[#AB526B]/20 shadow-[0_0_50px_#AB526B]' : 'shadow-2xl'
+              }`}
+            >
+              {hackAttempt ? (
+                <ShieldAlert size={48} className="text-[#AB526B] animate-bounce" />
+              ) : (
+                <Lock size={48} className="text-[#C5CEAE] animate-pulse" />
+              )}
+
+              <h4 className="text-base font-mono font-extrabold text-[#F0E2A4] uppercase">
+                {hackAttempt ? "⚠️ DEFENSE DEFLECTED DIRECT WRITE!" : "Protected Private Boundary"}
+              </h4>
+
+              <p className="text-xs text-[#BCA297] max-w-md leading-relaxed">
+                Direct access to <code className="text-[#AB526B]">car.#engineRpm</code> from outside the class is strictly forbidden by the language compiler!
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* BOTTOM INTERACTIVE ACTION BAR */}
+        <div className="w-full mt-auto pt-4 border-t border-white/10 flex flex-wrap items-center justify-between gap-3 font-mono text-xs z-10">
+          
+          {/* Public Methods Buttons */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleToggleIgnition}
+              className={`px-4 py-2.5 rounded-2xl font-extrabold shadow-xl transition-all flex items-center gap-2 ${
+                isEngineOn 
+                  ? 'bg-[#AB526B] text-white hover:bg-[#8F3E54]' 
+                  : 'bg-[#C5CEAE] text-[#331921] hover:bg-[#A8B48D]'
+              }`}
+            >
+              <Zap size={16} />
+              <span>{isEngineOn ? "car.stop()" : "car.start()"}</span>
+            </button>
+
+            <button
+              onClick={handleIllegalHack}
+              disabled={hackAttempt}
+              className="px-4 py-2.5 rounded-2xl bg-[#AB526B]/20 hover:bg-[#AB526B] border border-[#AB526B] text-[#AB526B] hover:text-white font-extrabold shadow-xl transition-all flex items-center gap-1.5 disabled:opacity-40"
+            >
+              <Ban size={15} />
+              <span>Test Direct Hack (Illegal)</span>
+            </button>
           </div>
+
+          {/* Reset Button */}
+          <button
+            onClick={() => { setIsEngineOn(false); setGasPedal(30); setViewMode('cockpit'); setLogMessage("Laboratory reset."); }}
+            className="p-2.5 rounded-xl bg-[#331921] hover:bg-[#5C4E49] text-[#BCA297] hover:text-white border border-white/10"
+            title="Reset Lab"
+          >
+            <RotateCcw size={16} />
+          </button>
+
         </div>
 
       </div>
-
     </div>
   );
 }

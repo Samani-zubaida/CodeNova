@@ -27,7 +27,7 @@ export default function CodeInspector({
   const hasVariables = variables && Object.keys(variables).length > 0;
 
   return (
-    <div className={`w-full bg-white/95 dark:bg-[#161616]/95 backdrop-blur-md border border-[#EBE0D3] dark:border-[#2E2E2E] rounded-xl overflow-hidden shadow-xs flex flex-col transition-all duration-300 ${className}`}>
+    <div className={`w-full bg-white/95 dark:bg-[#423834]/95 backdrop-blur-md border border-[#EBE0D3] dark:border-[#2E2E2E] rounded-xl overflow-hidden shadow-xs flex flex-col transition-all duration-300 ${className}`}>
       
       {/* Header Bar */}
       <div 
@@ -35,7 +35,7 @@ export default function CodeInspector({
         className="flex items-center justify-between px-3 py-2 bg-gray-50/80 dark:bg-[#1F1F1F] border-b border-[#EBE0D3] dark:border-[#2A2A2A] cursor-pointer select-none hover:bg-gray-100 dark:hover:bg-[#252525] transition-colors"
       >
         <div className="flex items-center gap-2">
-          <Code2 size={14} className="text-[#BC4A54]" />
+          <Code2 size={14} className="text-[#AB526B]" />
           <span className="text-xs font-bold text-gray-800 dark:text-gray-200">{title}</span>
           {activeLine >= 0 && (
             <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-bold border border-emerald-300 dark:border-emerald-800">
@@ -57,7 +57,7 @@ export default function CodeInspector({
                   onClick={() => setSelectedLang(lang)}
                   className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase transition-all ${
                     selectedLang === lang
-                      ? 'bg-white dark:bg-[#141414] text-[#BC4A54] shadow-xs'
+                      ? 'bg-white dark:bg-[#423834] text-[#AB526B] shadow-xs'
                       : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-200'
                   }`}
                 >
@@ -88,7 +88,7 @@ export default function CodeInspector({
                   key={idx}
                   className={`flex items-start px-1.5 py-0.5 rounded transition-colors duration-150 ${
                     isCurrent 
-                      ? 'bg-[#BC4A54]/30 border-l-2 border-[#BC4A54] text-white font-bold' 
+                      ? 'bg-[#AB526B]/30 border-l-2 border-[#AB526B] text-white font-bold' 
                       : 'hover:bg-white/5 opacity-85'
                   }`}
                 >
@@ -108,19 +108,19 @@ export default function CodeInspector({
 
           {/* Live Variable Watcher Section */}
           {hasVariables && (
-            <div className="p-2.5 bg-gray-50 dark:bg-[#1A1A1A] border-t border-[#EBE0D3] dark:border-[#2A2A2A] flex flex-col gap-1.5">
+            <div className="p-2.5 bg-gray-50 dark:bg-[#423834] border-t border-[#EBE0D3] dark:border-[#2A2A2A] flex flex-col gap-1.5">
               <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">
-                <Eye size={11} className="text-[#BC4A54]" />
+                <Eye size={11} className="text-[#AB526B]" />
                 <span>Variable Watcher</span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                 {Object.entries(variables).map(([name, val]) => (
                   <div 
                     key={name}
-                    className="flex items-center justify-between bg-white dark:bg-[#222] px-2 py-1 rounded border border-gray-200 dark:border-[#333] text-[11px]"
+                    className="flex items-center justify-between bg-white dark:bg-[#222] px-2 py-1 rounded border border-gray-200 dark:border-[#5C4E49] text-[11px]"
                   >
                     <span className="text-gray-500 dark:text-gray-400 font-semibold">{name}:</span>
-                    <span className="font-bold text-[#BC4A54] dark:text-[#D3DFC8]">
+                    <span className="font-bold text-[#AB526B] dark:text-[#D3DFC8]">
                       {typeof val === 'object' ? JSON.stringify(val) : String(val)}
                     </span>
                   </div>

@@ -38,10 +38,10 @@ const DynamicArrayGraphic = () => (
       <rect x="10" y="0" width="9" height="15" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
       <rect x="20" y="0" width="9" height="15" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
       <rect x="30" y="0" width="9" height="15" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
-      <rect x="40" y="0" width="9" height="15" fill="none" stroke="#BC4A54" strokeWidth="1" strokeDasharray="2 2"/>
-      <rect x="50" y="0" width="9" height="15" fill="none" stroke="#BC4A54" strokeWidth="1" strokeDasharray="2 2"/>
-      <rect x="60" y="0" width="9" height="15" fill="none" stroke="#BC4A54" strokeWidth="1" strokeDasharray="2 2"/>
-      <rect x="70" y="0" width="9" height="15" fill="none" stroke="#BC4A54" strokeWidth="1" strokeDasharray="2 2"/>
+      <rect x="40" y="0" width="9" height="15" fill="none" stroke="#AB526B" strokeWidth="1" strokeDasharray="2 2"/>
+      <rect x="50" y="0" width="9" height="15" fill="none" stroke="#AB526B" strokeWidth="1" strokeDasharray="2 2"/>
+      <rect x="60" y="0" width="9" height="15" fill="none" stroke="#AB526B" strokeWidth="1" strokeDasharray="2 2"/>
+      <rect x="70" y="0" width="9" height="15" fill="none" stroke="#AB526B" strokeWidth="1" strokeDasharray="2 2"/>
     </g>
     <text x="50" y="22" fontSize="10" fill="#333" textAnchor="middle" fontWeight="bold">Cap: 4 → 8 (2x)</text>
   </svg>
@@ -53,7 +53,7 @@ const Matrix2DGraphic = () => (
     <g transform="translate(25, 25)">
       <rect x="0" y="0" width="15" height="15" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
       <rect x="17" y="0" width="15" height="15" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
-      <rect x="34" y="0" width="15" height="15" fill="#BC4A54" stroke="#333" strokeWidth="1"/>
+      <rect x="34" y="0" width="15" height="15" fill="#AB526B" stroke="#333" strokeWidth="1"/>
       
       <rect x="0" y="17" width="15" height="15" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
       <rect x="17" y="17" width="15" height="15" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
@@ -71,7 +71,7 @@ const CircularBufferGraphic = () => (
   <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="100" height="100" rx="16" fill="#F4E9D4"/>
     <circle cx="50" cy="50" r="28" stroke="#333" strokeWidth="1.5" strokeDasharray="3 3"/>
-    <circle cx="50" cy="22" r="7" fill="#BC4A54" stroke="#333" strokeWidth="1"/>
+    <circle cx="50" cy="22" r="7" fill="#AB526B" stroke="#333" strokeWidth="1"/>
     <circle cx="78" cy="50" r="7" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
     <circle cx="50" cy="78" r="7" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
     <circle cx="22" cy="50" r="7" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
@@ -85,13 +85,13 @@ const SparseArrayGraphic = () => (
     <g transform="translate(15, 30)">
       <rect x="0" y="0" width="12" height="16" fill="#FDFBF7" stroke="#888" strokeWidth="0.8"/>
       <text x="6" y="11" fontSize="9" fill="#888" textAnchor="middle">0</text>
-      <rect x="14" y="0" width="12" height="16" fill="#BC4A54" stroke="#333" strokeWidth="1"/>
+      <rect x="14" y="0" width="12" height="16" fill="#AB526B" stroke="#333" strokeWidth="1"/>
       <text x="20" y="11" fontSize="9" fill="#fff" textAnchor="middle" fontWeight="bold">9</text>
       <rect x="28" y="0" width="12" height="16" fill="#FDFBF7" stroke="#888" strokeWidth="0.8"/>
       <text x="34" y="11" fontSize="9" fill="#888" textAnchor="middle">0</text>
       <rect x="42" y="0" width="12" height="16" fill="#FDFBF7" stroke="#888" strokeWidth="0.8"/>
       <text x="48" y="11" fontSize="9" fill="#888" textAnchor="middle">0</text>
-      <rect x="56" y="0" width="12" height="16" fill="#BC4A54" stroke="#333" strokeWidth="1"/>
+      <rect x="56" y="0" width="12" height="16" fill="#AB526B" stroke="#333" strokeWidth="1"/>
       <text x="62" y="11" fontSize="9" fill="#fff" textAnchor="middle" fontWeight="bold">4</text>
     </g>
     <text x="50" y="70" fontSize="9" fill="#333" textAnchor="middle" fontFamily="monospace">90% Zero Saved</text>
@@ -104,7 +104,7 @@ const BinarySearchGraphic = () => (
     <g transform="translate(12, 35)">
       <rect x="0" y="0" width="14" height="20" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
       <rect x="15" y="0" width="14" height="20" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
-      <rect x="30" y="0" width="16" height="22" fill="#BC4A54" stroke="#333" strokeWidth="1.5"/>
+      <rect x="30" y="0" width="16" height="22" fill="#AB526B" stroke="#333" strokeWidth="1.5"/>
       <text x="38" y="15" fontSize="10" fill="#fff" textAnchor="middle" fontWeight="bold">M</text>
       <rect x="47" y="0" width="14" height="20" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
       <rect x="62" y="0" width="14" height="20" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
@@ -123,9 +123,9 @@ const QuickSortGraphic = () => (
       <rect x="15" y="15" width="12" height="35" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
       <rect x="30" y="30" width="12" height="20" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
       <rect x="45" y="5" width="12" height="45" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
-      <rect x="60" y="20" width="14" height="30" fill="#BC4A54" stroke="#333" strokeWidth="1.5"/>
+      <rect x="60" y="20" width="14" height="30" fill="#AB526B" stroke="#333" strokeWidth="1.5"/>
     </g>
-    <text x="77" y="20" fontSize="9" fill="#BC4A54" fontWeight="bold">PIVOT</text>
+    <text x="77" y="20" fontSize="9" fill="#AB526B" fontWeight="bold">PIVOT</text>
     <path d="M20 78 L45 78" stroke="#333" strokeWidth="1.5"/>
     <path d="M25 75 L20 78 L25 81" stroke="#333" fill="none"/>
     <path d="M40 75 L45 78 L40 81" stroke="#333" fill="none"/>
@@ -139,7 +139,7 @@ const MergeSortGraphic = () => (
     <rect x="25" y="20" width="50" height="12" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
     <path d="M40 32 L30 45 M60 32 L70 45" stroke="#333" strokeWidth="1.5"/>
     <rect x="15" y="45" width="28" height="12" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
-    <rect x="57" y="45" width="28" height="12" fill="#BC4A54" stroke="#333" strokeWidth="1"/>
+    <rect x="57" y="45" width="28" height="12" fill="#AB526B" stroke="#333" strokeWidth="1"/>
     <path d="M30 57 L45 70 M70 57 L55 70" stroke="#333" strokeWidth="1.5"/>
     <rect x="25" y="72" width="50" height="12" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
   </svg>
@@ -150,7 +150,7 @@ const BubbleSortGraphic = () => (
     <rect width="100" height="100" rx="16" fill="#E8D1CB"/>
     <circle cx="28" cy="55" r="14" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
     <text x="28" y="59" fontSize="11" fill="#333" textAnchor="middle" fontWeight="bold">64</text>
-    <circle cx="62" cy="42" r="18" fill="#BC4A54" stroke="#333" strokeWidth="1"/>
+    <circle cx="62" cy="42" r="18" fill="#AB526B" stroke="#333" strokeWidth="1"/>
     <text x="62" y="47" fontSize="13" fill="#fff" textAnchor="middle" fontWeight="bold">92</text>
     <path d="M35 35 Q45 20 55 30" stroke="#333" strokeWidth="1.5" fill="none"/>
     <path d="M53 25 L55 30 L50 32" stroke="#333" fill="#333"/>
@@ -164,7 +164,7 @@ const InsertionSortGraphic = () => (
     <g transform="translate(15, 40)">
       <rect x="0" y="0" width="14" height="24" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
       <rect x="16" y="0" width="14" height="24" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
-      <rect x="32" y="-12" width="16" height="26" fill="#BC4A54" stroke="#333" strokeWidth="1.5"/>
+      <rect x="32" y="-12" width="16" height="26" fill="#AB526B" stroke="#333" strokeWidth="1.5"/>
       <rect x="50" y="0" width="14" height="24" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
     </g>
     <path d="M48 25 Q35 15 20 28" stroke="#333" strokeWidth="1.5" fill="none"/>
@@ -177,11 +177,11 @@ const TwoSumGraphic = () => (
   <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="100" height="100" rx="16" fill="#D3DFC8"/>
     <g transform="translate(15, 35)">
-      <rect x="0" y="0" width="15" height="22" fill="#BC4A54" stroke="#333" strokeWidth="1"/>
+      <rect x="0" y="0" width="15" height="22" fill="#AB526B" stroke="#333" strokeWidth="1"/>
       <text x="7.5" y="15" fontSize="10" fill="#fff" textAnchor="middle" fontWeight="bold">L</text>
       <rect x="18" y="0" width="15" height="22" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
       <rect x="36" y="0" width="15" height="22" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
-      <rect x="54" y="0" width="15" height="22" fill="#BC4A54" stroke="#333" strokeWidth="1"/>
+      <rect x="54" y="0" width="15" height="22" fill="#AB526B" stroke="#333" strokeWidth="1"/>
       <text x="61.5" y="15" fontSize="10" fill="#fff" textAnchor="middle" fontWeight="bold">R</text>
     </g>
     <path d="M12 25 L30 25 M68 25 L50 25" stroke="#333" strokeWidth="1.5"/>
@@ -200,9 +200,9 @@ const SlidingWindowGraphic = () => (
       <rect x="48" y="0" width="14" height="20" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
       <rect x="64" y="0" width="14" height="20" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
     </g>
-    <rect x="25" y="30" width="36" height="30" rx="4" fill="none" stroke="#BC4A54" strokeWidth="2.5"/>
-    <path d="M68 45 L78 45" stroke="#BC4A54" strokeWidth="2"/>
-    <path d="M74 41 L78 45 L74 49" stroke="#BC4A54" fill="none" strokeWidth="2"/>
+    <rect x="25" y="30" width="36" height="30" rx="4" fill="none" stroke="#AB526B" strokeWidth="2.5"/>
+    <path d="M68 45 L78 45" stroke="#AB526B" strokeWidth="2"/>
+    <path d="M74 41 L78 45 L74 49" stroke="#AB526B" fill="none" strokeWidth="2"/>
     <text x="50" y="78" fontSize="9" fill="#333" textAnchor="middle" fontFamily="monospace">O(1) Delta Slide</text>
   </svg>
 );
@@ -213,9 +213,9 @@ const KadaneGraphic = () => (
     <g transform="translate(15, 20)">
       <rect x="0" y="25" width="10" height="25" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
       <rect x="12" y="38" width="10" height="12" fill="#888" stroke="#333" strokeWidth="1"/>
-      <rect x="24" y="10" width="12" height="40" fill="#BC4A54" stroke="#333" strokeWidth="1"/>
-      <rect x="38" y="5" width="12" height="45" fill="#BC4A54" stroke="#333" strokeWidth="1"/>
-      <rect x="52" y="15" width="12" height="35" fill="#BC4A54" stroke="#333" strokeWidth="1"/>
+      <rect x="24" y="10" width="12" height="40" fill="#AB526B" stroke="#333" strokeWidth="1"/>
+      <rect x="38" y="5" width="12" height="45" fill="#AB526B" stroke="#333" strokeWidth="1"/>
+      <rect x="52" y="15" width="12" height="35" fill="#AB526B" stroke="#333" strokeWidth="1"/>
     </g>
     <line x1="10" y1="70" x2="90" y2="70" stroke="#333" strokeWidth="1"/>
     <text x="50" y="85" fontSize="9" fill="#333" textAnchor="middle" fontWeight="bold">Max Subarray Streak</text>
@@ -226,7 +226,7 @@ const DutchFlagGraphic = () => (
   <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="100" height="100" rx="16" fill="#D3DFC8"/>
     <g transform="translate(15, 30)">
-      <rect x="0" y="0" width="22" height="35" fill="#BC4A54" stroke="#333" strokeWidth="1"/>
+      <rect x="0" y="0" width="22" height="35" fill="#AB526B" stroke="#333" strokeWidth="1"/>
       <text x="11" y="22" fontSize="12" fill="#fff" textAnchor="middle" fontWeight="bold">0</text>
       
       <rect x="24" y="0" width="22" height="35" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
@@ -263,7 +263,7 @@ const PrefixSumGraphic = () => (
       <rect x="0" y="0" width="68" height="15" fill="#FDFBF7" stroke="#333" strokeWidth="1"/>
       <text x="34" y="11" fontSize="8" fill="#333" textAnchor="middle">arr: [3, 1, 4, 2, 5]</text>
       
-      <rect x="0" y="20" width="68" height="15" fill="#BC4A54" stroke="#333" strokeWidth="1"/>
+      <rect x="0" y="20" width="68" height="15" fill="#AB526B" stroke="#333" strokeWidth="1"/>
       <text x="34" y="31" fontSize="8" fill="#fff" textAnchor="middle" fontWeight="bold">P: [0, 3, 4, 8, 10, 15]</text>
     </g>
     <text x="50" y="75" fontSize="9" fill="#333" textAnchor="middle" fontFamily="monospace">Query sum = P[R]-P[L]</text>
@@ -446,10 +446,10 @@ export default function ArrayHub() {
   });
 
   return (
-    <div className="min-h-[calc(100vh-76px)] bg-[#FDFBF7] dark:bg-[#121212] relative overflow-hidden flex flex-col transition-colors duration-300 pb-16">
+    <div className="min-h-[calc(100vh-76px)] bg-[#FDFBF7] dark:bg-[#331921] relative overflow-hidden flex flex-col transition-colors duration-300 pb-16">
       
       {/* Background Ambient Gradients */}
-      <div className="absolute top-0 right-0 w-[60vw] h-[60vw] bg-[#BC4A54]/10 rounded-full blur-[120px] pointer-events-none -translate-y-1/4 translate-x-1/4" />
+      <div className="absolute top-0 right-0 w-[60vw] h-[60vw] bg-[#AB526B]/10 rounded-full blur-[120px] pointer-events-none -translate-y-1/4 translate-x-1/4" />
       <div className="absolute bottom-0 left-0 w-[40vw] h-[40vw] bg-[#D3DFC8]/30 rounded-full blur-[100px] pointer-events-none translate-y-1/4 -translate-x-1/4" />
 
       {/* Main Content Area */}
@@ -459,7 +459,7 @@ export default function ArrayHub() {
         <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <Link
             to="/visualizer"
-            className="inline-flex items-center gap-2 text-xs font-bold text-gray-600 dark:text-gray-400 hover:text-[#BC4A54] dark:hover:text-[#E27D86] transition-colors"
+            className="inline-flex items-center gap-2 text-xs font-bold text-gray-600 dark:text-gray-400 hover:text-[#AB526B] dark:hover:text-[#E27D86] transition-colors"
           >
             <ArrowLeft size={16} />
             <span>Back to Dashboard</span>
@@ -473,7 +473,7 @@ export default function ArrayHub() {
               placeholder="Search 16 array algorithms & types..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-white dark:bg-[#1A1A1A] border border-[#EBE0D3] dark:border-[#333] rounded-full text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#BC4A54] shadow-xs text-gray-800 dark:text-gray-200"
+              className="w-full pl-9 pr-4 py-2 bg-white dark:bg-[#423834] border border-[#EBE0D3] dark:border-[#5C4E49] rounded-full text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#AB526B] shadow-xs text-gray-800 dark:text-gray-200"
             />
           </div>
         </div>
@@ -484,7 +484,7 @@ export default function ArrayHub() {
             <h1 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white tracking-tight">
               Array Algorithms & Types Suite
             </h1>
-            <span className="text-xs font-mono font-bold bg-[#BC4A54]/10 text-[#BC4A54] px-2.5 py-1 rounded-full border border-[#BC4A54]/20">
+            <span className="text-xs font-mono font-bold bg-[#AB526B]/10 text-[#AB526B] px-2.5 py-1 rounded-full border border-[#AB526B]/20">
               16 Options
             </span>
           </div>
@@ -503,21 +503,21 @@ export default function ArrayHub() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ delay: i * 0.03 }}
-                className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-4 md:p-5 shadow-sm border border-[#EBE0D3]/50 dark:border-[#333] hover:shadow-md transition-all duration-300 group flex flex-col h-full cursor-pointer"
+                className="bg-white dark:bg-[#423834] rounded-2xl p-4 md:p-5 shadow-sm border border-[#EBE0D3]/50 dark:border-[#5C4E49] hover:shadow-md transition-all duration-300 group flex flex-col h-full cursor-pointer"
               >
                 {/* Topic Header & Graphic (Navigates to 3D page) */}
                 <Link to={`/visualizer/array/${item.id}`} className="block group/head flex-1 flex flex-col">
                   {/* Top Graphic Box */}
-                  <div className="w-full h-24 md:h-28 mb-3 rounded-xl overflow-hidden bg-gray-50 dark:bg-[#252525] flex items-center justify-center transform group-hover/head:scale-[1.02] transition-transform duration-300">
+                  <div className="w-full h-24 md:h-28 mb-3 rounded-xl overflow-hidden bg-gray-50 dark:bg-[#5C4E49] flex items-center justify-center transform group-hover/head:scale-[1.02] transition-transform duration-300">
                     {item.graphic}
                   </div>
 
                   {/* Title & Tag */}
                   <div className="flex items-center justify-between mb-1">
-                    <h3 className="text-base md:text-lg font-bold text-gray-900 dark:text-gray-100 leading-tight group-hover/head:text-[#BC4A54] transition-colors">
+                    <h3 className="text-base md:text-lg font-bold text-gray-900 dark:text-gray-100 leading-tight group-hover/head:text-[#AB526B] transition-colors">
                       {item.name}
                     </h3>
-                    <span className="text-[10px] font-mono font-bold bg-[#BC4A54]/10 text-[#BC4A54] px-2 py-0.5 rounded-full border border-[#BC4A54]/20 shrink-0">
+                    <span className="text-[10px] font-mono font-bold bg-[#AB526B]/10 text-[#AB526B] px-2 py-0.5 rounded-full border border-[#AB526B]/20 shrink-0">
                       {item.tag}
                     </span>
                   </div>
@@ -532,7 +532,7 @@ export default function ArrayHub() {
                 <div className="flex justify-end mt-auto pt-2">
                   <Link 
                     to={`/visualizer/array/${item.id}`}
-                    className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white dark:bg-[#1A1A1A] border border-[#EBE0D3] dark:border-[#333] flex items-center justify-center text-[#BC4A54] group-hover:bg-[#BC4A54] group-hover:text-white transition-colors duration-300 shadow-xs"
+                    className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white dark:bg-[#423834] border border-[#EBE0D3] dark:border-[#5C4E49] flex items-center justify-center text-[#AB526B] group-hover:bg-[#AB526B] group-hover:text-white transition-colors duration-300 shadow-xs"
                     title={`Visualize ${item.name}`}
                   >
                     <ArrowRight size={14} className="md:w-4 md:h-4" />

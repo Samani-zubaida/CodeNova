@@ -21,7 +21,7 @@ const Sandbox = () => {
   const [isError, setIsError] = useState(false);
   
   const [showTerminal, setShowTerminal] = useState(false);
-  const [mobileTab, setMobileTab] = useState('editor'); // 'editor', 'terminal', 'visualizer'
+  const [mobileTab, setMobileTab] = useState('editor'); // 'editor', 'terminal', 'analysis'
   
   // Resizing state
   const [terminalHeight, setTerminalHeight] = useState(250);
@@ -32,7 +32,6 @@ const Sandbox = () => {
   
   const [analysisData, setAnalysisData] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [isVisualizing, setIsVisualizing] = useState(false);
   
   const { setExecutionOutput } = useAppStore();
 
@@ -145,8 +144,10 @@ const Sandbox = () => {
 
   return (
     <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="fixed top-16 left-0 right-0 bottom-0 flex flex-col lg:flex-row overflow-hidden w-full bg-gray-50 dark:bg-[#09090b]"
+      className="flex flex-col lg:flex-row h-[calc(100vh-64px)] w-full overflow-hidden bg-[#FAF7F2] dark:bg-[#331921] text-[#2D1F23] dark:text-[#F4EBC3] transition-colors"
     >
       {/* Invisible overlay to prevent iframes/canvases from swallowing mouse events during drag */}
       {(isDraggingTerminal || isDraggingSidebar) && (
@@ -157,7 +158,7 @@ const Sandbox = () => {
       )}
 
       {/* Mobile Tab Navigation */}
-      <div className="lg:hidden flex items-center justify-between border-b border-black/5 dark:border-white/5 bg-white/50 dark:bg-[#111] p-2 z-10 shrink-0">
+      <div className="lg:hidden flex items-center justify-between border-b border-black/5 dark:border-white/5 bg-white/50 dark:bg-[#423834] p-2 z-10 shrink-0">
         <button 
           onClick={() => setMobileTab('editor')}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${mobileTab === 'editor' ? 'bg-[var(--color-nova-red)]/10 text-[var(--color-nova-red)]' : 'text-gray-500 hover:bg-black/5'}`}
@@ -180,7 +181,7 @@ const Sandbox = () => {
 
       {/* Left Panel: Editor & Terminal */}
       <div 
-        className={`flex-col w-full h-full lg:border-r border-black/5 dark:border-white/5 ${mobileTab === 'analysis' ? 'hidden lg:flex' : 'flex'}`}
+        className={`flex-col w-full h-full lg:border-r border-[#EBE0D3] dark:border-[#5C4E49] ${mobileTab === 'analysis' ? 'hidden lg:flex' : 'flex'}`}
         style={typeof window !== 'undefined' && window.innerWidth >= 1024 ? { width: `${leftPanelWidth}%` } : {}}
       >
         
@@ -195,7 +196,7 @@ const Sandbox = () => {
                 <select 
                   value={language} 
                   onChange={handleLanguageChange}
-                  className="appearance-none bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-md pl-2 pr-6 py-1 text-[11px] font-medium focus:outline-none focus:ring-1 focus:ring-[var(--color-nova-red)]/50 transition-all cursor-pointer"
+                  className="appearance-none bg-white/80 dark:bg-[#423834] border border-[#EBE0D3] dark:border-[#5C4E49] text-[#2D1F23] dark:text-[#F4EBC3] rounded-md pl-2 pr-6 py-1 text-[11px] font-medium focus:outline-none focus:ring-1 focus:ring-[#AB526B]/50 transition-all cursor-pointer"
                 >
                   <option value="javascript">JavaScript</option>
                   <option value="python">Python</option>
@@ -211,7 +212,7 @@ const Sandbox = () => {
               <button 
                 onClick={handleAnalyze}
                 disabled={isAnalyzing}
-                className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium bg-gradient-to-r from-[var(--color-nova-brown)] to-[#a88a7c] hover:brightness-110 text-white shadow-sm shadow-[var(--color-nova-brown)]/30 rounded-md transition-all transform active:scale-95 disabled:opacity-50 disabled:active:scale-100"
+                className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium bg-[#BCA297] hover:bg-[#A4877B] text-white shadow-xs rounded-md transition-all transform active:scale-95 disabled:opacity-50"
               >
                 {isAnalyzing ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
                 <span className="hidden sm:inline">Analyze</span>
@@ -219,7 +220,7 @@ const Sandbox = () => {
               <button 
                 onClick={handleRunCode}
                 disabled={isExecuting}
-                className="flex items-center gap-1 px-3 py-1 text-[11px] font-bold bg-gradient-to-r from-[var(--color-nova-red)] to-[#C86B85] text-white shadow-sm shadow-[var(--color-nova-red)]/40 hover:shadow-[var(--color-nova-red)]/60 rounded-md transition-all transform hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 disabled:hover:translate-y-0 disabled:active:scale-100"
+                className="flex items-center gap-1 px-3 py-1 text-[11px] font-bold bg-[#AB526B] hover:bg-[#8E3B53] text-white shadow-xs rounded-md transition-all transform hover:-translate-y-0.5 active:scale-95 disabled:opacity-50"
               >
                 {isExecuting ? <Loader2 size={12} className="animate-spin" /> : <Play size={12} className="fill-white" />}
                 <span className="hidden sm:inline">Run Code</span>

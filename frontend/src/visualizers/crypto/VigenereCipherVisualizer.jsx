@@ -2,10 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Layers, Unlock, Lock, Play, Square, History, ArrowRight, ArrowLeft } from 'lucide-react';
 
-export default function VigenereCipherVisualizer() {
+export default function VigenereCipherVisualizer({ mode: propMode }) {
   const [text, setText] = useState("SECURE");
   const [keyWord, setKeyWord] = useState("KEY");
-  const [mode, setMode] = useState('encrypt');
+  const [mode, setMode] = useState(propMode || 'encrypt');
+
+  useEffect(() => {
+    if (propMode && propMode !== mode) {
+      setMode(propMode);
+      setIsPlaying(false);
+      setCurrentStep(-1);
+      setResult(Array(text.length).fill(''));
+    }
+  }, [propMode]);
   
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentStep, setCurrentStep] = useState(-1);

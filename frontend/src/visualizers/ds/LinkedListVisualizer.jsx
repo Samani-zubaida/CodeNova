@@ -5,12 +5,11 @@ import {
   Play, Pause, SkipForward, SkipBack, RotateCcw, Volume2, VolumeX,
   Plus, Trash2, Search, ArrowRight, ArrowLeft, RefreshCw, Layers,
   Compass, Lightbulb, FastForward, CheckCircle, AlertCircle, Eye,
-  Sliders, Activity, Cpu, Database, GitMerge, Split, ShieldCheck, Repeat, Target
+  Sliders, Activity, Cpu, Database, GitMerge, Split, ShieldCheck, Repeat, Target, Award, Zap, Check, X, Sparkles, Flame, Info, Shuffle
 } from 'lucide-react';
 import ResponsiveVisualizerShell from '../../components/visualizer/ResponsiveVisualizerShell';
-import ComplexityBadge from '../../components/visualizer/ComplexityBadge';
-import CodeInspector from '../../components/visualizer/CodeInspector';
 import VisualizerPlaybackBar from '../../components/visualizer/VisualizerPlaybackBar';
+import DryRunVariableTracker from '../../components/visualizer/DryRunVariableTracker';
 import { LINKED_LIST_ALGORITHMS } from './LinkedListHub';
 
 // Web Audio Sound Synthesizer
@@ -65,7 +64,6 @@ const playSynthTone = (type = 'visit', isMuted = false) => {
   } catch (e) {}
 };
 
-// CODE SNIPPETS FOR ALL 12 LINKED LIST ALGORITHMS
 const CODE_SNIPPETS = {
   singly: {
     javascript: `class Node {
@@ -697,109 +695,136 @@ const INTUITIONS = {
   }
 };
 
-// STEP GENERATORS FOR ALL 12 LINKED LIST ALGORITHMS + GOAL SEARCH & POSITION INSERT
+
+// ========================================================
+// STEP GENERATORS FOR ALL 12 LINKED LIST ALGORITHMS + OPERATIONS
+// ========================================================
+
 function generateSearchGoalSteps(nodes, goalVal) {
   const steps = [];
   const target = Number(goalVal);
   steps.push({
-    status: `Initiating Search for Goal Node [${target}]. Starting at Head node [${nodes[0]?.val ?? 'NULL'}].`,
+    status: `Searching for Goal Node (${target}). Starting at Head...`,
     nodes: [...nodes],
     currIdx: 0,
-    goalVal: target,
-    highlightIdx: [0]
+    goalVal: target
   });
 
   let found = false;
   for (let i = 0; i < nodes.length; i++) {
-    const isGoal = nodes[i].val === target;
+    const isMatch = nodes[i].val === target;
     steps.push({
-      status: `Inspecting Node ${i} (Value: ${nodes[i].val}). Comparing with Goal Node [${target}]: ${isGoal ? 'GOAL MATCH FOUND!' : 'Mismatch, advancing pointer to next.'}`,
+      status: isMatch 
+        ? `FOUND! Node at index ${i} has value ${nodes[i].val} == Goal ${target}.`
+        : `Checking index ${i}: Value ${nodes[i].val} !== ${target}. Moving next...`,
       nodes: [...nodes],
       currIdx: i,
       goalVal: target,
-      highlightIdx: [i],
-      isGoalFound: isGoal
+      isGoalFound: isMatch
     });
-    if (isGoal) {
+    if (isMatch) {
       found = true;
-      steps.push({
-        status: `SUCCESS! Reached Goal Node [${target}] at index ${i}!`,
-        nodes: [...nodes],
-        currIdx: i,
-        goalVal: target,
-        highlightIdx: [i],
-        isGoalFound: true,
-        isComplete: true
-      });
       break;
     }
   }
 
   if (!found) {
     steps.push({
-      status: `Reached NULL terminator. Goal Node [${target}] was NOT found in the linked list.`,
+      status: `Goal ${target} not found in linked list (reached NULL).`,
       nodes: [...nodes],
-      currIdx: nodes.length - 1,
+      currIdx: -1,
       goalVal: target,
-      highlightIdx: [],
-      notFound: true
+      notFound: true,
+      isComplete: true
     });
   }
   return steps;
 }
 
 function generateInsertAtPosSteps(nodes, val, pos) {
-  const targetPos = Math.max(0, Math.min(Number(pos), nodes.length));
-  const numVal = Number(val);
   const steps = [];
-
+  const safePos = Math.max(0, Math.min(pos, nodes.length));
+  
   steps.push({
-    status: `Goal: Insert Node [${numVal}] at Position ${targetPos}. Traversing list...`,
+    status: `Target: Insert new node (${val}) at index ${safePos}.`,
     nodes: [...nodes],
     currIdx: 0,
-    insertPos: targetPos,
-    insertVal: numVal
+    insertPos: safePos,
+    newVal: val
   });
 
-  for (let i = 0; i < targetPos; i++) {
+  if (safePos === 0) {
+    // Insert at Head
+    const newNodes = [{ id: `n_${Date.now()}`, val }, ...nodes];
     steps.push({
-      status: `Traversing node ${i} (${nodes[i].val}) towards insertion target index ${targetPos}.`,
+      status: `Created new node (${val}). Setting newNode.next = head.`,
+      nodes: newNodes,
+      currIdx: 0,
+      insertPos: 0,
+      newVal: val,
+      isNew: true
+    });
+    steps.push({
+      status: `Head updated! New node (${val}) is now HEAD of the list.`,
+      nodes: newNodes,
+      currIdx: 0,
+      insertPos: 0,
+      isComplete: true
+    });
+    return steps;
+  }
+
+  for (let i = 0; i < safePos; i++) {
+    steps.push({
+      status: `Traversing index ${i} (${nodes[i].val}). Finding insertion predecessor...`,
       nodes: [...nodes],
       currIdx: i,
-      insertPos: targetPos,
-      insertVal: numVal
+      prevIdx: i - 1,
+      insertPos: safePos,
+      newVal: val
     });
   }
 
-  const newNode = { id: `n_${Date.now()}`, val: numVal };
   const updatedNodes = [...nodes];
-  updatedNodes.splice(targetPos, 0, newNode);
+  updatedNodes.splice(safePos, 0, { id: `n_${Date.now()}`, val });
 
   steps.push({
-    status: `Creating new Node [${numVal}] and splicing link at index ${targetPos}: (newNode.next = curr.next, curr.next = newNode).`,
+    status: `Linking newNode (${val}).next = curr.next. Then curr.next = newNode.`,
     nodes: updatedNodes,
-    currIdx: targetPos,
-    insertPos: targetPos,
-    insertVal: numVal,
-    isNewNode: true
+    currIdx: safePos,
+    prevIdx: safePos - 1,
+    insertPos: safePos,
+    newVal: val,
+    isNew: true
   });
 
   steps.push({
-    status: `Successfully inserted Node [${numVal}] at position ${targetPos}!`,
+    status: `Node (${val}) inserted cleanly at index ${safePos}!`,
     nodes: updatedNodes,
-    currIdx: targetPos,
-    insertPos: targetPos,
+    currIdx: safePos,
+    insertPos: safePos,
     isComplete: true
   });
+
   return steps;
 }
 
 function generateDeleteAtPosSteps(nodes, pos) {
-  const targetPos = Math.max(0, Math.min(Number(pos), nodes.length - 1));
   const steps = [];
+  if (nodes.length <= 1) {
+    steps.push({
+      status: `Cannot delete: list must retain at least 1 node.`,
+      nodes: [...nodes],
+      currIdx: 0,
+      isComplete: true
+    });
+    return steps;
+  }
+
+  const targetPos = Math.max(0, Math.min(pos, nodes.length - 1));
 
   steps.push({
-    status: `Goal: Delete Node at Position ${targetPos} (Value: [${nodes[targetPos]?.val}]). Traversing...`,
+    status: `Target: Delete node at index ${targetPos} (Val: ${nodes[targetPos]?.val}).`,
     nodes: [...nodes],
     currIdx: 0,
     targetPos
@@ -807,52 +832,61 @@ function generateDeleteAtPosSteps(nodes, pos) {
 
   for (let i = 0; i <= targetPos; i++) {
     steps.push({
-      status: `Traversing index ${i} (${nodes[i]?.val}). ${i === targetPos ? 'Reached target position!' : 'Advancing...'}`,
+      status: i === targetPos
+        ? `Target reached at index ${i} (${nodes[i]?.val}).`
+        : `Traversing index ${i} (${nodes[i]?.val}). Advancing...`,
       nodes: [...nodes],
       currIdx: i,
+      prevIdx: i - 1,
       targetPos
     });
   }
 
   steps.push({
-    status: `Bypassing node at index ${targetPos} (prev.next = curr.next). Removing from chain.`,
+    status: `Bypassing node at index ${targetPos}: prev.next = curr.next. Severing link.`,
     nodes: [...nodes],
     currIdx: targetPos,
+    prevIdx: targetPos - 1,
     targetPos,
-    bypassing: true
+    isSevering: true
   });
 
   const updatedNodes = nodes.filter((_, idx) => idx !== targetPos);
+
   steps.push({
-    status: `Node at position ${targetPos} successfully deleted from list!`,
+    status: `Node at index ${targetPos} removed. Memory recycled.`,
     nodes: updatedNodes,
-    currIdx: -1,
+    currIdx: Math.min(targetPos, updatedNodes.length - 1),
     isComplete: true
   });
+
   return steps;
 }
 
 function generateSinglySteps(nodes) {
   const steps = [];
   steps.push({
-    status: `Initialized Singly Linked List with ${nodes.length} nodes. Head is [${nodes[0]?.val ?? 'null'}].`,
+    status: `Singly Linked List: Head is [${nodes[0]?.val ?? 'null'}].`,
     nodes: [...nodes],
     currIdx: 0,
-    highlightIdx: [0]
+    nextIdx: nodes.length > 1 ? 1 : -1
   });
   for (let i = 0; i < nodes.length; i++) {
     steps.push({
-      status: `Visiting node ${i} (Value: ${nodes[i].val}). Following next pointer to [${nodes[i+1]?.val ?? 'NULL'}].`,
+      status: `Visiting node ${i} (${nodes[i].val}). Following .next pointer to [${nodes[i+1]?.val ?? 'NULL'}].`,
       nodes: [...nodes],
       currIdx: i,
-      highlightIdx: [i]
+      prevIdx: i - 1,
+      nextIdx: i + 1 < nodes.length ? i + 1 : -1
     });
   }
   steps.push({
     status: `Reached end of list (NULL pointer). Traversal complete.`,
     nodes: [...nodes],
-    currIdx: nodes.length - 1,
-    highlightIdx: []
+    currIdx: -1,
+    prevIdx: nodes.length - 1,
+    nextIdx: -1,
+    isComplete: true
   });
   return steps;
 }
@@ -860,200 +894,154 @@ function generateSinglySteps(nodes) {
 function generateDoublySteps(nodes) {
   const steps = [];
   steps.push({
-    status: `Initialized Doubly Linked List with bidirectional pointers.`,
+    status: `Doubly Linked List: Bidirectional pointer chain.`,
     nodes: [...nodes],
     currIdx: 0,
+    nextIdx: nodes.length > 1 ? 1 : -1,
     direction: 'forward'
   });
+  // Forward pass
   for (let i = 0; i < nodes.length; i++) {
     steps.push({
       status: `Forward scan at node ${i} (${nodes[i].val}): Prev=[${nodes[i-1]?.val ?? 'NULL'}], Next=[${nodes[i+1]?.val ?? 'NULL'}].`,
       nodes: [...nodes],
       currIdx: i,
+      prevIdx: i - 1,
+      nextIdx: i + 1 < nodes.length ? i + 1 : -1,
       direction: 'forward'
     });
   }
+  // Backward pass
   for (let i = nodes.length - 1; i >= 0; i--) {
     steps.push({
       status: `Backward scan at node ${i} (${nodes[i].val}): Following curr = curr.prev.`,
       nodes: [...nodes],
       currIdx: i,
+      prevIdx: i - 1,
+      nextIdx: i + 1 < nodes.length ? i + 1 : -1,
       direction: 'backward'
     });
   }
   steps.push({
-    status: `Bidirectional traversal verified successfully!`,
+    status: `Two-way traversal complete.`,
     nodes: [...nodes],
     currIdx: 0,
-    direction: 'none'
+    direction: 'done',
+    isComplete: true
   });
   return steps;
 }
 
 function generateCircularSteps(nodes) {
   const steps = [];
-  const totalSteps = nodes.length * 2;
+  const totalLaps = 2;
+  const totalSteps = nodes.length * totalLaps;
   steps.push({
-    status: `Circular List: Tail node [${nodes[nodes.length-1].val}] points directly back to Head [${nodes[0].val}].`,
+    status: `Circular List: Tail [${nodes[nodes.length-1]?.val}] points back to Head [${nodes[0]?.val}].`,
     nodes: [...nodes],
     currIdx: 0,
+    nextIdx: 1 % nodes.length,
     lap: 1
   });
   for (let s = 0; s < totalSteps; s++) {
     const idx = s % nodes.length;
+    const nextIdx = (idx + 1) % nodes.length;
     const lap = Math.floor(s / nodes.length) + 1;
     steps.push({
-      status: `Lap ${lap}: Visiting node ${idx} (${nodes[idx].val}). Next: [${nodes[(idx+1)%nodes.length].val}]. Infinite loop proof.`,
+      status: `Lap ${lap}: Visiting node ${idx} (${nodes[idx].val}). Next: [${nodes[nextIdx].val}].`,
       nodes: [...nodes],
       currIdx: idx,
+      nextIdx,
       lap
     });
   }
+  steps.push({
+    status: `Demonstrated circular ring continuity across ${totalLaps} laps.`,
+    nodes: [...nodes],
+    currIdx: 0,
+    lap: totalLaps,
+    isComplete: true
+  });
   return steps;
 }
 
 function generateReverseSteps(nodes) {
   const steps = [];
-  const currentNodes = nodes.map(n => ({ ...n }));
+  const n = nodes.length;
   steps.push({
-    status: `Starting 3-pointer reversal. prev = NULL, curr = Head [${currentNodes[0].val}].`,
-    nodes: [...currentNodes],
+    status: `Starting 3-pointer reversal. prev = NULL, curr = Head (${nodes[0]?.val}).`,
+    nodes: [...nodes],
     prevIdx: -1,
     currIdx: 0,
-    nextIdx: 1,
+    nextIdx: n > 1 ? 1 : -1,
     reversedLinks: []
   });
 
   const reversed = [];
-  for (let i = 0; i < currentNodes.length; i++) {
-    const nextIdx = i + 1 < currentNodes.length ? i + 1 : -1;
+  for (let i = 0; i < n; i++) {
+    const nextIdx = i + 1 < n ? i + 1 : -1;
+    
+    // Step A: Stash next
     steps.push({
-      status: `Step ${i+1}: next = curr.next [${nextIdx >= 0 ? currentNodes[nextIdx].val : 'NULL'}]. Stashing next pointer.`,
-      nodes: [...currentNodes],
+      status: `Step ${i + 1}: next = curr.next (${nextIdx >= 0 ? nodes[nextIdx].val : 'NULL'}).`,
+      nodes: [...nodes],
       prevIdx: i - 1,
       currIdx: i,
-      nextIdx: nextIdx,
+      nextIdx,
       reversedLinks: [...reversed]
     });
 
+    // Step B: Flip arrow
     reversed.push(i);
     steps.push({
-      status: `Flipping arrow: curr.next = prev [${i > 0 ? currentNodes[i-1].val : 'NULL'}]. Arrow direction reversed!`,
-      nodes: [...currentNodes],
+      status: `Flipping link: curr.next = prev (${i > 0 ? nodes[i-1].val : 'NULL'}). Link reversed!`,
+      nodes: [...nodes],
       prevIdx: i - 1,
       currIdx: i,
-      nextIdx: nextIdx,
-      reversedLinks: [...reversed]
+      nextIdx,
+      reversedLinks: [...reversed],
+      isFlipping: true
     });
 
+    // Step C: Advance pointers
     steps.push({
-      status: `Advancing pointers: prev = curr [${currentNodes[i].val}], curr = next [${nextIdx >= 0 ? currentNodes[nextIdx].val : 'NULL'}].`,
-      nodes: [...currentNodes],
+      status: `Advancing: prev = curr (${nodes[i].val}), curr = next (${nextIdx >= 0 ? nodes[nextIdx].val : 'NULL'}).`,
+      nodes: [...nodes],
       prevIdx: i,
       currIdx: nextIdx,
-      nextIdx: nextIdx >= 0 && nextIdx + 1 < currentNodes.length ? nextIdx + 1 : -1,
+      nextIdx: nextIdx >= 0 && nextIdx + 1 < n ? nextIdx + 1 : -1,
       reversedLinks: [...reversed]
     });
   }
 
   steps.push({
-    status: `Reversal complete! New Head is [${currentNodes[currentNodes.length - 1].val}].`,
-    nodes: [...currentNodes].reverse(),
-    prevIdx: currentNodes.length - 1,
+    status: `Reversal complete! New HEAD is [${nodes[n-1]?.val}].`,
+    nodes: [...nodes],
+    prevIdx: n - 1,
     currIdx: -1,
     nextIdx: -1,
-    reversedLinks: currentNodes.map((_, i) => i)
-  });
-  return steps;
-}
-
-function generateFloydSteps(nodes) {
-  const steps = [];
-  const cycleEntry = 2;
-  const loopNodes = [...nodes];
-  steps.push({
-    status: `List has a loop! Tail [${nodes[nodes.length-1].val}] points back to Node [${nodes[cycleEntry].val}].`,
-    nodes: loopNodes,
-    slow: 0,
-    fast: 0,
-    phase: 1
+    reversedLinks: [...reversed],
+    isComplete: true
   });
 
-  let slow = 0, fast = 0;
-  const nextOf = (idx) => (idx === loopNodes.length - 1 ? cycleEntry : idx + 1);
-
-  let stepsCount = 0;
-  while (stepsCount < 20) {
-    slow = nextOf(slow);
-    fast = nextOf(nextOf(fast));
-    stepsCount++;
-    steps.push({
-      status: `Phase 1 Race: Slow (1x) at [${loopNodes[slow].val}], Fast (2x) at [${loopNodes[fast].val}].`,
-      nodes: loopNodes,
-      slow,
-      fast,
-      phase: 1
-    });
-    if (slow === fast) {
-      steps.push({
-        status: `COLLISION DETECTED at node [${loopNodes[slow].val}]! Cycle mathematically proven.`,
-        nodes: loopNodes,
-        slow,
-        fast,
-        phase: 1,
-        collision: true
-      });
-      break;
-    }
-  }
-
-  let entry = 0;
-  steps.push({
-    status: `Phase 2: Reset slow = Head [${loopNodes[0].val}]. Keep fast at collision node. Move both 1 step at a time.`,
-    nodes: loopNodes,
-    slow: entry,
-    fast,
-    phase: 2
-  });
-
-  while (entry !== fast) {
-    entry = nextOf(entry);
-    fast = nextOf(fast);
-    steps.push({
-      status: `Phase 2: Pointer A at [${loopNodes[entry].val}], Pointer B at [${loopNodes[fast].val}].`,
-      nodes: loopNodes,
-      slow: entry,
-      fast,
-      phase: 2
-    });
-  }
-
-  steps.push({
-    status: `CYCLE START FOUND at Node [${loopNodes[entry].val}] (Index ${cycleEntry})!`,
-    nodes: loopNodes,
-    slow: entry,
-    fast: entry,
-    phase: 2,
-    cycleFound: true
-  });
   return steps;
 }
 
 function generateMiddleSteps(nodes) {
   const steps = [];
   steps.push({
-    status: `Starting Fast & Slow pointer race. Slow moves 1x speed, Fast moves 2x speed.`,
+    status: `Starting Tortoise & Hare race: Slow (1x), Fast (2x).`,
     nodes: [...nodes],
     slow: 0,
     fast: 0
   });
 
   let slow = 0, fast = 0;
-  while (fast < nodes.length && fast + 1 < nodes.length) {
+  while (fast < nodes.length - 1 && fast + 1 < nodes.length) {
     slow += 1;
     fast += 2;
     steps.push({
-      status: `Slow advanced 1 step to [${nodes[slow].val}]. Fast advanced 2 steps to [${fast < nodes.length ? nodes[fast].val : 'End'}].`,
+      status: `Slow advanced 1x to [${nodes[slow]?.val}]. Fast advanced 2x to [${fast < nodes.length ? nodes[fast]?.val : 'End'}].`,
       nodes: [...nodes],
       slow,
       fast: Math.min(fast, nodes.length - 1)
@@ -1061,12 +1049,256 @@ function generateMiddleSteps(nodes) {
   }
 
   steps.push({
-    status: `Fast pointer reached end! Slow pointer is on MIDDLE NODE: [${nodes[slow].val}].`,
+    status: `Fast pointer reached end! Slow pointer is on MIDDLE NODE: [${nodes[slow]?.val}].`,
     nodes: [...nodes],
     slow,
     fast: Math.min(fast, nodes.length - 1),
-    foundMiddle: true
+    foundMiddle: true,
+    isComplete: true
   });
+
+  return steps;
+}
+
+function generateFloydSteps(nodes, cycleEntryIndex = 2) {
+  const steps = [];
+  const n = nodes.length;
+  const hasLoop = cycleEntryIndex >= 0 && cycleEntryIndex < n;
+  const cycleEntry = hasLoop ? cycleEntryIndex : -1;
+
+  if (!hasLoop) {
+    // Clean run with no cycle
+    steps.push({
+      status: `Floyd Cycle Check: Testing list with NO cycle.`,
+      nodes: [...nodes],
+      slow: 0,
+      fast: 0,
+      phase: 1,
+      hasCycle: false
+    });
+
+    let slow = 0, fast = 0;
+    while (fast < n - 1 && fast + 1 < n) {
+      slow += 1;
+      fast += 2;
+      steps.push({
+        status: `Slow at [${nodes[slow]?.val}], Fast at [${fast < n ? nodes[fast]?.val : 'NULL'}].`,
+        nodes: [...nodes],
+        slow,
+        fast: Math.min(fast, n - 1),
+        phase: 1,
+        hasCycle: false
+      });
+    }
+
+    steps.push({
+      status: `Fast reached NULL pointer! No cycle exists in list.`,
+      nodes: [...nodes],
+      slow,
+      fast: n,
+      phase: 1,
+      hasCycle: false,
+      noCycleFound: true,
+      isComplete: true
+    });
+    return steps;
+  }
+
+  // List with cycle
+  steps.push({
+    status: `Floyd's Cycle: Tail (${nodes[n-1]?.val}) loops back to Node ${cycleEntry} (${nodes[cycleEntry]?.val}).`,
+    nodes: [...nodes],
+    slow: 0,
+    fast: 0,
+    phase: 1,
+    cycleEntry
+  });
+
+  let slow = 0, fast = 0;
+  const nextOf = (idx) => (idx === n - 1 ? cycleEntry : idx + 1);
+
+  let stepCount = 0;
+  while (stepCount < 25) {
+    slow = nextOf(slow);
+    fast = nextOf(nextOf(fast));
+    stepCount++;
+
+    const isCollision = slow === fast;
+    steps.push({
+      status: isCollision
+        ? `COLLISION at node [${nodes[slow]?.val}]! Loop mathematically proven.`
+        : `Phase 1: Slow (1x) at [${nodes[slow]?.val}], Fast (2x) at [${nodes[fast]?.val}].`,
+      nodes: [...nodes],
+      slow,
+      fast,
+      phase: 1,
+      cycleEntry,
+      collision: isCollision
+    });
+
+    if (isCollision) break;
+  }
+
+  // Phase 2: Find entrance
+  steps.push({
+    status: `Phase 2: Reset slow to Head (0). Fast stays at collision. Both move at 1x speed.`,
+    nodes: [...nodes],
+    slow: 0,
+    fast,
+    phase: 2,
+    cycleEntry
+  });
+
+  slow = 0;
+  while (slow !== fast) {
+    slow = nextOf(slow);
+    fast = nextOf(fast);
+    const atEntrance = slow === fast;
+    steps.push({
+      status: atEntrance
+        ? `MATCH! Pointers met at CYCLE ENTRANCE: Node ${slow} (${nodes[slow]?.val})!`
+        : `Phase 2 Step: Slow at [${nodes[slow]?.val}], Fast at [${nodes[fast]?.val}].`,
+      nodes: [...nodes],
+      slow,
+      fast,
+      phase: 2,
+      cycleEntry,
+      cycleFound: atEntrance
+    });
+  }
+
+  steps.push({
+    status: `Cycle Entry verified at Node ${cycleEntry} (${nodes[cycleEntry]?.val}). Algorithm complete.`,
+    nodes: [...nodes],
+    slow,
+    fast,
+    phase: 2,
+    cycleEntry,
+    cycleFound: true,
+    isComplete: true
+  });
+
+  return steps;
+}
+
+function generateRemoveNthSteps(nodes, nParam = 2) {
+  const steps = [];
+  const safeN = Math.min(Math.max(1, Number(nParam) || 1), nodes.length);
+  const targetIdx = nodes.length - safeN;
+
+  steps.push({
+    status: `Target: Remove ${safeN}-th node from end (Index ${targetIdx}, Val: ${nodes[targetIdx]?.val}).`,
+    nodes: [...nodes],
+    slow: 0,
+    fast: 0,
+    phase: 'advance_fast',
+    safeN
+  });
+
+  let fast = 0;
+  for (let i = 0; i < safeN; i++) {
+    fast++;
+    steps.push({
+      status: `Advancing fast pointer ${i + 1}/${safeN} steps ahead. (Currently on [${nodes[fast]?.val ?? 'End'}]).`,
+      nodes: [...nodes],
+      slow: 0,
+      fast: Math.min(fast, nodes.length),
+      phase: 'advance_fast',
+      safeN
+    });
+  }
+
+  let slow = 0;
+  while (fast < nodes.length - 1) {
+    slow++;
+    fast++;
+    steps.push({
+      status: `Sliding gap of ${safeN}: Slow at [${nodes[slow]?.val}], Fast at [${nodes[fast]?.val}].`,
+      nodes: [...nodes],
+      slow,
+      fast,
+      phase: 'slide_window',
+      safeN
+    });
+  }
+
+  steps.push({
+    status: `Fast reached tail! Target to remove is at index ${targetIdx} (${nodes[targetIdx]?.val}).`,
+    nodes: [...nodes],
+    slow,
+    fast,
+    targetIdx,
+    bypassing: true,
+    safeN
+  });
+
+  const updatedNodes = nodes.filter((_, i) => i !== targetIdx);
+
+  steps.push({
+    status: `Rerouted slow.next = slow.next.next. Node (${nodes[targetIdx]?.val}) deleted!`,
+    nodes: updatedNodes,
+    slow: -1,
+    fast: -1,
+    deleted: true,
+    safeN,
+    isComplete: true
+  });
+
+  return steps;
+}
+
+function generatePalindromeSteps(nodes) {
+  const steps = [];
+  const n = nodes.length;
+  steps.push({
+    status: `Testing palindrome symmetry on [${nodes.map(x => x.val).join(', ')}].`,
+    nodes: [...nodes],
+    p1: 0,
+    p2: n - 1,
+    isSymmetric: true
+  });
+
+  let l = 0, r = n - 1;
+  let isPal = true;
+  while (l <= r) {
+    const match = nodes[l].val === nodes[r].val;
+    steps.push({
+      status: match
+        ? `Comparing Left [idx ${l}: ${nodes[l].val}] == Right [idx ${r}: ${nodes[r].val}]. Symmetric! ✓`
+        : `MISMATCH! Left (${nodes[l].val}) !== Right (${nodes[r].val}). NOT a palindrome! ✗`,
+      nodes: [...nodes],
+      p1: l,
+      p2: r,
+      isSymmetric: match
+    });
+
+    if (!match) {
+      isPal = false;
+      steps.push({
+        status: `Validation failed: List is NOT a palindrome.`,
+        nodes: [...nodes],
+        p1: l,
+        p2: r,
+        isSymmetric: false,
+        failed: true,
+        isComplete: true
+      });
+      return steps;
+    }
+    l++;
+    r--;
+  }
+
+  steps.push({
+    status: `All mirrored pairs matched! Linked list IS a valid PALINDROME! ✓`,
+    nodes: [...nodes],
+    p1: Math.floor(n / 2),
+    p2: Math.floor(n / 2),
+    isSymmetric: true,
+    success: true,
+    isComplete: true
+  });
+
   return steps;
 }
 
@@ -1089,7 +1321,7 @@ function generateMergeSteps(list1, list2) {
     if (v1 <= v2) {
       merged.push(v1);
       steps.push({
-        status: `Comparison: ${v1} <= ${v2}. Appending ${v1} from List 1 to Merged List. Advance p1.`,
+        status: `Comparison: ${v1} <= ${v2}. Appending ${v1} from List 1 to Merged List.`,
         list1: [...list1],
         list2: [...list2],
         merged: [...merged],
@@ -1100,7 +1332,7 @@ function generateMergeSteps(list1, list2) {
     } else {
       merged.push(v2);
       steps.push({
-        status: `Comparison: ${v2} < ${v1}. Appending ${v2} from List 2 to Merged List. Advance p2.`,
+        status: `Comparison: ${v2} < ${v1}. Appending ${v2} from List 2 to Merged List.`,
         list1: [...list1],
         list2: [...list2],
         merged: [...merged],
@@ -1114,7 +1346,7 @@ function generateMergeSteps(list1, list2) {
   while (p1 < list1.length) {
     merged.push(list1[p1]);
     steps.push({
-      status: `List 2 exhausted. Appending remaining node ${list1[p1]} from List 1.`,
+      status: `List 2 exhausted. Appending remaining [${list1[p1]}] from List 1.`,
       list1: [...list1],
       list2: [...list2],
       merged: [...merged],
@@ -1127,7 +1359,7 @@ function generateMergeSteps(list1, list2) {
   while (p2 < list2.length) {
     merged.push(list2[p2]);
     steps.push({
-      status: `List 1 exhausted. Appending remaining node ${list2[p2]} from List 2.`,
+      status: `List 1 exhausted. Appending remaining [${list2[p2]}] from List 2.`,
       list1: [...list1],
       list2: [...list2],
       merged: [...merged],
@@ -1138,116 +1370,15 @@ function generateMergeSteps(list1, list2) {
   }
 
   steps.push({
-    status: `Merge complete! Consolidated Sorted List: [${merged.join(' ➔ ')}].`,
+    status: `Merge complete! Merged list contains ${merged.length} sorted elements.`,
     list1: [...list1],
     list2: [...list2],
     merged: [...merged],
-    p1: list1.length,
-    p2: list2.length,
-    complete: true
-  });
-  return steps;
-}
-
-function generateRemoveNthSteps(nodes, n = 2) {
-  const steps = [];
-  const safeN = Math.min(Math.max(1, Number(n)), nodes.length);
-  steps.push({
-    status: `Target: Remove ${safeN}-th node from end of list. Advance fast pointer by ${safeN} nodes.`,
-    nodes: [...nodes],
-    slow: 0,
-    fast: 0,
-    phase: 'advance_fast'
+    p1,
+    p2,
+    isComplete: true
   });
 
-  let fast = 0;
-  for (let i = 0; i < safeN; i++) {
-    fast++;
-    steps.push({
-      status: `Fast pointer offset: ${i + 1}/${safeN} (Currently on [${nodes[fast]?.val ?? 'End'}]).`,
-      nodes: [...nodes],
-      slow: 0,
-      fast: Math.min(fast, nodes.length)
-    });
-  }
-
-  let slow = 0;
-  while (fast < nodes.length) {
-    slow++;
-    fast++;
-    steps.push({
-      status: `Sliding window: Slow at [${nodes[slow]?.val}], Fast at [${nodes[fast]?.val ?? 'NULL'}].`,
-      nodes: [...nodes],
-      slow,
-      fast: Math.min(fast, nodes.length)
-    });
-  }
-
-  const targetIdx = nodes.length - safeN;
-  steps.push({
-    status: `Found target node to remove: [${nodes[targetIdx].val}] at index ${targetIdx}!`,
-    nodes: [...nodes],
-    slow,
-    fast,
-    targetIdx,
-    bypassing: true
-  });
-
-  const updatedNodes = nodes.filter((_, i) => i !== targetIdx);
-  steps.push({
-    status: `Rerouted link around [${nodes[targetIdx].val}]. Node deleted successfully!`,
-    nodes: updatedNodes,
-    slow: -1,
-    fast: -1,
-    deleted: true
-  });
-  return steps;
-}
-
-function generatePalindromeSteps(nodes) {
-  const steps = [];
-  const vals = nodes.map(n => n.val);
-  steps.push({
-    status: `Testing palindrome symmetry on [${vals.join(' ➔ ')}].`,
-    nodes: [...nodes],
-    p1: 0,
-    p2: vals.length - 1,
-    isSymmetric: true
-  });
-
-  let l = 0, r = vals.length - 1;
-  while (l < r) {
-    steps.push({
-      status: `Comparing node ${l} (${vals[l]}) with node ${r} (${vals[r]}).`,
-      nodes: [...nodes],
-      p1: l,
-      p2: r,
-      isSymmetric: vals[l] === vals[r]
-    });
-
-    if (vals[l] !== vals[r]) {
-      steps.push({
-        status: `MISMATCH: ${vals[l]} !== ${vals[r]}. Linked list is NOT a palindrome!`,
-        nodes: [...nodes],
-        p1: l,
-        p2: r,
-        isSymmetric: false,
-        failed: true
-      });
-      return steps;
-    }
-    l++;
-    r--;
-  }
-
-  steps.push({
-    status: `All mirrored pairs matched! Linked list IS a valid PALINDROME.`,
-    nodes: [...nodes],
-    p1: l,
-    p2: r,
-    isSymmetric: true,
-    success: true
-  });
   return steps;
 }
 
@@ -1257,218 +1388,355 @@ function generateIntersectionSteps(listA, listB, common) {
   const fullB = [...listB, ...common];
 
   steps.push({
-    status: `List A: [${fullA.join(' ➔ ')}]. List B: [${fullB.join(' ➔ ')}]. Common tail starts at [${common[0]}].`,
+    status: `Testing 2 lists: List A (${fullA.join('➔')}) & List B (${fullB.join('➔')}).`,
     fullA,
     fullB,
-    pA: 0,
-    pB: 0,
-    switchA: false,
-    switchB: false
+    idxA: 0,
+    idxB: 0,
+    isIntersect: false
   });
 
+  const maxSteps = fullA.length + fullB.length;
   let pA = 0, pB = 0;
-  let switchedA = false, switchedB = false;
 
-  for (let s = 0; s < 12; s++) {
-    const nodeA = switchedA ? fullB[pA] : fullA[pA];
-    const nodeB = switchedB ? fullA[pB] : fullB[pB];
+  for (let s = 0; s < maxSteps; s++) {
+    const valA = fullA[pA];
+    const valB = fullB[pB];
+    const isCommon = valA === valB && valA.startsWith('C');
 
     steps.push({
-      status: `Step ${s+1}: Pointer A at [${nodeA}], Pointer B at [${nodeB}].`,
+      status: isCommon
+        ? `COLLISION! Both pointers met at shared node [${valA}]. Intersection confirmed!`
+        : `Pointer A on [${valA}], Pointer B on [${valB}]. Advancing...`,
       fullA,
       fullB,
-      pA,
-      pB,
-      switchedA,
-      switchedB
+      idxA: pA,
+      idxB: pB,
+      isIntersect: isCommon
     });
 
-    if (switchedA && switchedB && nodeA === nodeB && nodeA === common[0]) {
+    if (isCommon) {
       steps.push({
-        status: `INTERSECTION FOUND! Both pointers met at shared node [${common[0]}].`,
+        status: `Intersection detected at node [${valA}]! Algorithm complete.`,
         fullA,
         fullB,
-        pA,
-        pB,
-        intersectNode: common[0],
-        found: true
+        idxA: pA,
+        idxB: pB,
+        isIntersect: true,
+        isComplete: true
       });
-      break;
+      return steps;
     }
 
-    pA++;
-    if (!switchedA && pA >= fullA.length) {
-      pA = 0;
-      switchedA = true;
-    } else if (switchedA && pA >= fullB.length) {
-      pA = 0;
-    }
-
-    pB++;
-    if (!switchedB && pB >= fullB.length) {
-      pB = 0;
-      switchedB = true;
-    } else if (switchedB && pB >= fullA.length) {
-      pB = 0;
-    }
+    pA = pA + 1 < fullA.length ? pA + 1 : 0;
+    pB = pB + 1 < fullB.length ? pB + 1 : 0;
   }
+
   return steps;
 }
 
-function generateDeleteValSteps(nodes, targetVal = 42) {
+function generateDeleteValSteps(nodes, targetVal = 40) {
   const steps = [];
   const target = Number(targetVal);
+
   steps.push({
-    status: `Searching for node with value ${target} to delete.`,
+    status: `Searching to delete value (${target}). Starting at Head...`,
     nodes: [...nodes],
-    prev: -1,
-    curr: 0
+    currIdx: 0,
+    targetVal: target
   });
 
-  let prev = -1, curr = 0;
-  let found = false;
-
+  let foundIdx = -1;
   for (let i = 0; i < nodes.length; i++) {
+    const isMatch = nodes[i].val === target;
     steps.push({
-      status: `Inspecting node ${i} (${nodes[i].val}). Does it equal target ${target}?`,
+      status: isMatch
+        ? `Found node with value ${target} at index ${i}!`
+        : `Index ${i}: Value ${nodes[i].val} !== ${target}. Advancing...`,
       nodes: [...nodes],
-      prev: i - 1,
-      curr: i
+      currIdx: i,
+      prevIdx: i - 1,
+      targetVal: target,
+      isTarget: isMatch
     });
 
-    if (nodes[i].val === target) {
-      found = true;
-      steps.push({
-        status: `MATCH! Node ${i} has value ${target}. Rewiring: prev.next = curr.next.`,
-        nodes: [...nodes],
-        prev: i - 1,
-        curr: i,
-        targetFound: true
-      });
+    if (isMatch) {
+      foundIdx = i;
       break;
     }
   }
 
-  if (found) {
-    const updated = nodes.filter(n => n.val !== target);
+  if (foundIdx === -1) {
     steps.push({
-      status: `Node ${target} bypassed and removed from memory!`,
-      nodes: updated,
-      prev: -1,
-      curr: -1,
-      deleted: true
-    });
-  } else {
-    steps.push({
-      status: `Value ${target} not found in the list. List remains unchanged.`,
+      status: `Value ${target} not found in linked list (reached NULL).`,
       nodes: [...nodes],
-      prev: -1,
-      curr: -1
+      currIdx: -1,
+      targetVal: target,
+      isComplete: true
     });
+    return steps;
   }
+
+  steps.push({
+    status: `Rerouting links: prev.next = curr.next. Bypassing node (${target}).`,
+    nodes: [...nodes],
+    currIdx: foundIdx,
+    prevIdx: foundIdx - 1,
+    targetVal: target,
+    isSevering: true
+  });
+
+  const updatedNodes = nodes.filter((_, idx) => idx !== foundIdx);
+
+  steps.push({
+    status: `Node (${target}) deleted! Memory freed.`,
+    nodes: updatedNodes,
+    currIdx: Math.min(foundIdx, updatedNodes.length - 1),
+    targetVal: target,
+    isComplete: true
+  });
+
   return steps;
 }
 
 function generateLruSteps(operations) {
   const steps = [];
-  const capacity = 3;
+  const capacity = 4;
   let cache = [];
 
   steps.push({
-    status: `LRU Cache initialized with Capacity = ${capacity}. MRU is Head, LRU is Tail.`,
+    status: `Initialized LRU Cache with capacity = ${capacity}.`,
     cache: [],
     capacity
   });
 
-  for (let op of operations) {
+  for (const op of operations) {
     if (op.type === 'put') {
-      const existingIdx = cache.findIndex(c => c.key === op.key);
+      const existingIdx = cache.findIndex(item => item.key === op.key);
+      let evicted = null;
+
       if (existingIdx !== -1) {
-        cache.splice(existingIdx, 1);
-        cache.unshift({ key: op.key, val: op.val });
-        steps.push({
-          status: `PUT(${op.key}, ${op.val}): Key ${op.key} existed. Updated and moved to MRU Head.`,
-          cache: [...cache],
-          capacity,
-          activeKey: op.key
-        });
+        // Update & move to head
+        const item = { ...cache[existingIdx], val: op.val };
+        cache = [item, ...cache.filter((_, i) => i !== existingIdx)];
       } else {
-        let evicted = null;
         if (cache.length >= capacity) {
-          evicted = cache.pop();
+          evicted = cache[cache.length - 1];
+          cache = cache.slice(0, capacity - 1);
         }
-        cache.unshift({ key: op.key, val: op.val });
-        steps.push({
-          status: `PUT(${op.key}, ${op.val}): Inserted at MRU Head. ${evicted ? `Evicted LRU key '${evicted.key}' from tail.` : ''}`,
-          cache: [...cache],
-          capacity,
-          activeKey: op.key,
-          evictedKey: evicted ? evicted.key : null
-        });
+        cache = [{ key: op.key, val: op.val }, ...cache];
       }
+
+      steps.push({
+        status: evicted
+          ? `PUT(${op.key}, ${op.val}): Cache full! Evicted LRU tail [${evicted.key}] and added [${op.key}] to MRU Head.`
+          : `PUT(${op.key}, ${op.val}): Added [${op.key}] to MRU Head.`,
+        cache: [...cache],
+        activeKey: op.key,
+        evictedKey: evicted?.key,
+        op
+      });
     } else if (op.type === 'get') {
-      const idx = cache.findIndex(c => c.key === op.key);
-      if (idx !== -1) {
-        const item = cache.splice(idx, 1)[0];
-        cache.unshift(item);
+      const existing = cache.find(item => item.key === op.key);
+      if (existing) {
+        cache = [existing, ...cache.filter(item => item.key !== op.key)];
         steps.push({
-          status: `GET(${op.key}): Cache HIT! Value = ${item.val}. Node promoted to MRU Head.`,
+          status: `GET(${op.key}): Cache HIT (Val: ${existing.val})! Moved [${op.key}] to MRU Head.`,
           cache: [...cache],
-          capacity,
           activeKey: op.key,
-          hit: true
+          op
         });
       } else {
         steps.push({
-          status: `GET(${op.key}): Cache MISS (-1). Key not found in cache.`,
+          status: `GET(${op.key}): Cache MISS (Key not present in cache).`,
           cache: [...cache],
-          capacity,
-          activeKey: op.key,
-          hit: false
+          activeKey: null,
+          op
         });
       }
     }
   }
+
+  steps.push({
+    status: `LRU Cache simulation complete.`,
+    cache: [...cache],
+    capacity,
+    isComplete: true
+  });
+
   return steps;
 }
 
+// Pedagogical HUD Helper to explain WHY each step happens
+const getLinkedListHUDInfo = (algoId, step, nodes) => {
+  const n = nodes || [];
+  const currVal = step.currIdx >= 0 && step.currIdx < n.length ? n[step.currIdx]?.val : null;
+  const prevVal = step.prevIdx >= 0 && step.prevIdx < n.length ? n[step.prevIdx]?.val : null;
+  const nextVal = step.nextIdx >= 0 && step.nextIdx < n.length ? n[step.nextIdx]?.val : null;
+  const slowVal = step.slow !== undefined && step.slow < n.length ? n[step.slow]?.val : null;
+  const fastVal = step.fast !== undefined && step.fast < n.length ? n[step.fast]?.val : null;
+
+  if (algoId === 'floyd_cycle') {
+    if (step.collision) {
+      return {
+        badge: 'Collision Detected',
+        icon: AlertCircle,
+        bg: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+        why: `Fast and slow pointers occupy the same node [${n[step.slow]?.val}]. This mathematically proves a loop exists.`
+      };
+    }
+    if (step.cycleFound) {
+      return {
+        badge: 'Cycle Entrance Found',
+        icon: CheckCircle,
+        bg: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+        why: `Slow pointer from head and fast pointer from collision point met at entrance Node [${n[step.slow]?.val}].`
+      };
+    }
+    if (step.noCycleFound) {
+      return {
+        badge: 'No Cycle Found',
+        icon: CheckCircle,
+        bg: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+        why: `Fast pointer reached NULL. The linked list is linear with no loop.`
+      };
+    }
+    return {
+      badge: step.phase === 2 ? 'Phase 2: Finding Entrance' : 'Phase 1: Race',
+      icon: Activity,
+      bg: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
+      why: step.phase === 2
+        ? `Both pointers advance 1 step until meeting at the cycle entrance.`
+        : `Hare leaps 2x while tortoise steps 1x. Distance between them shrinks by 1 each iteration.`
+    };
+  }
+
+  if (algoId === 'reverse') {
+    if (step.isFlipping) {
+      return {
+        badge: 'Flipping Pointer',
+        icon: Repeat,
+        bg: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+        why: `Rewired curr.next = prev. Arrow direction is reversed without losing next node address.`
+      };
+    }
+    if (step.isComplete) {
+      return {
+        badge: 'Reversal Complete',
+        icon: CheckCircle,
+        bg: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+        why: `All links inverted in O(N) time and O(1) auxiliary memory.`
+      };
+    }
+    return {
+      badge: '3-Pointer Reversal',
+      icon: RefreshCw,
+      bg: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+      why: `Saved next pointer before inverting link to maintain traversal access.`
+    };
+  }
+
+  if (algoId === 'middle_node' || algoId === 'middle') {
+    if (step.foundMiddle) {
+      return {
+        badge: 'Middle Node Found',
+        icon: Target,
+        bg: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+        why: `When fast pointer hits the end of list, slow pointer is at the exact midpoint.`
+      };
+    }
+    return {
+      badge: 'Two-Pointer Midpoint Race',
+      icon: FastForward,
+      bg: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
+      why: `Fast moves at 2x velocity while slow moves at 1x. Ratio ensures midpoint convergence.`
+    };
+  }
+
+  if (algoId === 'merge_sorted') {
+    return {
+      badge: 'Merge Sorted Lists',
+      icon: GitMerge,
+      bg: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
+      why: `Comparing head values of both lists and appending the smaller node to the merged list.`
+    };
+  }
+
+  if (algoId === 'remove_nth') {
+    return {
+      badge: 'Remove N-th From End',
+      icon: Trash2,
+      bg: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+      why: `Maintaining a gap of N between fast and slow pointers identifies the target in 1 pass.`
+    };
+  }
+
+  if (algoId === 'palindrome') {
+    return {
+      badge: 'Palindrome Symmetry Check',
+      icon: ShieldCheck,
+      bg: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
+      why: `Comparing inward pointers from head and tail to verify mirrored symmetry.`
+    };
+  }
+
+  return {
+    badge: 'Linked List Traversal',
+    icon: Compass,
+    bg: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+    why: step.status || 'Iterating through dynamic node references via .next pointers.'
+  };
+};
+
+// ========================================================
 // MAIN EXPORT COMPONENT
+// ========================================================
+
 export default function LinkedListVisualizer() {
   const { algoId } = useParams();
   const navigate = useNavigate();
 
+  // Normalize algoId
   const currentAlgoId = useMemo(() => {
+    if (algoId === 'middle') return 'middle_node';
     const valid = LINKED_LIST_ALGORITHMS.find(a => a.id === algoId);
-    return valid ? valid.id : 'singly';
+    return valid ? valid.id : LINKED_LIST_ALGORITHMS[0].id;
   }, [algoId]);
 
   const currentAlgo = useMemo(() => {
     return LINKED_LIST_ALGORITHMS.find(a => a.id === currentAlgoId) || LINKED_LIST_ALGORITHMS[0];
   }, [currentAlgoId]);
 
-  // General linked list state
+  // Base state for linked list nodes
   const [nodeList, setNodeList] = useState([
     { id: 'n1', val: 12 },
-    { id: 'n2', val: 24 },
-    { id: 'n3', val: 36 },
-    { id: 'n4', val: 48 },
-    { id: 'n5', val: 60 }
+    { id: 'n2', val: 25 },
+    { id: 'n3', val: 40 },
+    { id: 'n4', val: 55 },
+    { id: 'n5', val: 70 },
+    { id: 'n6', val: 88 }
   ]);
 
-  // Node Insertion & Position Inputs
+  // Input states
+  const [customListInput, setCustomListInput] = useState('12, 25, 40, 55, 70, 88');
   const [nodeValToAdd, setNodeValToAdd] = useState('99');
   const [nodePositionToAdd, setNodePositionToAdd] = useState('2');
-
-  // Goal Node to Search Input
-  const [goalNodeVal, setGoalNodeVal] = useState('48');
-
-  // Position to delete input
+  const [goalNodeVal, setGoalNodeVal] = useState('40');
   const [positionToDelete, setPositionToDelete] = useState('0');
-
-  // Extra inputs
   const [nthParam, setNthParam] = useState(2);
-  const [deleteTarget, setDeleteTarget] = useState('36');
+  const [deleteTarget, setDeleteTarget] = useState('40');
+  const [cycleIndex, setCycleIndex] = useState(2);
+  const [hasCycle, setHasCycle] = useState(true);
+
+  // Merge Sorted Lists inputs
+  const [mergeList1, setMergeList1] = useState([10, 30, 50, 70]);
+  const [mergeList2, setMergeList2] = useState([20, 40, 60, 80]);
+  const [mergeInput1, setMergeInput1] = useState('10, 30, 50, 70');
+  const [mergeInput2, setMergeInput2] = useState('20, 40, 60, 80');
+
+  // Audio / Voice
   const [isMuted, setIsMuted] = useState(false);
+  const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
 
   // Playback state
   const [steps, setSteps] = useState([]);
@@ -1476,42 +1744,37 @@ export default function LinkedListVisualizer() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
   const timerRef = useRef(null);
+  const pendingUpdateRef = useRef(null);
 
-  // Default step generator
-  const computeSteps = () => {
+  // Step computation helper
+  const computeSteps = (overrideNodes = null, overrideAlgo = null) => {
+    const nodes = overrideNodes || nodeList;
+    const targetAlgo = overrideAlgo || currentAlgoId;
     let gen = [];
-    if (currentAlgoId === 'singly') {
-      gen = generateSinglySteps(nodeList);
-    } else if (currentAlgoId === 'doubly') {
-      gen = generateDoublySteps(nodeList);
-    } else if (currentAlgoId === 'circular') {
-      gen = generateCircularSteps(nodeList);
-    } else if (currentAlgoId === 'reverse') {
-      gen = generateReverseSteps(nodeList);
-    } else if (currentAlgoId === 'floyd_cycle') {
-      gen = generateFloydSteps([
-        { id: 'c1', val: 1 }, { id: 'c2', val: 2 }, { id: 'c3', val: 3 },
-        { id: 'c4', val: 4 }, { id: 'c5', val: 5 }, { id: 'c6', val: 6 }
-      ]);
-    } else if (currentAlgoId === 'middle_node') {
-      gen = generateMiddleSteps(nodeList.length >= 3 ? nodeList : [
-        { id: 'm1', val: 10 }, { id: 'm2', val: 20 }, { id: 'm3', val: 30 },
-        { id: 'm4', val: 40 }, { id: 'm5', val: 50 }, { id: 'm6', val: 60 }, { id: 'm7', val: 70 }
-      ]);
-    } else if (currentAlgoId === 'merge_sorted') {
-      gen = generateMergeSteps([1, 3, 5, 7], [2, 4, 6, 8]);
-    } else if (currentAlgoId === 'remove_nth') {
-      gen = generateRemoveNthSteps(nodeList, nthParam);
-    } else if (currentAlgoId === 'palindrome') {
-      gen = generatePalindromeSteps([
-        { id: 'p1', val: 1 }, { id: 'p2', val: 2 }, { id: 'p3', val: 3 },
-        { id: 'p4', val: 2 }, { id: 'p5', val: 1 }
-      ]);
-    } else if (currentAlgoId === 'intersection') {
+
+    if (targetAlgo === 'singly') {
+      gen = generateSinglySteps(nodes);
+    } else if (targetAlgo === 'doubly') {
+      gen = generateDoublySteps(nodes);
+    } else if (targetAlgo === 'circular') {
+      gen = generateCircularSteps(nodes);
+    } else if (targetAlgo === 'reverse') {
+      gen = generateReverseSteps(nodes);
+    } else if (targetAlgo === 'floyd_cycle') {
+      gen = generateFloydSteps(nodes, hasCycle ? cycleIndex : -1);
+    } else if (targetAlgo === 'middle_node') {
+      gen = generateMiddleSteps(nodes);
+    } else if (targetAlgo === 'merge_sorted') {
+      gen = generateMergeSteps(mergeList1, mergeList2);
+    } else if (targetAlgo === 'remove_nth') {
+      gen = generateRemoveNthSteps(nodes, nthParam);
+    } else if (targetAlgo === 'palindrome') {
+      gen = generatePalindromeSteps(nodes);
+    } else if (targetAlgo === 'intersection') {
       gen = generateIntersectionSteps(['A1', 'A2'], ['B1', 'B2', 'B3'], ['C1', 'C2', 'C3']);
-    } else if (currentAlgoId === 'delete_val') {
-      gen = generateDeleteValSteps(nodeList, parseInt(deleteTarget) || 36);
-    } else if (currentAlgoId === 'lru_cache') {
+    } else if (targetAlgo === 'delete_val') {
+      gen = generateDeleteValSteps(nodes, parseInt(deleteTarget) || 40);
+    } else if (targetAlgo === 'lru_cache') {
       gen = generateLruSteps([
         { type: 'put', key: 'A', val: 100 },
         { type: 'put', key: 'B', val: 200 },
@@ -1522,14 +1785,78 @@ export default function LinkedListVisualizer() {
         { type: 'put', key: 'E', val: 500 }
       ]);
     }
+
     setSteps(gen);
     setCurrentStepIdx(0);
     setIsPlaying(false);
   };
 
+  // Re-generate steps on algorithm change or key settings change
   useEffect(() => {
-    computeSteps();
-  }, [currentAlgoId, nodeList, nthParam, deleteTarget]);
+    if (!pendingUpdateRef.current) {
+      computeSteps();
+    }
+  }, [currentAlgoId, nthParam, deleteTarget, cycleIndex, hasCycle]);
+
+  // Apply custom comma-separated list
+  const handleApplyCustomList = () => {
+    const rawVals = customListInput.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+    if (rawVals.length === 0) return;
+    const newNodes = rawVals.map((v, i) => ({ id: `cn_${Date.now()}_${i}`, val: v }));
+    setNodeList(newNodes);
+    computeSteps(newNodes);
+  };
+
+  // Randomize list
+  const handleRandomizeList = () => {
+    const len = Math.floor(Math.random() * 3) + 4; // 4 to 6 nodes
+    const vals = [];
+    let cur = Math.floor(Math.random() * 20) + 10;
+    for (let i = 0; i < len; i++) {
+      vals.push(cur);
+      cur += Math.floor(Math.random() * 15) + 5;
+    }
+    const newNodes = vals.map((v, i) => ({ id: `rn_${Date.now()}_${i}`, val: v }));
+    setNodeList(newNodes);
+    setCustomListInput(vals.join(', '));
+    computeSteps(newNodes);
+  };
+
+  // Load Palindrome preset
+  const handleLoadPalindrome = (isTrue) => {
+    const vals = isTrue ? [1, 2, 3, 2, 1] : [1, 2, 3, 4, 5];
+    const newNodes = vals.map((v, i) => ({ id: `pn_${Date.now()}_${i}`, val: v }));
+    setNodeList(newNodes);
+    setCustomListInput(vals.join(', '));
+    computeSteps(newNodes, 'palindrome');
+  };
+
+  // Toggle Floyd Cycle
+  const handleToggleCycle = () => {
+    setHasCycle(!hasCycle);
+  };
+
+  // Apply Merge inputs
+  const handleMergeLists = () => {
+    const l1 = mergeInput1.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n)).sort((a,b) => a - b);
+    const l2 = mergeInput2.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n)).sort((a,b) => a - b);
+    setMergeList1(l1);
+    setMergeList2(l2);
+    const gen = generateMergeSteps(l1, l2);
+    setSteps(gen);
+    setCurrentStepIdx(0);
+    setIsPlaying(true);
+  };
+
+  // Interactive LRU action
+  const handleLruOp = (type, key, val) => {
+    const gen = generateLruSteps([
+      { type, key, val: val || Math.floor(Math.random() * 800) + 100 }
+    ]);
+    setSteps(gen);
+    setCurrentStepIdx(0);
+    setIsPlaying(true);
+  };
 
   // Action: Search Goal Node
   const handleSearchGoalNode = () => {
@@ -1540,19 +1867,17 @@ export default function LinkedListVisualizer() {
     playSynthTone('traverse', isMuted);
   };
 
-  // Action: Insert Node at Specified Position
+  // Action: Insert Node at Position
   const handleInsertAtPosition = () => {
     const val = parseInt(nodeValToAdd) || Math.floor(Math.random() * 90) + 10;
     const pos = Math.max(0, Math.min(parseInt(nodePositionToAdd) || 0, nodeList.length));
     const gen = generateInsertAtPosSteps(nodeList, val, pos);
+    const finalNodes = gen[gen.length - 1]?.nodes || nodeList;
+
+    pendingUpdateRef.current = finalNodes;
     setSteps(gen);
     setCurrentStepIdx(0);
     setIsPlaying(true);
-
-    // Also persist into nodeList once complete
-    const updated = [...nodeList];
-    updated.splice(pos, 0, { id: `n_${Date.now()}`, val });
-    setNodeList(updated);
     playSynthTone('insert', isMuted);
   };
 
@@ -1560,22 +1885,25 @@ export default function LinkedListVisualizer() {
   const handleInsertHead = () => {
     const val = parseInt(nodeValToAdd) || Math.floor(Math.random() * 90) + 10;
     const gen = generateInsertAtPosSteps(nodeList, val, 0);
+    const finalNodes = gen[gen.length - 1]?.nodes || nodeList;
+
+    pendingUpdateRef.current = finalNodes;
     setSteps(gen);
     setCurrentStepIdx(0);
     setIsPlaying(true);
-    setNodeList([{ id: `n_${Date.now()}`, val }, ...nodeList]);
     playSynthTone('insert', isMuted);
   };
 
   // Action: Insert Tail
   const handleInsertTail = () => {
     const val = parseInt(nodeValToAdd) || Math.floor(Math.random() * 90) + 10;
-    const pos = nodeList.length;
-    const gen = generateInsertAtPosSteps(nodeList, val, pos);
+    const gen = generateInsertAtPosSteps(nodeList, val, nodeList.length);
+    const finalNodes = gen[gen.length - 1]?.nodes || nodeList;
+
+    pendingUpdateRef.current = finalNodes;
     setSteps(gen);
     setCurrentStepIdx(0);
     setIsPlaying(true);
-    setNodeList([...nodeList, { id: `n_${Date.now()}`, val }]);
     playSynthTone('insert', isMuted);
   };
 
@@ -1584,17 +1912,31 @@ export default function LinkedListVisualizer() {
     if (nodeList.length <= 1) return;
     const pos = Math.max(0, Math.min(parseInt(positionToDelete) || 0, nodeList.length - 1));
     const gen = generateDeleteAtPosSteps(nodeList, pos);
+    const finalNodes = gen[gen.length - 1]?.nodes || nodeList;
+
+    pendingUpdateRef.current = finalNodes;
     setSteps(gen);
     setCurrentStepIdx(0);
     setIsPlaying(true);
-    setNodeList(nodeList.filter((_, idx) => idx !== pos));
     playSynthTone('delete', isMuted);
   };
 
-  // Ticker loop with speed handling
+  // Action: Delete by Value
+  const handleDeleteTargetVal = () => {
+    const gen = generateDeleteValSteps(nodeList, parseInt(deleteTarget) || 40);
+    const finalNodes = gen[gen.length - 1]?.nodes || nodeList;
+
+    pendingUpdateRef.current = finalNodes;
+    setSteps(gen);
+    setCurrentStepIdx(0);
+    setIsPlaying(true);
+    playSynthTone('delete', isMuted);
+  };
+
+  // Ticker loop
   useEffect(() => {
     if (isPlaying) {
-      const delay = Math.max(80, Math.round(900 / speed));
+      const delay = Math.max(160, Math.round(1400 / speed));
       timerRef.current = setTimeout(() => {
         if (currentStepIdx < steps.length - 1) {
           const nextIdx = currentStepIdx + 1;
@@ -1603,6 +1945,12 @@ export default function LinkedListVisualizer() {
         } else {
           setIsPlaying(false);
           playSynthTone('success', isMuted);
+          // Sync pending list update once animation finishes
+          if (pendingUpdateRef.current) {
+            setNodeList(pendingUpdateRef.current);
+            setCustomListInput(pendingUpdateRef.current.map(x => x.val).join(', '));
+            pendingUpdateRef.current = null;
+          }
         }
       }, delay);
     }
@@ -1611,7 +1959,7 @@ export default function LinkedListVisualizer() {
 
   const step = steps[currentStepIdx] || {};
 
-  // Playback Handlers (Matches VisualizerPlaybackBar props exactly!)
+  // Playback Handlers
   const handlePlay = () => {
     if (currentStepIdx >= steps.length - 1) {
       setCurrentStepIdx(0);
@@ -1639,70 +1987,284 @@ export default function LinkedListVisualizer() {
 
   const handleReset = () => {
     setIsPlaying(false);
+    if (pendingUpdateRef.current) {
+      setNodeList(pendingUpdateRef.current);
+      pendingUpdateRef.current = null;
+    }
     setCurrentStepIdx(0);
   };
 
-  // DYNAMIC CANVAS RENDERER
+  // ========================================================
+  // ZERO-TEXT FLOATING VARIABLE HUD (Directly on Visualization)
+  // ========================================================
+  const renderVariableHUD = () => {
+    const activeNodes = step.nodes || nodeList;
+    return (
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex flex-wrap items-center justify-center gap-2 px-3 py-1.5 rounded-2xl bg-white dark:bg-[#423834]/90 border border-[#EBE0D3] dark:border-[#5C4E49]/80 shadow-2xl backdrop-blur-md text-xs font-mono">
+        {/* Step Indicator */}
+        <span className="px-2 py-0.5 rounded-lg bg-gray-100 dark:bg-[#5C4E49] text-gray-500 dark:text-[#BCA297] font-bold border border-[#EBE0D3] dark:border-[#5C4E49]/50">
+          Step {currentStepIdx + 1}/{Math.max(1, steps.length)}
+        </span>
+
+        {currentAlgoId === 'reverse' && (
+          <>
+            <span className="px-2.5 py-0.5 rounded-lg bg-sky-500/20 text-sky-300 font-bold border border-sky-400/30">
+              prev: {step.prevIdx >= 0 && step.prevIdx < activeNodes.length ? activeNodes[step.prevIdx].val : 'NULL'}
+            </span>
+            <span className="px-2.5 py-0.5 rounded-lg bg-amber-500/20 text-amber-300 font-bold border border-amber-400/30">
+              curr: {step.currIdx >= 0 && step.currIdx < activeNodes.length ? activeNodes[step.currIdx].val : 'NULL'}
+            </span>
+            <span className="px-2.5 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-400/30">
+              next: {step.nextIdx >= 0 && step.nextIdx < activeNodes.length ? activeNodes[step.nextIdx].val : 'NULL'}
+            </span>
+            <span className="px-2 py-0.5 rounded-lg bg-purple-500/20 text-purple-300 font-bold border border-purple-400/30">
+              flipped: {step.reversedLinks ? step.reversedLinks.length : 0}/{activeNodes.length}
+            </span>
+          </>
+        )}
+
+        {(currentAlgoId === 'middle_node' || currentAlgoId === 'middle') && (
+          <>
+            <span className="px-2.5 py-0.5 rounded-lg bg-teal-500/20 text-teal-300 font-bold border border-teal-400/30">
+              slow (1x): {step.slow !== undefined && step.slow < activeNodes.length ? activeNodes[step.slow]?.val : '-'}
+            </span>
+            <span className="px-2.5 py-0.5 rounded-lg bg-fuchsia-500/20 text-fuchsia-300 font-bold border border-fuchsia-400/30">
+              fast (2x): {step.fast !== undefined && step.fast < activeNodes.length ? activeNodes[step.fast]?.val : 'END'}
+            </span>
+            {step.foundMiddle && (
+              <span className="px-2.5 py-0.5 rounded-lg bg-emerald-500/25 text-emerald-300 font-extrabold border border-emerald-400">
+                MID: {activeNodes[step.slow]?.val}
+              </span>
+            )}
+          </>
+        )}
+
+        {currentAlgoId === 'floyd_cycle' && (
+          <>
+            <span className="px-2.5 py-0.5 rounded-lg bg-teal-500/20 text-teal-300 font-bold border border-teal-400/30">
+              slow: {step.slow !== undefined && step.slow < activeNodes.length ? activeNodes[step.slow]?.val : '-'}
+            </span>
+            <span className="px-2.5 py-0.5 rounded-lg bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-400/30">
+              fast: {step.fast !== undefined && step.fast < activeNodes.length ? activeNodes[step.fast]?.val : '-'}
+            </span>
+            <span className="px-2 py-0.5 rounded-lg bg-purple-500/20 text-purple-300 font-bold border border-purple-400/30">
+              phase: {step.phase || 1}
+            </span>
+            {step.collision && (
+              <span className="px-2 py-0.5 rounded-lg bg-rose-500/30 text-rose-300 font-black border border-rose-400 animate-bounce">
+                💥 COLLISION
+              </span>
+            )}
+            {step.cycleFound && (
+              <span className="px-2 py-0.5 rounded-lg bg-emerald-500/30 text-emerald-300 font-black border border-emerald-400">
+                ENTRY: Node {step.cycleEntry}
+              </span>
+            )}
+          </>
+        )}
+
+        {currentAlgoId === 'remove_nth' && (
+          <>
+            <span className="px-2.5 py-0.5 rounded-lg bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-400/30">
+              N: {step.safeN || nthParam}
+            </span>
+            <span className="px-2.5 py-0.5 rounded-lg bg-teal-500/20 text-teal-300 font-bold border border-teal-400/30">
+              slow: {step.slow !== undefined && step.slow >= 0 && step.slow < activeNodes.length ? activeNodes[step.slow]?.val : '-'}
+            </span>
+            <span className="px-2.5 py-0.5 rounded-lg bg-fuchsia-500/20 text-fuchsia-300 font-bold border border-fuchsia-400/30">
+              fast: {step.fast !== undefined && step.fast < activeNodes.length ? activeNodes[step.fast]?.val : 'END'}
+            </span>
+            {step.targetIdx !== undefined && (
+              <span className="px-2.5 py-0.5 rounded-lg bg-rose-500/25 text-rose-300 font-extrabold border border-rose-400">
+                TARGET: {activeNodes[step.targetIdx]?.val}
+              </span>
+            )}
+          </>
+        )}
+
+        {currentAlgoId === 'palindrome' && (
+          <>
+            <span className="px-2.5 py-0.5 rounded-lg bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-400/30">
+              left: {step.p1 !== undefined && step.p1 < activeNodes.length ? activeNodes[step.p1]?.val : '-'}
+            </span>
+            <span className="px-2.5 py-0.5 rounded-lg bg-purple-500/20 text-purple-300 font-bold border border-purple-400/30">
+              right: {step.p2 !== undefined && step.p2 < activeNodes.length ? activeNodes[step.p2]?.val : '-'}
+            </span>
+            <span className={`px-2.5 py-0.5 rounded-lg font-bold border ${
+              step.failed ? 'bg-rose-500/25 text-rose-300 border-rose-400' :
+              step.success ? 'bg-emerald-500/25 text-emerald-300 border-emerald-400' :
+              'bg-gray-100 dark:bg-[#5C4E49] text-[#2D1F23] dark:text-[#F0E2A4] border-[#EBE0D3] dark:border-[#5C4E49]'
+            }`}>
+              {step.failed ? '✗ NOT PALINDROME' : step.success ? '✓ PALINDROME' : 'CHECKING...'}
+            </span>
+          </>
+        )}
+
+        {currentAlgoId === 'merge_sorted' && (
+          <>
+            <span className="px-2.5 py-0.5 rounded-lg bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-400/30">
+              p1: {step.p1 !== undefined && step.p1 < (step.list1?.length || 0) ? step.list1[step.p1] : 'EOF'}
+            </span>
+            <span className="px-2.5 py-0.5 rounded-lg bg-purple-500/20 text-purple-300 font-bold border border-purple-400/30">
+              p2: {step.p2 !== undefined && step.p2 < (step.list2?.length || 0) ? step.list2[step.p2] : 'EOF'}
+            </span>
+            <span className="px-2.5 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-400/30">
+              merged: {step.merged ? step.merged.length : 0}
+            </span>
+          </>
+        )}
+
+        {currentAlgoId === 'intersection' && (
+          <>
+            <span className="px-2.5 py-0.5 rounded-lg bg-amber-500/20 text-amber-300 font-bold border border-amber-400/30">
+              pA: {step.idxA !== undefined ? (step.fullA?.[step.idxA] || '-') : '-'}
+            </span>
+            <span className="px-2.5 py-0.5 rounded-lg bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-400/30">
+              pB: {step.idxB !== undefined ? (step.fullB?.[step.idxB] || '-') : '-'}
+            </span>
+            {step.isIntersect && (
+              <span className="px-2.5 py-0.5 rounded-lg bg-emerald-500/25 text-emerald-300 font-extrabold border border-emerald-400">
+                INTERSECT!
+              </span>
+            )}
+          </>
+        )}
+
+        {(currentAlgoId === 'singly' || currentAlgoId === 'doubly' || currentAlgoId === 'circular' || currentAlgoId === 'delete_val') && (
+          <>
+            <span className="px-2.5 py-0.5 rounded-lg bg-amber-500/20 text-amber-300 font-bold border border-amber-400/30">
+              curr: {step.currIdx >= 0 && step.currIdx < activeNodes.length ? activeNodes[step.currIdx]?.val : 'NULL'}
+            </span>
+            {step.nextIdx !== undefined && step.nextIdx >= 0 && (
+              <span className="px-2.5 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-400/30">
+                next: {activeNodes[step.nextIdx]?.val}
+              </span>
+            )}
+            {step.targetVal !== undefined && (
+              <span className="px-2.5 py-0.5 rounded-lg bg-rose-500/20 text-rose-300 font-bold border border-rose-400/30">
+                target: {step.targetVal}
+              </span>
+            )}
+          </>
+        )}
+      </div>
+    );
+  };
+
+  // ========================================================
+  // VISUALIZATION CANVAS (PURE HERO GRAPHICS, ZERO TEXT WALLS)
+  // ========================================================
   const renderCanvas = () => {
     // 1. MERGE SORTED CANVAS
     if (currentAlgoId === 'merge_sorted') {
-      const l1 = step.list1 || [];
-      const l2 = step.list2 || [];
+      const l1 = step.list1 || mergeList1;
+      const l2 = step.list2 || mergeList2;
       const merged = step.merged || [];
+
       return (
-        <div className="flex flex-col items-center gap-6 w-full py-4">
-          <div className="flex flex-col md:flex-row items-center justify-around gap-6 w-full">
-            <div className="flex flex-col items-center">
-              <span className="text-xs font-mono text-cyan-400 font-bold mb-2">List 1 (Pointer p1: {step.p1 ?? 0})</span>
-              <div className="flex items-center gap-2">
-                {l1.map((v, i) => (
-                  <React.Fragment key={i}>
-                    <div className={`w-11 h-11 rounded-xl border flex items-center justify-center font-mono font-bold ${
-                      step.p1 === i ? 'border-cyan-400 bg-cyan-500/30 text-white scale-110' : i < step.p1 ? 'border-slate-800 bg-slate-900/40 text-slate-600' : 'border-slate-700 bg-slate-800 text-slate-200'
-                    }`}>
-                      {v}
-                    </div>
-                    {i < l1.length - 1 && <ArrowRight className="w-3.5 h-3.5 text-slate-600" />}
-                  </React.Fragment>
-                ))}
+        <div className="flex flex-col items-center justify-center gap-6 w-full py-8">
+          {renderVariableHUD()}
+
+          {/* List 1 & List 2 rows */}
+          <div className="flex flex-col lg:flex-row items-center justify-around gap-8 w-full max-w-4xl pt-8">
+            {/* List 1 */}
+            <div className="flex flex-col items-center p-4 bg-white dark:bg-[#423834]/60 border border-[#EBE0D3] dark:border-[#5C4E49]/80 rounded-2xl shadow-xl">
+              <span className="text-xs font-mono text-cyan-400 font-bold mb-3 flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-sm" /> List 1 (p1)
+              </span>
+              <div className="flex items-center gap-2 overflow-x-auto p-1">
+                {l1.map((v, i) => {
+                  const isCurrent = step.p1 === i;
+                  const isConsumed = i < (step.p1 || 0);
+                  return (
+                    <React.Fragment key={`l1_${i}`}>
+                      <div className="flex flex-col items-center">
+                        <div className="h-5 text-[10px] font-mono text-cyan-400 font-bold">
+                          {isCurrent ? 'p1' : ''}
+                        </div>
+                        <motion.div
+                          animate={{
+                            scale: isCurrent ? 1.15 : 1,
+                            borderColor: isCurrent ? '#22d3ee' : isConsumed ? '#1e293b' : '#334155',
+                            backgroundColor: isCurrent ? 'rgba(6, 182, 212, 0.25)' : isConsumed ? 'rgba(15, 23, 42, 0.4)' : '#1e293b'
+                          }}
+                          className={`w-14 h-14 rounded-2xl border-2 flex flex-col items-center justify-center font-mono font-bold shadow-md ${
+                            isConsumed ? 'text-slate-600 line-through' : 'text-[#2D1F23] dark:text-[#F4EBC3]'
+                          }`}
+                        >
+                          <span className="text-base font-extrabold">{v}</span>
+                          <span className="text-[8px] font-mono text-slate-500">0x{(100 + i*8).toString(16)}</span>
+                        </motion.div>
+                      </div>
+                      {i < l1.length - 1 && <ArrowRight className="w-4 h-4 text-slate-600 mt-4" />}
+                    </React.Fragment>
+                  );
+                })}
               </div>
             </div>
 
-            <div className="flex flex-col items-center">
-              <span className="text-xs font-mono text-purple-400 font-bold mb-2">List 2 (Pointer p2: {step.p2 ?? 0})</span>
-              <div className="flex items-center gap-2">
-                {l2.map((v, i) => (
-                  <React.Fragment key={i}>
-                    <div className={`w-11 h-11 rounded-xl border flex items-center justify-center font-mono font-bold ${
-                      step.p2 === i ? 'border-purple-400 bg-purple-500/30 text-white scale-110' : i < step.p2 ? 'border-slate-800 bg-slate-900/40 text-slate-600' : 'border-slate-700 bg-slate-800 text-slate-200'
-                    }`}>
-                      {v}
-                    </div>
-                    {i < l2.length - 1 && <ArrowRight className="w-3.5 h-3.5 text-slate-600" />}
-                  </React.Fragment>
-                ))}
+            {/* List 2 */}
+            <div className="flex flex-col items-center p-4 bg-white dark:bg-[#423834]/60 border border-[#EBE0D3] dark:border-[#5C4E49]/80 rounded-2xl shadow-xl">
+              <span className="text-xs font-mono text-purple-400 font-bold mb-3 flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-purple-400 shadow-sm" /> List 2 (p2)
+              </span>
+              <div className="flex items-center gap-2 overflow-x-auto p-1">
+                {l2.map((v, i) => {
+                  const isCurrent = step.p2 === i;
+                  const isConsumed = i < (step.p2 || 0);
+                  return (
+                    <React.Fragment key={`l2_${i}`}>
+                      <div className="flex flex-col items-center">
+                        <div className="h-5 text-[10px] font-mono text-purple-400 font-bold">
+                          {isCurrent ? 'p2' : ''}
+                        </div>
+                        <motion.div
+                          animate={{
+                            scale: isCurrent ? 1.15 : 1,
+                            borderColor: isCurrent ? '#c084fc' : isConsumed ? '#1e293b' : '#334155',
+                            backgroundColor: isCurrent ? 'rgba(192, 132, 252, 0.25)' : isConsumed ? 'rgba(15, 23, 42, 0.4)' : '#1e293b'
+                          }}
+                          className={`w-14 h-14 rounded-2xl border-2 flex flex-col items-center justify-center font-mono font-bold shadow-md ${
+                            isConsumed ? 'text-slate-600 line-through' : 'text-[#2D1F23] dark:text-[#F4EBC3]'
+                          }`}
+                        >
+                          <span className="text-base font-extrabold">{v}</span>
+                          <span className="text-[8px] font-mono text-slate-500">0x{(200 + i*8).toString(16)}</span>
+                        </motion.div>
+                      </div>
+                      {i < l2.length - 1 && <ArrowRight className="w-4 h-4 text-slate-600 mt-4" />}
+                    </React.Fragment>
+                  );
+                })}
               </div>
             </div>
           </div>
 
-          <div className="w-full max-w-2xl bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-col items-center">
-            <span className="text-xs font-mono text-emerald-400 font-bold mb-3 flex items-center gap-1.5">
-              <GitMerge className="w-4 h-4" /> Consolidated Zippered Merged List
+          {/* Merged Output Chain */}
+          <div className="w-full max-w-3xl bg-white dark:bg-[#423834]/80 border border-emerald-500/30 rounded-3xl p-5 flex flex-col items-center shadow-2xl">
+            <span className="text-xs font-mono text-emerald-400 font-bold mb-3 flex items-center gap-2">
+              <GitMerge className="w-4 h-4" /> Merged Sorted Chain
             </span>
-            <div className="flex flex-wrap items-center justify-center gap-2">
+            <div className="flex flex-wrap items-center justify-center gap-2.5">
               {merged.length === 0 ? (
-                <span className="text-xs font-mono text-slate-500">Merging in progress...</span>
+                <span className="text-xs font-mono text-slate-500 py-3 italic">Empty (traversing lists...)</span>
               ) : (
                 merged.map((v, i) => (
-                  <React.Fragment key={i}>
+                  <React.Fragment key={`m_${i}`}>
                     <motion.div
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      className="w-10 h-10 rounded-lg bg-emerald-500/20 border border-emerald-400 flex items-center justify-center font-mono font-bold text-emerald-200"
+                      initial={{ scale: 0.7, opacity: 0, y: 10 }}
+                      animate={{ scale: 1, opacity: 1, y: 0 }}
+                      className="flex flex-col items-center"
                     >
-                      {v}
+                      <div className="h-4 text-[9px] font-mono text-emerald-400 font-bold">
+                        {i === 0 ? 'HEAD' : i === merged.length - 1 ? 'TAIL' : ''}
+                      </div>
+                      <div className="w-13 h-13 rounded-2xl bg-emerald-500/20 border-2 border-emerald-400 flex flex-col items-center justify-center font-mono font-bold text-emerald-200 shadow-md">
+                        <span className="text-base font-black">{v}</span>
+                        <span className="text-[8px] text-emerald-400/70">0x{(300 + i*8).toString(16)}</span>
+                      </div>
                     </motion.div>
-                    {i < merged.length - 1 && <ArrowRight className="w-3.5 h-3.5 text-emerald-600" />}
+                    {i < merged.length - 1 && <ArrowRight className="w-4 h-4 text-emerald-500 mt-3" />}
                   </React.Fragment>
                 ))
               )}
@@ -1714,41 +2276,65 @@ export default function LinkedListVisualizer() {
 
     // 2. INTERSECTION CANVAS
     if (currentAlgoId === 'intersection') {
-      const fullA = step.fullA || [];
-      const fullB = step.fullB || [];
+      const fullA = step.fullA || ['A1', 'A2', 'C1', 'C2', 'C3'];
+      const fullB = step.fullB || ['B1', 'B2', 'B3', 'C1', 'C2', 'C3'];
+
       return (
-        <div className="flex flex-col items-center gap-6 w-full py-4">
-          <div className="flex flex-col items-center gap-4">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-mono text-amber-400 font-bold w-14">List A:</span>
-              {fullA.map((val, i) => (
-                <React.Fragment key={i}>
-                  <div className={`px-3 py-2 rounded-xl border font-mono font-bold text-sm ${
-                    val.startsWith('C') ? 'border-emerald-500 bg-emerald-500/20 text-emerald-300' : 'border-slate-700 bg-slate-800 text-slate-200'
-                  }`}>
-                    {val}
-                  </div>
-                  {i < fullA.length - 1 && <ArrowRight className="w-3.5 h-3.5 text-slate-600" />}
-                </React.Fragment>
-              ))}
+        <div className="flex flex-col items-center justify-center gap-6 w-full py-8">
+          {renderVariableHUD()}
+
+          <div className="flex flex-col items-center gap-6 pt-8 w-full max-w-3xl">
+            {/* List A */}
+            <div className="flex items-center gap-2 overflow-x-auto p-2">
+              <span className="text-xs font-mono text-amber-400 font-bold w-16">List A:</span>
+              {fullA.map((val, i) => {
+                const isShared = val.startsWith('C');
+                const isCurr = step.idxA === i;
+                return (
+                  <React.Fragment key={`ia_${i}`}>
+                    <div className="flex flex-col items-center">
+                      <div className="h-5 text-[10px] font-mono text-amber-400 font-bold">
+                        {isCurr ? 'pA' : ''}
+                      </div>
+                      <div className={`px-3.5 py-2.5 rounded-2xl border-2 font-mono font-bold text-base shadow-md transition-all ${
+                        isShared 
+                          ? 'border-emerald-500 bg-emerald-500/25 text-emerald-200 ring-2 ring-emerald-500/40' 
+                          : 'border-[#EBE0D3] dark:border-[#5C4E49] bg-gray-100 dark:bg-[#5C4E49] text-[#2D1F23] dark:text-[#F4EBC3]'
+                      }`}>
+                        {val}
+                      </div>
+                    </div>
+                    {i < fullA.length - 1 && <ArrowRight className="w-4 h-4 text-slate-600 mt-5" />}
+                  </React.Fragment>
+                );
+              })}
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-mono text-indigo-400 font-bold w-14">List B:</span>
-              {fullB.map((val, i) => (
-                <React.Fragment key={i}>
-                  <div className={`px-3 py-2 rounded-xl border font-mono font-bold text-sm ${
-                    val.startsWith('C') ? 'border-emerald-500 bg-emerald-500/20 text-emerald-300' : 'border-slate-700 bg-slate-800 text-slate-200'
-                  }`}>
-                    {val}
-                  </div>
-                  {i < fullB.length - 1 && <ArrowRight className="w-3.5 h-3.5 text-slate-600" />}
-                </React.Fragment>
-              ))}
+            {/* List B */}
+            <div className="flex items-center gap-2 overflow-x-auto p-2">
+              <span className="text-xs font-mono text-indigo-400 font-bold w-16">List B:</span>
+              {fullB.map((val, i) => {
+                const isShared = val.startsWith('C');
+                const isCurr = step.idxB === i;
+                return (
+                  <React.Fragment key={`ib_${i}`}>
+                    <div className="flex flex-col items-center">
+                      <div className="h-5 text-[10px] font-mono text-indigo-400 font-bold">
+                        {isCurr ? 'pB' : ''}
+                      </div>
+                      <div className={`px-3.5 py-2.5 rounded-2xl border-2 font-mono font-bold text-base shadow-md transition-all ${
+                        isShared 
+                          ? 'border-emerald-500 bg-emerald-500/25 text-emerald-200 ring-2 ring-emerald-500/40' 
+                          : 'border-[#EBE0D3] dark:border-[#5C4E49] bg-gray-100 dark:bg-[#5C4E49] text-[#2D1F23] dark:text-[#F4EBC3]'
+                      }`}>
+                        {val}
+                      </div>
+                    </div>
+                    {i < fullB.length - 1 && <ArrowRight className="w-4 h-4 text-slate-600 mt-5" />}
+                  </React.Fragment>
+                );
+              })}
             </div>
-          </div>
-          <div className="p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs font-mono text-slate-300">
-            Green nodes [C1, C2, C3] represent the shared memory intersection tail.
           </div>
         </div>
       );
@@ -1758,127 +2344,274 @@ export default function LinkedListVisualizer() {
     if (currentAlgoId === 'lru_cache') {
       const cache = step.cache || [];
       return (
-        <div className="flex flex-col items-center gap-6 w-full py-4">
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-mono text-slate-400 font-bold">MRU (Head)</span>
+        <div className="flex flex-col items-center justify-center gap-6 w-full py-8">
+          {renderVariableHUD()}
+
+          <div className="flex items-center gap-3 max-w-full overflow-x-auto p-4 pt-10">
+            <span className="text-xs font-mono text-emerald-400 font-bold px-3 py-1.5 bg-emerald-950/40 border border-emerald-500/40 rounded-xl">
+              HEAD (MRU)
+            </span>
             <div className="flex items-center gap-3">
               {cache.map((item, idx) => (
                 <React.Fragment key={item.key}>
                   <motion.div
                     animate={{
-                      scale: step.activeKey === item.key ? 1.12 : 1,
+                      scale: step.activeKey === item.key ? 1.15 : 1,
                       borderColor: step.activeKey === item.key ? '#06b6d4' : '#334155'
                     }}
-                    className="flex flex-col items-center p-3 rounded-xl border bg-slate-900 min-w-[70px] shadow-md"
+                    className="flex flex-col items-center p-3 rounded-2xl border-2 bg-white dark:bg-[#423834] min-w-[85px] shadow-xl"
                   >
-                    <span className="text-xs font-mono text-slate-400">Key: <strong className="text-cyan-400">{item.key}</strong></span>
-                    <span className="text-sm font-mono font-bold text-slate-100 mt-1">{item.val}</span>
+                    <span className="text-xs font-mono text-gray-500 dark:text-[#BCA297] font-semibold">Key: <strong className="text-cyan-400">{item.key}</strong></span>
+                    <span className="text-base font-mono font-extrabold text-[#2D1F23] dark:text-[#F4EBC3] mt-1">Val: {item.val}</span>
+                    <span className="text-[9px] font-mono text-slate-500 mt-1">0x{(400 + idx*8).toString(16)}</span>
                   </motion.div>
-                  {idx < cache.length - 1 && <ArrowRight className="w-4 h-4 text-slate-600" />}
+                  {idx < cache.length - 1 && (
+                    <div className="flex flex-col items-center text-xs font-mono text-slate-500 font-bold">
+                      <span>◄──►</span>
+                    </div>
+                  )}
                 </React.Fragment>
               ))}
               {cache.length === 0 && (
-                <span className="text-xs font-mono text-slate-500">Cache Empty</span>
+                <span className="text-xs font-mono text-slate-500 italic">Cache Empty</span>
               )}
             </div>
-            <span className="text-xs font-mono text-slate-400 font-bold">LRU (Tail)</span>
+            <span className="text-xs font-mono text-rose-400 font-bold px-3 py-1.5 bg-rose-950/40 border border-rose-500/40 rounded-xl">
+              TAIL (LRU)
+            </span>
           </div>
         </div>
       );
     }
 
-    // 4. FLOYD CYCLE CANVAS
+    // 4. FLOYD CYCLE CANVAS (Loop curve)
     if (currentAlgoId === 'floyd_cycle') {
-      const nodes = step.nodes || [];
+      const activeNodes = step.nodes || nodeList;
+      const cycleEntry = step.cycleEntry !== undefined ? step.cycleEntry : (hasCycle ? cycleIndex : -1);
+
       return (
-        <div className="flex flex-col items-center gap-6 w-full py-4">
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            {nodes.map((n, i) => {
+        <div className="flex flex-col items-center justify-center gap-6 w-full py-8">
+          {renderVariableHUD()}
+
+          <div className="flex flex-wrap items-center justify-center gap-4 max-w-full overflow-x-auto p-4 pt-10 relative">
+            {activeNodes.map((n, i) => {
               const isSlow = step.slow === i;
               const isFast = step.fast === i;
-              const inCycle = i >= 2;
+              const isEntry = cycleEntry >= 0 && i === cycleEntry;
+              const inLoop = cycleEntry >= 0 && i >= cycleEntry;
+              const isCollision = step.collision && isSlow && isFast;
+
               return (
-                <div key={n.id} className="flex flex-col items-center">
-                  <div className="flex gap-1 mb-1">
-                    {isSlow && <span className="px-1.5 py-0.5 bg-amber-500/20 border border-amber-400 rounded text-[9px] font-mono text-amber-300 font-bold">SLOW</span>}
-                    {isFast && <span className="px-1.5 py-0.5 bg-cyan-500/20 border border-cyan-400 rounded text-[9px] font-mono text-cyan-300 font-bold">FAST</span>}
+                <React.Fragment key={n.id || i}>
+                  <div className="flex flex-col items-center relative">
+                    {/* Floating Badges */}
+                    <div className="h-6 flex items-center gap-1 mb-1.5">
+                      {isCollision && (
+                        <span className="px-2 py-0.5 bg-rose-500/30 border border-rose-400 rounded-md text-[10px] font-mono text-rose-300 font-black animate-bounce">
+                          💥 COLLISION
+                        </span>
+                      )}
+                      {isSlow && !isCollision && (
+                        <span className="px-1.5 py-0.5 bg-teal-500/25 border border-teal-400 rounded-md text-[10px] font-mono text-teal-300 font-bold">
+                          SLOW
+                        </span>
+                      )}
+                      {isFast && !isCollision && (
+                        <span className="px-1.5 py-0.5 bg-fuchsia-500/25 border border-fuchsia-400 rounded-md text-[10px] font-mono text-fuchsia-300 font-bold">
+                          FAST
+                        </span>
+                      )}
+                      {isEntry && (
+                        <span className="px-1.5 py-0.5 bg-purple-500/25 border border-purple-400 rounded-md text-[10px] font-mono text-purple-300 font-bold">
+                          ENTRY
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Node Card */}
+                    <motion.div
+                      animate={{
+                        scale: isCollision ? 1.25 : (isSlow || isFast) ? 1.15 : 1,
+                        borderColor: isCollision ? '#f43f5e' : (isSlow && isFast) ? '#f43f5e' : isFast ? '#d946ef' : isSlow ? '#14b8a6' : inLoop ? '#a855f7' : '#334155',
+                        backgroundColor: isCollision ? 'rgba(244, 63, 94, 0.3)' : (isSlow || isFast) ? 'rgba(20, 184, 166, 0.2)' : inLoop ? 'rgba(168, 85, 247, 0.15)' : '#423834'
+                      }}
+                      className={`w-24 h-26 rounded-2xl border-2 flex flex-col items-center justify-between p-2 font-mono shadow-xl transition-all ${
+                        isEntry ? 'ring-2 ring-purple-500/50' : ''
+                      }`}
+                    >
+                      <span className="text-[10px] text-gray-500 dark:text-[#BCA297] font-bold">idx {i}</span>
+                      <span className="text-2xl font-black text-[#2D1F23] dark:text-[#F4EBC3]">{n.val}</span>
+                      <span className="text-[9px] text-cyan-400 font-mono">
+                        {cycleEntry >= 0 && i === activeNodes.length - 1 ? `↺0x${(100 + cycleEntry*8).toString(16)}` : `0x${(100 + (i+1)*8).toString(16)}`}
+                      </span>
+                    </motion.div>
+
+                    <span className="text-[10px] font-mono text-slate-500 mt-1 font-semibold">
+                      0x{(100 + i*8).toString(16)}
+                    </span>
                   </div>
-                  <motion.div
-                    animate={{
-                      scale: (isSlow || isFast) ? 1.15 : 1,
-                      borderColor: inCycle ? '#8b5cf6' : '#334155',
-                      backgroundColor: inCycle ? 'rgba(139, 92, 246, 0.15)' : '#0f172a'
-                    }}
-                    className="w-12 h-12 rounded-2xl border flex items-center justify-center font-mono font-bold text-slate-100 shadow-md"
-                  >
-                    {n.val}
-                  </motion.div>
-                </div>
+
+                  {i < activeNodes.length - 1 && (
+                    <div className="flex items-center text-slate-500 pt-5">
+                      <ArrowRight className={`w-5 h-5 ${inLoop ? 'text-purple-400' : 'text-cyan-400'}`} />
+                    </div>
+                  )}
+                </React.Fragment>
               );
             })}
-          </div>
-          <div className="text-xs font-mono text-purple-400 bg-purple-950/30 border border-purple-800/40 px-4 py-2 rounded-xl">
-            Loop Link: Node 6 ➔ loops back to Node 3 (Purple nodes are inside loop)
+
+            {/* Loopback Arrow to Entry Node */}
+            {cycleEntry >= 0 && (
+              <div className="flex items-center gap-1.5 pl-2 pt-5">
+                <Repeat className="w-5 h-5 text-purple-400 animate-spin" />
+                <span className="text-xs font-mono font-bold text-purple-300">
+                  ↺ Node {cycleEntry}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       );
     }
 
-    // 5. STANDARD CHAIN CANVAS (Singly, Doubly, Circular, Reverse, Middle, RemoveNth, Palindrome, DeleteVal, SearchGoal)
+    // 5. STANDARD CHAIN CANVAS (Singly, Doubly, Circular, Reverse, Middle, RemoveNth, Palindrome, Delete, Search)
     const activeNodes = step.nodes || nodeList;
+
     return (
-      <div className="flex flex-col items-center gap-6 w-full py-4">
-        <div className="flex flex-wrap items-center justify-center gap-2 max-w-full overflow-x-auto p-4">
+      <div className="flex flex-col items-center justify-center gap-6 w-full py-8">
+        {renderVariableHUD()}
+
+        <div className="flex flex-wrap items-center justify-center gap-4 max-w-full overflow-x-auto p-4 pt-10">
           {activeNodes.map((node, idx) => {
-            const isCurr = step.currIdx === idx || step.slow === idx || step.p1 === idx;
-            const isPrev = step.prevIdx === idx || step.p2 === idx;
-            const isNext = step.nextIdx === idx || step.fast === idx;
+            const isCurr = step.currIdx === idx;
+            const isPrev = step.prevIdx === idx;
+            const isNext = step.nextIdx === idx;
+            const isSlow = (currentAlgoId === 'middle_node' || currentAlgoId === 'middle' || currentAlgoId === 'remove_nth') && step.slow === idx;
+            const isFast = (currentAlgoId === 'middle_node' || currentAlgoId === 'middle' || currentAlgoId === 'remove_nth') && step.fast === idx;
             const isReversed = step.reversedLinks && step.reversedLinks.includes(idx);
             const isMiddle = step.foundMiddle && step.slow === idx;
             const isGoal = step.isGoalFound && step.currIdx === idx;
-            const isTargetPos = step.insertPos === idx || step.targetPos === idx;
+            const isLeft = currentAlgoId === 'palindrome' && step.p1 === idx;
+            const isRight = currentAlgoId === 'palindrome' && step.p2 === idx;
+            const isTargetPos = step.insertPos === idx || step.targetPos === idx || (step.targetVal && node.val === step.targetVal);
+            const isSevering = step.isSevering || (currentAlgoId === 'reverse' && step.currIdx === idx && step.isFlipping);
+
+            // Memory address
+            const nodeAddr = `0x${(100 + idx*8).toString(16)}`;
+            const nextAddr = isReversed
+              ? (idx > 0 ? `0x${(100 + (idx-1)*8).toString(16)}` : 'NULL')
+              : (idx < activeNodes.length - 1 ? `0x${(100 + (idx+1)*8).toString(16)}` : (currentAlgoId === 'circular' ? '0x100' : 'NULL'));
 
             return (
               <React.Fragment key={node.id || idx}>
                 <div className="flex flex-col items-center">
-                  {/* Pointer Badges */}
-                  <div className="h-5 flex items-center gap-1 mb-1">
-                    {isGoal && <span className="px-2 py-0.5 bg-emerald-500/30 border border-emerald-400 rounded text-[9px] font-mono text-emerald-300 font-bold">GOAL!</span>}
-                    {isPrev && <span className="px-1.5 py-0.5 bg-amber-500/20 border border-amber-400 rounded text-[9px] font-mono text-amber-300 font-bold">PREV</span>}
-                    {isCurr && !isGoal && <span className="px-1.5 py-0.5 bg-cyan-500/20 border border-cyan-400 rounded text-[9px] font-mono text-cyan-300 font-bold">CURR</span>}
-                    {isNext && <span className="px-1.5 py-0.5 bg-purple-500/20 border border-purple-400 rounded text-[9px] font-mono text-purple-300 font-bold">NEXT</span>}
-                    {isMiddle && <span className="px-1.5 py-0.5 bg-emerald-500/20 border border-emerald-400 rounded text-[9px] font-mono text-emerald-300 font-bold">MID</span>}
+                  {/* Floating Variable Badges Rack */}
+                  <div className="h-6 flex items-center gap-1 mb-1.5">
+                    {isGoal && (
+                      <span className="px-2 py-0.5 bg-emerald-500/30 border border-emerald-400 rounded-md text-[10px] font-mono text-emerald-300 font-extrabold flex items-center gap-0.5">
+                        <Award className="w-3 h-3" /> GOAL!
+                      </span>
+                    )}
+                    {idx === 0 && !isGoal && (
+                      <span className="px-1.5 py-0.5 bg-amber-500/20 border border-amber-400 rounded-md text-[10px] font-mono text-amber-300 font-bold">
+                        HEAD
+                      </span>
+                    )}
+                    {idx === activeNodes.length - 1 && currentAlgoId !== 'circular' && (
+                      <span className="px-1.5 py-0.5 bg-slate-700/40 border border-slate-600 rounded-md text-[10px] font-mono text-[#2D1F23] dark:text-[#F0E2A4] font-bold">
+                        TAIL
+                      </span>
+                    )}
+                    {isPrev && (
+                      <span className="px-1.5 py-0.5 bg-sky-500/25 border border-sky-400 rounded-md text-[10px] font-mono text-sky-300 font-bold">
+                        PREV
+                      </span>
+                    )}
+                    {isCurr && !isGoal && !isSlow && (
+                      <span className="px-1.5 py-0.5 bg-amber-500/25 border border-amber-400 rounded-md text-[10px] font-mono text-amber-300 font-bold animate-pulse">
+                        CURR
+                      </span>
+                    )}
+                    {isNext && (
+                      <span className="px-1.5 py-0.5 bg-emerald-500/25 border border-emerald-400 rounded-md text-[10px] font-mono text-emerald-300 font-bold">
+                        NEXT
+                      </span>
+                    )}
+                    {isSlow && (
+                      <span className="px-1.5 py-0.5 bg-teal-500/25 border border-teal-400 rounded-md text-[10px] font-mono text-teal-300 font-bold">
+                        SLOW
+                      </span>
+                    )}
+                    {isFast && (
+                      <span className="px-1.5 py-0.5 bg-fuchsia-500/25 border border-fuchsia-400 rounded-md text-[10px] font-mono text-fuchsia-300 font-bold">
+                        FAST
+                      </span>
+                    )}
+                    {isLeft && (
+                      <span className="px-1.5 py-0.5 bg-cyan-500/25 border border-cyan-400 rounded-md text-[10px] font-mono text-cyan-300 font-bold">
+                        LEFT
+                      </span>
+                    )}
+                    {isRight && (
+                      <span className="px-1.5 py-0.5 bg-purple-500/25 border border-purple-400 rounded-md text-[10px] font-mono text-purple-300 font-bold">
+                        RIGHT
+                      </span>
+                    )}
+                    {isMiddle && (
+                      <span className="px-2 py-0.5 bg-emerald-500/30 border border-emerald-400 rounded-md text-[10px] font-mono text-emerald-300 font-extrabold">
+                        MID
+                      </span>
+                    )}
                   </div>
 
-                  {/* Node Pill */}
+                  {/* 3-Layer Hero Node Card */}
                   <motion.div
                     animate={{
-                      scale: isGoal ? 1.25 : isCurr || isMiddle ? 1.15 : 1,
-                      borderColor: isGoal ? '#10b981' : isMiddle ? '#10b981' : isTargetPos ? '#f59e0b' : isCurr ? '#06b6d4' : '#334155',
-                      backgroundColor: isGoal ? 'rgba(16, 185, 129, 0.35)' : isMiddle ? 'rgba(16, 185, 129, 0.25)' : isCurr ? 'rgba(6, 182, 212, 0.25)' : '#0f172a'
+                      scale: isGoal ? 1.25 : (isCurr || isMiddle || isLeft || isRight) ? 1.15 : 1,
+                      borderColor: isGoal ? '#10b981' : isMiddle ? '#10b981' : isTargetPos ? '#f59e0b' : isCurr ? '#f59e0b' : isPrev ? '#38bdf8' : isNext ? '#10b981' : '#334155',
+                      backgroundColor: isGoal ? 'rgba(16, 185, 129, 0.35)' : isMiddle ? 'rgba(16, 185, 129, 0.25)' : isCurr ? 'rgba(245, 158, 11, 0.2)' : isPrev ? 'rgba(56, 189, 248, 0.15)' : '#423834'
                     }}
-                    className="flex rounded-xl border overflow-hidden shadow-lg"
+                    className="flex flex-col rounded-2xl border-2 overflow-hidden shadow-2xl min-w-[102px] transition-all"
                   >
-                    <div className="px-3.5 py-2 font-mono font-bold text-slate-100 flex items-center justify-center min-w-[44px]">
+                    {/* Top Cell: Data Value */}
+                    <div className="px-4 py-3 font-mono font-black text-2xl text-[#2D1F23] dark:text-[#F4EBC3] flex items-center justify-center bg-white dark:bg-[#423834]/90 border-b border-[#EBE0D3] dark:border-[#5C4E49]">
                       {node.val}
                     </div>
-                    <div className="px-2 py-2 bg-slate-900 border-l border-slate-800 text-[10px] font-mono text-slate-500 flex items-center">
-                      •
+                    {/* Bottom Cell: Next Address Pointer */}
+                    <div className="px-2.5 py-1.5 bg-white dark:bg-[#331921] text-[10px] font-mono text-cyan-400 flex items-center justify-between gap-1.5">
+                      <span className="text-slate-500 font-semibold">.next:</span>
+                      <span className="font-bold">{nextAddr}</span>
                     </div>
                   </motion.div>
 
-                  <span className="text-[10px] font-mono text-slate-500 mt-1">pos {idx}</span>
+                  {/* Heap Memory Address */}
+                  <span className="text-[10px] font-mono text-slate-500 mt-1.5 font-medium">
+                    {nodeAddr}
+                  </span>
                 </div>
 
                 {/* Connecting Arrow */}
                 {idx < activeNodes.length - 1 && (
-                  <div className="flex items-center text-slate-500 px-1">
+                  <div className="flex flex-col items-center justify-center px-1 text-slate-500 pt-6">
                     {currentAlgoId === 'doubly' ? (
-                      <span className="text-xs font-mono font-bold text-slate-400">⇄</span>
+                      <div className="flex flex-col items-center">
+                        <span className="text-sm font-mono font-bold text-cyan-400">◄──►</span>
+                      </div>
+                    ) : isSevering ? (
+                      <div className="flex flex-col items-center animate-pulse">
+                        <span className="text-[9px] font-mono text-amber-400 font-extrabold">⚡ FLIP ⚡</span>
+                        <span className="text-xs font-mono text-amber-400 font-bold">- - -</span>
+                      </div>
                     ) : isReversed ? (
-                      <ArrowLeft className="w-4 h-4 text-amber-400" />
+                      <div className="flex flex-col items-center">
+                        <ArrowLeft className="w-8 h-8 text-emerald-400 animate-pulse" />
+                        <span className="text-[8px] font-mono text-emerald-400 font-bold">REVERSED</span>
+                      </div>
                     ) : (
-                      <ArrowRight className="w-4 h-4 text-cyan-500" />
+                      <div className="flex flex-col items-center">
+                        <ArrowRight className="w-8 h-8 text-cyan-400" />
+                        <span className="text-[8px] font-mono text-slate-500">.next</span>
+                      </div>
                     )}
                   </div>
                 )}
@@ -1887,19 +2620,23 @@ export default function LinkedListVisualizer() {
           })}
 
           {currentAlgoId !== 'circular' && (
-            <div className="flex items-center gap-1.5 pl-2">
-              <ArrowRight className="w-4 h-4 text-slate-600" />
-              <div className="px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-[11px] font-mono text-slate-500 font-bold">
-                NULL
+            <div className="flex flex-col items-center gap-1 pl-2 pt-6">
+              <div className="flex items-center gap-1.5">
+                <ArrowRight className="w-5 h-5 text-slate-600" />
+                <div className="px-3.5 py-2 rounded-xl bg-white dark:bg-[#423834] border border-[#EBE0D3] dark:border-[#5C4E49] text-xs font-mono text-rose-400/90 font-black shadow-inner">
+                  NULL
+                </div>
               </div>
             </div>
           )}
 
           {currentAlgoId === 'circular' && (
-            <div className="flex items-center gap-1.5 pl-2">
-              <Repeat className="w-4 h-4 text-amber-400 animate-spin" />
-              <div className="px-2.5 py-1 rounded bg-amber-500/10 border border-amber-500/30 text-[11px] font-mono text-amber-300 font-bold">
-                ➔ HEAD
+            <div className="flex flex-col items-center gap-1 pl-2 pt-6">
+              <div className="flex items-center gap-1.5">
+                <Repeat className="w-5 h-5 text-amber-400 animate-spin" />
+                <div className="px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs font-mono text-amber-300 font-bold">
+                  ↺ HEAD (0x100)
+                </div>
               </div>
             </div>
           )}
@@ -1907,6 +2644,205 @@ export default function LinkedListVisualizer() {
       </div>
     );
   };
+
+  // Live Dry-Run Variables Tracker
+  const trackedVariables = useMemo(() => {
+    const vars = [];
+    const nodes = step.nodes || nodeList;
+
+    if (currentAlgoId === 'reverse') {
+      vars.push({
+        name: 'prev',
+        value: step.prevIdx >= 0 && step.prevIdx < nodes.length ? `Node(${nodes[step.prevIdx]?.val})` : 'NULL',
+        type: 'Pointer',
+        role: 'Inverted predecessor node',
+        isChanged: true
+      });
+      vars.push({
+        name: 'curr',
+        value: step.currIdx >= 0 && step.currIdx < nodes.length ? `Node(${nodes[step.currIdx]?.val})` : 'NULL',
+        type: 'Pointer',
+        role: 'Active node being reversed',
+        isChanged: true
+      });
+      vars.push({
+        name: 'next',
+        value: step.nextIdx >= 0 && step.nextIdx < nodes.length ? `Node(${nodes[step.nextIdx]?.val})` : 'NULL',
+        type: 'Pointer',
+        role: 'Saved forward link (curr.next)',
+        isChanged: true
+      });
+      vars.push({
+        name: 'reversedCount',
+        value: `${step.reversedLinks ? step.reversedLinks.length : 0} / ${nodes.length}`,
+        type: 'Count',
+        role: 'Number of inverted links'
+      });
+    } else if (currentAlgoId === 'floyd_cycle') {
+      vars.push({
+        name: 'slow (1x)',
+        value: step.slow !== undefined && step.slow < nodes.length ? `Node(${nodes[step.slow]?.val}) [idx ${step.slow}]` : '-',
+        type: 'Pointer',
+        role: 'Tortoise stepping 1 node per iteration',
+        isChanged: true
+      });
+      vars.push({
+        name: 'fast (2x)',
+        value: step.fast !== undefined && step.fast < nodes.length ? `Node(${nodes[step.fast]?.val}) [idx ${step.fast}]` : '-',
+        type: 'Pointer',
+        role: 'Hare leaping 2 nodes per iteration',
+        isChanged: true
+      });
+      vars.push({
+        name: 'phase',
+        value: step.phase === 1 ? 'Phase 1: Detection' : 'Phase 2: Entrance',
+        type: 'State',
+        role: 'Current Floyd phase'
+      });
+      vars.push({
+        name: 'collision',
+        value: step.collision ? 'YES' : 'NO',
+        type: 'Boolean',
+        role: 'Whether pointers met in loop'
+      });
+    } else if (currentAlgoId === 'middle_node' || currentAlgoId === 'middle') {
+      vars.push({
+        name: 'slow (1x)',
+        value: step.slow !== undefined && step.slow < nodes.length ? `Node(${nodes[step.slow]?.val})` : '-',
+        type: 'Pointer',
+        role: 'Midpoint tracker moving 1 step',
+        isChanged: true
+      });
+      vars.push({
+        name: 'fast (2x)',
+        value: step.fast !== undefined && step.fast < nodes.length ? `Node(${nodes[step.fast]?.val})` : (step.foundMiddle ? 'TAIL / NULL' : '-'),
+        type: 'Pointer',
+        role: 'Lead tracker moving 2 steps',
+        isChanged: true
+      });
+      vars.push({
+        name: 'middleFound',
+        value: step.foundMiddle ? 'TRUE' : 'Searching...',
+        type: 'Boolean',
+        role: 'Whether middle reached'
+      });
+    } else if (currentAlgoId === 'merge_sorted') {
+      const l1 = step.list1 || mergeList1;
+      const l2 = step.list2 || mergeList2;
+      vars.push({
+        name: 'p1',
+        value: step.p1 !== undefined && step.p1 < l1.length ? `val: ${l1[step.p1]}` : 'EOF',
+        type: 'Pointer',
+        role: 'Pointer in List 1'
+      });
+      vars.push({
+        name: 'p2',
+        value: step.p2 !== undefined && step.p2 < l2.length ? `val: ${l2[step.p2]}` : 'EOF',
+        type: 'Pointer',
+        role: 'Pointer in List 2'
+      });
+      vars.push({
+        name: 'mergedCount',
+        value: step.merged ? step.merged.length : 0,
+        type: 'Count',
+        role: 'Merged elements'
+      });
+    } else if (currentAlgoId === 'remove_nth') {
+      vars.push({
+        name: 'n',
+        value: step.safeN || nthParam,
+        type: 'Number',
+        role: 'Offset from end of list'
+      });
+      vars.push({
+        name: 'slow',
+        value: step.slow !== undefined && step.slow >= 0 && step.slow < nodes.length ? `Node(${nodes[step.slow]?.val})` : '-',
+        type: 'Pointer',
+        role: 'Predecessor pointer'
+      });
+      vars.push({
+        name: 'fast',
+        value: step.fast !== undefined && step.fast < nodes.length ? `Node(${nodes[step.fast]?.val})` : 'END',
+        type: 'Pointer',
+        role: 'Lead pointer creating gap'
+      });
+    } else if (currentAlgoId === 'palindrome') {
+      vars.push({
+        name: 'p1 (left)',
+        value: step.p1 !== undefined && step.p1 < nodes.length ? `Node(${nodes[step.p1]?.val})` : '-',
+        type: 'Pointer',
+        role: 'Inward left pointer'
+      });
+      vars.push({
+        name: 'p2 (right)',
+        value: step.p2 !== undefined && step.p2 < nodes.length ? `Node(${nodes[step.p2]?.val})` : '-',
+        type: 'Pointer',
+        role: 'Inward right pointer'
+      });
+      vars.push({
+        name: 'symmetric',
+        value: step.isSymmetric !== false ? 'YES' : 'NO',
+        type: 'Boolean',
+        role: 'Pair match status'
+      });
+    } else {
+      if (step.currIdx !== undefined && step.currIdx >= 0) {
+        vars.push({
+          name: 'curr',
+          value: `Node(${nodes[step.currIdx]?.val}) [idx ${step.currIdx}]`,
+          type: 'Pointer',
+          role: 'Current node being inspected',
+          isChanged: true
+        });
+      }
+      if (step.prevIdx !== undefined && step.prevIdx >= 0) {
+        vars.push({
+          name: 'prev',
+          value: `Node(${nodes[step.prevIdx]?.val}) [idx ${step.prevIdx}]`,
+          type: 'Pointer',
+          role: 'Predecessor node pointer'
+        });
+      }
+      vars.push({
+        name: 'listLength',
+        value: nodes.length,
+        type: 'Number',
+        role: 'Total nodes in list'
+      });
+    }
+
+    return vars;
+  }, [currentAlgoId, step, nodeList, mergeList1, mergeList2, nthParam]);
+
+  // Code Statement for Dry Run trace
+  const currentCodeStatement = useMemo(() => {
+    if (currentAlgoId === 'reverse') {
+      if (step.isFlipping) return 'curr.next = prev;';
+      if (step.status?.includes('next = curr.next')) return 'next = curr.next;';
+      if (step.status?.includes('Advancing')) return 'prev = curr; curr = next;';
+      return 'ListNode prev = null, curr = head;';
+    }
+    if (currentAlgoId === 'floyd_cycle') {
+      if (step.phase === 1) return 'slow = slow.next; fast = fast.next.next;';
+      if (step.phase === 2) return 'slow = slow.next; fast = fast.next;';
+      return 'ListNode slow = head, fast = head;';
+    }
+    if (currentAlgoId === 'middle_node' || currentAlgoId === 'middle') {
+      return 'slow = slow.next; fast = fast.next.next;';
+    }
+    if (currentAlgoId === 'merge_sorted') {
+      return 'if (p1.val <= p2.val) { curr.next = p1; p1 = p1.next; } else { curr.next = p2; p2 = p2.next; }';
+    }
+    if (currentAlgoId === 'remove_nth') {
+      if (step.bypassing) return 'slow.next = slow.next.next;';
+      if (step.phase === 'slide_window') return 'slow = slow.next; fast = fast.next;';
+      return 'fast = fast.next;';
+    }
+    if (currentAlgoId === 'palindrome') {
+      return 'if (left.val != right.val) return false;';
+    }
+    return 'curr = curr.next;';
+  }, [currentAlgoId, step]);
 
   return (
     <ResponsiveVisualizerShell
@@ -1917,7 +2853,7 @@ export default function LinkedListVisualizer() {
           <select
             value={currentAlgoId}
             onChange={(e) => navigate(`/visualizer/linkedlist/${e.target.value}`)}
-            className="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-cyan-500 font-mono"
+            className="bg-gray-100 dark:bg-[#5C4E49] border border-[#EBE0D3] dark:border-[#5C4E49] text-[#2D1F23] dark:text-[#F4EBC3] text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-cyan-500 font-mono font-bold"
           >
             {LINKED_LIST_ALGORITHMS.map(a => (
               <option key={a.id} value={a.id}>{a.name}</option>
@@ -1925,89 +2861,215 @@ export default function LinkedListVisualizer() {
           </select>
           <button
             onClick={() => setIsMuted(!isMuted)}
-            className="p-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 hover:text-white"
+            className="p-1.5 rounded-lg bg-gray-100 dark:bg-[#5C4E49] border border-[#EBE0D3] dark:border-[#5C4E49] text-[#2D1F23] dark:text-[#F0E2A4] hover:text-white transition-colors"
             title={isMuted ? "Unmute sound" : "Mute sound"}
           >
             {isMuted ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
           </button>
           <Link
             to="/visualizer/linkedlist"
-            className="text-xs px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-mono transition-colors"
+            className="text-xs px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-mono font-bold transition-colors"
           >
             All Algorithms
           </Link>
         </div>
       }
       controls={
-        <div className="flex flex-col gap-3.5 w-full">
-          {/* USER INTERACTION BAR: GOAL NODE & INSERT AT POSITION CONTROLS */}
-          <div className="flex flex-col md:flex-row flex-wrap items-center justify-between gap-3 p-3.5 bg-slate-900/80 rounded-2xl border border-slate-800 shadow-md">
-            
-            {/* 1. Goal Node Search Input & Trigger */}
+        <div className="flex flex-col gap-3 w-full">
+          {/* 1. FLEXIBLE DATA & PRESETS BAR */}
+          <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-white dark:bg-[#423834]/80 rounded-2xl border border-[#EBE0D3] dark:border-[#5C4E49] shadow-md">
+            {/* Custom List Input */}
+            <div className="flex items-center gap-2 flex-1 min-w-[260px]">
+              <span className="text-xs font-mono font-bold text-cyan-400 flex items-center gap-1">
+                <Layers className="w-3.5 h-3.5" /> List:
+              </span>
+              <input
+                type="text"
+                value={customListInput}
+                onChange={(e) => setCustomListInput(e.target.value)}
+                className="flex-1 bg-gray-100 dark:bg-[#5C4E49] border border-[#EBE0D3] dark:border-[#5C4E49] rounded-lg px-2.5 py-1 text-xs font-mono text-cyan-300 focus:outline-none focus:border-cyan-500"
+                placeholder="10, 20, 30, 40, 50"
+              />
+              <button
+                onClick={handleApplyCustomList}
+                className="px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-mono font-bold transition-all active:scale-95"
+              >
+                Apply
+              </button>
+              <button
+                onClick={handleRandomizeList}
+                className="px-2.5 py-1 bg-gray-100 dark:bg-[#5C4E49] hover:bg-slate-700 border border-[#EBE0D3] dark:border-[#5C4E49] text-[#2D1F23] dark:text-[#F0E2A4] rounded-lg text-xs font-mono flex items-center gap-1 transition-all active:scale-95"
+                title="Generate clean random list"
+              >
+                <Shuffle className="w-3.5 h-3.5" /> Random
+              </button>
+            </div>
+
+            {/* Quick Algorithm-Specific Adjusters */}
+            <div className="flex flex-wrap items-center gap-2">
+              {currentAlgoId === 'floyd_cycle' && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-mono text-purple-400 font-bold">Loop:</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max={Math.max(0, nodeList.length - 1)}
+                    value={cycleIndex}
+                    onChange={(e) => setCycleIndex(parseInt(e.target.value) || 0)}
+                    className="w-12 bg-gray-100 dark:bg-[#5C4E49] border border-[#EBE0D3] dark:border-[#5C4E49] rounded-lg px-2 py-1 text-xs font-mono text-purple-300"
+                  />
+                  <button
+                    onClick={handleToggleCycle}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold border transition-all ${
+                      hasCycle 
+                        ? 'bg-purple-500/20 border-purple-500/40 text-purple-300' 
+                        : 'bg-gray-100 dark:bg-[#5C4E49] border-[#EBE0D3] dark:border-[#5C4E49] text-gray-500 dark:text-[#BCA297]'
+                    }`}
+                  >
+                    Cycle: {hasCycle ? 'ON' : 'OFF'}
+                  </button>
+                </div>
+              )}
+
+              {currentAlgoId === 'remove_nth' && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-mono text-indigo-400 font-bold">N from end:</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max={nodeList.length}
+                    value={nthParam}
+                    onChange={(e) => setNthParam(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="w-12 bg-gray-100 dark:bg-[#5C4E49] border border-[#EBE0D3] dark:border-[#5C4E49] rounded-lg px-2 py-1 text-xs font-mono text-indigo-300"
+                  />
+                </div>
+              )}
+
+              {currentAlgoId === 'palindrome' && (
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => handleLoadPalindrome(true)}
+                    className="px-2 py-1 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 rounded-lg text-xs font-mono font-bold"
+                  >
+                    1,2,3,2,1
+                  </button>
+                  <button
+                    onClick={() => handleLoadPalindrome(false)}
+                    className="px-2 py-1 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-300 rounded-lg text-xs font-mono font-bold"
+                  >
+                    1,2,3,4,5
+                  </button>
+                </div>
+              )}
+
+              {currentAlgoId === 'delete_val' && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-mono text-rose-400 font-bold">Target Val:</span>
+                  <input
+                    type="number"
+                    value={deleteTarget}
+                    onChange={(e) => setDeleteTarget(e.target.value)}
+                    className="w-14 bg-gray-100 dark:bg-[#5C4E49] border border-[#EBE0D3] dark:border-[#5C4E49] rounded-lg px-2 py-1 text-xs font-mono text-rose-300"
+                  />
+                  <button
+                    onClick={handleDeleteTargetVal}
+                    className="px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-300 rounded-lg text-xs font-mono font-bold"
+                  >
+                    Delete Val
+                  </button>
+                </div>
+              )}
+
+              {currentAlgoId === 'lru_cache' && (
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => handleLruOp('put', 'A', 100)}
+                    className="px-2 py-1 bg-gray-100 dark:bg-[#5C4E49] hover:bg-slate-700 text-cyan-300 rounded-lg text-xs font-mono"
+                  >
+                    PUT(A)
+                  </button>
+                  <button
+                    onClick={() => handleLruOp('get', 'A')}
+                    className="px-2 py-1 bg-gray-100 dark:bg-[#5C4E49] hover:bg-slate-700 text-emerald-300 rounded-lg text-xs font-mono"
+                  >
+                    GET(A)
+                  </button>
+                  <button
+                    onClick={() => handleLruOp('put', 'X', 999)}
+                    className="px-2 py-1 bg-gray-100 dark:bg-[#5C4E49] hover:bg-slate-700 text-purple-300 rounded-lg text-xs font-mono"
+                  >
+                    PUT(X)
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 2. NODE MANIPULATION BAR (Add, Delete, Search) */}
+          <div className="flex flex-col md:flex-row flex-wrap items-center justify-between gap-3 p-3 bg-white dark:bg-[#423834]/80 rounded-2xl border border-[#EBE0D3] dark:border-[#5C4E49] shadow-md">
+            {/* Search Goal Node */}
             <div className="flex items-center gap-2">
               <span className="text-xs font-mono font-bold text-amber-400 flex items-center gap-1">
-                <Target className="w-3.5 h-3.5" /> Goal Node:
+                <Target className="w-3.5 h-3.5" /> Goal:
               </span>
               <input
                 type="number"
                 value={goalNodeVal}
                 onChange={(e) => setGoalNodeVal(e.target.value)}
-                className="w-16 bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono text-amber-300 focus:outline-none focus:border-amber-500"
-                placeholder="48"
+                className="w-16 bg-gray-100 dark:bg-[#5C4E49] border border-[#EBE0D3] dark:border-[#5C4E49] rounded-lg px-2.5 py-1 text-xs font-mono text-amber-300 focus:outline-none focus:border-amber-500"
+                placeholder="40"
               />
               <button
                 onClick={handleSearchGoalNode}
                 className="px-3 py-1 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 rounded-lg text-xs font-mono font-bold flex items-center gap-1 transition-all active:scale-95"
               >
-                <Search className="w-3.5 h-3.5" /> Find Goal
+                <Search className="w-3.5 h-3.5" /> Find
               </button>
             </div>
 
-            {/* 2. Add Node with Value & Position Input */}
+            {/* Add Node */}
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs font-mono font-bold text-cyan-400 flex items-center gap-1">
-                <Plus className="w-3.5 h-3.5" /> Add Node:
+                <Plus className="w-3.5 h-3.5" /> Add:
               </span>
               <input
                 type="number"
                 value={nodeValToAdd}
                 onChange={(e) => setNodeValToAdd(e.target.value)}
-                className="w-14 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-xs font-mono text-cyan-300 focus:outline-none focus:border-cyan-500"
+                className="w-14 bg-gray-100 dark:bg-[#5C4E49] border border-[#EBE0D3] dark:border-[#5C4E49] rounded-lg px-2 py-1 text-xs font-mono text-cyan-300 focus:outline-none focus:border-cyan-500"
                 placeholder="Val"
-                title="Node Value to add"
               />
-              <span className="text-xs font-mono text-slate-400">at Pos:</span>
+              <span className="text-xs font-mono text-gray-500 dark:text-[#BCA297]">at:</span>
               <input
                 type="number"
                 min="0"
                 max={nodeList.length}
                 value={nodePositionToAdd}
                 onChange={(e) => setNodePositionToAdd(e.target.value)}
-                className="w-12 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-500"
+                className="w-12 bg-gray-100 dark:bg-[#5C4E49] border border-[#EBE0D3] dark:border-[#5C4E49] rounded-lg px-2 py-1 text-xs font-mono text-[#2D1F23] dark:text-[#F4EBC3] focus:outline-none focus:border-cyan-500"
                 placeholder="Pos"
-                title="Position / Index to insert"
               />
               <button
                 onClick={handleInsertAtPosition}
                 className="px-2.5 py-1 bg-cyan-600/30 hover:bg-cyan-600/40 border border-cyan-500 text-cyan-200 rounded-lg text-xs font-mono font-bold transition-all active:scale-95"
               >
-                Insert at Pos
+                Insert
               </button>
               <button
                 onClick={handleInsertHead}
-                className="px-2 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-mono text-slate-300"
+                className="px-2 py-1 bg-gray-100 dark:bg-[#5C4E49] hover:bg-slate-700 border border-[#EBE0D3] dark:border-[#5C4E49] rounded-lg text-xs font-mono text-[#2D1F23] dark:text-[#F0E2A4]"
               >
                 Head
               </button>
               <button
                 onClick={handleInsertTail}
-                className="px-2 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-mono text-slate-300"
+                className="px-2 py-1 bg-gray-100 dark:bg-[#5C4E49] hover:bg-slate-700 border border-[#EBE0D3] dark:border-[#5C4E49] rounded-lg text-xs font-mono text-[#2D1F23] dark:text-[#F0E2A4]"
               >
                 Tail
               </button>
             </div>
 
-            {/* 3. Delete at Position */}
+            {/* Delete at Position */}
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-mono text-rose-400 font-bold flex items-center gap-1">
                 <Trash2 className="w-3.5 h-3.5" /> Del Pos:
@@ -2018,7 +3080,7 @@ export default function LinkedListVisualizer() {
                 max={Math.max(0, nodeList.length - 1)}
                 value={positionToDelete}
                 onChange={(e) => setPositionToDelete(e.target.value)}
-                className="w-12 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-xs font-mono text-rose-300 focus:outline-none focus:border-rose-500"
+                className="w-12 bg-gray-100 dark:bg-[#5C4E49] border border-[#EBE0D3] dark:border-[#5C4E49] rounded-lg px-2 py-1 text-xs font-mono text-rose-300 focus:outline-none focus:border-rose-500"
               />
               <button
                 onClick={handleDeleteAtPosition}
@@ -2029,7 +3091,7 @@ export default function LinkedListVisualizer() {
             </div>
           </div>
 
-          {/* Core Playback Controller with Exact Prop Binding */}
+          {/* 3. CORE PLAYBACK BAR */}
           <VisualizerPlaybackBar
             isPlaying={isPlaying}
             onPlay={handlePlay}
@@ -2042,62 +3104,43 @@ export default function LinkedListVisualizer() {
             currentStep={currentStepIdx}
             totalSteps={steps.length}
             stepDescription={step.status || ''}
+            isVoiceEnabled={isVoiceEnabled}
+            onToggleVoice={() => setIsVoiceEnabled(!isVoiceEnabled)}
+          />
+        </div>
+      }
+      rightPanel={
+        <div className="flex flex-col gap-3">
+          <DryRunVariableTracker
+            title={`${currentAlgo.name} — Dry Run`}
+            stepNumber={currentStepIdx + 1}
+            totalSteps={Math.max(1, steps.length)}
+            actionBadge={(() => {
+              const h = getLinkedListHUDInfo(currentAlgoId, step, step.nodes || nodeList);
+              const IconComp = h.icon;
+              return { 
+                label: h.badge, 
+                icon: IconComp ? <IconComp className="w-3.5 h-3.5" /> : null, 
+                bg: h.bg 
+              };
+            })()}
+            codeStatement={currentCodeStatement}
+            explanation={(() => {
+              const h = getLinkedListHUDInfo(currentAlgoId, step, step.nodes || nodeList);
+              return h.why;
+            })()}
+            variables={trackedVariables}
+            isVoiceEnabled={isVoiceEnabled}
+            onToggleVoice={() => setIsVoiceEnabled(!isVoiceEnabled)}
           />
         </div>
       }
     >
-      <div className="flex flex-col gap-6 w-full">
-        {/* Step Status Callout */}
-        <div className="p-3.5 bg-slate-900/90 border border-cyan-500/30 rounded-xl flex items-start gap-3 shadow-lg">
-          <Activity className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
-          <div className="flex flex-col">
-            <span className="text-xs font-mono text-cyan-400 font-bold uppercase tracking-wider">
-              Step {currentStepIdx + 1} of {Math.max(1, steps.length)}
-            </span>
-            <span className="text-sm font-mono text-slate-200 mt-0.5 leading-relaxed">
-              {step.status || "Click Play or Step Forward to start simulation."}
-            </span>
-          </div>
-        </div>
-
-        {/* Dynamic Canvas */}
-        <div className="min-h-[280px] flex items-center justify-center bg-slate-950/60 border border-slate-800/80 rounded-2xl p-6 relative overflow-hidden backdrop-blur-sm">
+      {/* PURE VISUALIZATION STAGE (HERO, BIGGER, UNOBSTRUCTED, ZERO TEXT CLUTTER) */}
+      <div className="w-full h-full flex-1 flex flex-col p-3 sm:p-5 overflow-hidden">
+        <div className="w-full h-full flex-1 min-h-[580px] flex items-center justify-center bg-white/80 dark:bg-[#423834] border border-[#EBE0D3] dark:border-[#5C4E49] rounded-3xl p-6 relative overflow-x-auto shadow-sm backdrop-blur-sm transition-colors">
           {renderCanvas()}
         </div>
-
-        {/* Intuition (ELI5) Card */}
-        {INTUITIONS[currentAlgoId] && (
-          <div className="p-5 bg-gradient-to-br from-slate-900/90 to-slate-950/90 border border-slate-800 rounded-2xl shadow-xl flex flex-col gap-4">
-            <div className="flex items-center gap-2 text-amber-400 font-mono font-bold text-sm">
-              <Lightbulb className="w-5 h-5" /> Intuition & ELI5: {currentAlgo.name}
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-3.5 bg-slate-900/60 border border-slate-800/80 rounded-xl">
-                <span className="text-xs font-mono font-bold text-cyan-400 block mb-1">How To Think About It</span>
-                <p className="text-xs text-slate-300 leading-relaxed">{INTUITIONS[currentAlgoId].concept}</p>
-              </div>
-              <div className="p-3.5 bg-slate-900/60 border border-slate-800/80 rounded-xl">
-                <span className="text-xs font-mono font-bold text-emerald-400 block mb-1">Why It Works</span>
-                <p className="text-xs text-slate-300 leading-relaxed">{INTUITIONS[currentAlgoId].whyItWorks}</p>
-              </div>
-              <div className="p-3.5 bg-slate-900/60 border border-slate-800/80 rounded-xl">
-                <span className="text-xs font-mono font-bold text-amber-400 block mb-1">Real-World Metaphor</span>
-                <p className="text-xs text-slate-300 leading-relaxed">{INTUITIONS[currentAlgoId].analogy}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Complexity Badges */}
-        <div className="flex flex-wrap gap-4 items-center">
-          <ComplexityBadge type="time" complexity={currentAlgo.complexity?.time?.average || currentAlgo.tag} />
-          <ComplexityBadge type="space" complexity={currentAlgo.complexity?.space || "O(1)"} />
-        </div>
-
-        {/* Code Inspector */}
-        {CODE_SNIPPETS[currentAlgoId] && (
-          <CodeInspector snippets={CODE_SNIPPETS[currentAlgoId]} />
-        )}
       </div>
     </ResponsiveVisualizerShell>
   );

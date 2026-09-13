@@ -60,7 +60,7 @@ export default function GameWorld() {
 
   if (activeQuiz) {
     return (
-      <div className="w-full min-h-screen bg-[#FDFBF7] dark:bg-[#121212] font-sans">
+      <div className="w-full min-h-screen bg-[#FAF7F2] dark:bg-[#331921] font-sans">
         <QuizRunner 
           subject={activeQuiz.subject}
           levelId={activeQuiz.level}
@@ -73,7 +73,7 @@ export default function GameWorld() {
   }
 
   if (loading) {
-    return <div className="w-full min-h-screen bg-[#FDFBF7] dark:bg-[#121212] flex items-center justify-center text-gray-900 dark:text-white">Loading Assessment Center...</div>;
+    return <div className="w-full min-h-screen bg-[#FAF7F2] dark:bg-[#331921] flex items-center justify-center text-[#2D1F23] dark:text-[#F4EBC3]">Loading Assessment Center...</div>;
   }
 
   // Sidebar navigation items
@@ -87,15 +87,15 @@ export default function GameWorld() {
   ];
 
   return (
-    <div className="flex h-screen bg-[#FDFBF7] dark:bg-[#121212] text-gray-900 dark:text-gray-100 font-sans overflow-hidden">
+    <div className="flex h-screen bg-[#FAF7F2] dark:bg-[#331921] text-[#2D1F23] dark:text-[#F4EBC3] font-sans overflow-hidden">
       
       {/* Left Sidebar (Desktop) */}
-      <aside className="hidden md:flex w-64 bg-white dark:bg-[#1A1A1A] border-r border-[#EBE0D3] dark:border-[#333] flex-col shrink-0">
-        <div className="p-6 border-b border-[#EBE0D3] dark:border-[#333] flex items-center gap-3">
-          <div className="bg-[#BC4A54] p-2 rounded-lg">
+      <aside className="hidden md:flex w-64 bg-white dark:bg-[#423834] border-r border-[#EBE0D3] dark:border-[#5C4E49] dark:border-[#5C4E49] flex-col shrink-0">
+        <div className="p-6 border-b border-[#EBE0D3] dark:border-[#5C4E49] dark:border-[#5C4E49] flex items-center gap-3">
+          <div className="bg-[#AB526B] p-2 rounded-lg">
             <Code2 size={24} className="text-white" />
           </div>
-          <span className="text-xl font-bold text-[#BC4A54] dark:text-white tracking-wide">Code Nova</span>
+          <span className="text-xl font-bold text-[#AB526B] dark:text-white tracking-wide">Code Nova</span>
         </div>
         <nav className="flex-1 py-6 flex flex-col gap-2">
           {navItems.map((item, i) => (
@@ -103,7 +103,7 @@ export default function GameWorld() {
               key={i} 
               onClick={() => setActiveTab(item.name)}
               className={`flex items-center gap-3 px-6 py-3 cursor-pointer transition-colors ${
-                activeTab === item.name ? 'bg-[#FDFBF7] dark:bg-[#252525] border-l-4 border-[#BC4A54] text-[#BC4A54] font-bold' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-[#252525]'
+                activeTab === item.name ? 'bg-[#FAF7F2] dark:bg-[#5C4E49] border-l-4 border-[#AB526B] text-[#AB526B] font-bold' : 'text-[#2D1F23]/60 dark:text-[#BCA297] hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-[#5C4E49]'
               }`}
             >
               {item.icon}
@@ -111,8 +111,8 @@ export default function GameWorld() {
             </div>
           ))}
         </nav>
-        <div className="px-6 py-4 border-t border-[#EBE0D3] dark:border-[#333] mt-auto">
-          <button onClick={() => window.location.href="/host"} className="w-full bg-[#BC4A54] hover:bg-[#a03e48] text-white font-bold py-3 rounded-lg transition-colors text-sm shadow-lg shadow-[#BC4A54]/20">Host Competition</button>
+        <div className="px-6 py-4 border-t border-[#EBE0D3] dark:border-[#5C4E49] dark:border-[#5C4E49] mt-auto">
+          <button onClick={() => window.location.href="/host"} className="w-full bg-[#AB526B] hover:bg-[#a03e48] text-white font-bold py-3 rounded-lg transition-colors text-sm shadow-lg shadow-[#AB526B]/20">Host Competition</button>
         </div>
       </aside>
 
@@ -120,25 +120,25 @@ export default function GameWorld() {
       <main className="flex-1 flex flex-col h-full overflow-y-auto relative">
         
         {/* Top Navbar */}
-        <header className="h-16 bg-white dark:bg-[#1A1A1A] border-b border-[#EBE0D3] dark:border-[#333] flex items-center justify-between px-4 md:px-8 shrink-0">
+        <header className="h-16 bg-white dark:bg-[#423834] border-b border-[#EBE0D3] dark:border-[#5C4E49] dark:border-[#5C4E49] flex items-center justify-between px-4 md:px-8 shrink-0">
           <div className="flex items-center gap-2 md:gap-6 text-sm font-medium">
             <button 
-              className="md:hidden text-gray-900 dark:text-white p-2" 
+              className="md:hidden text-[#2D1F23] dark:text-[#F4EBC3] p-2" 
               onClick={() => setIsMobileMenuOpen(true)}
             >
               <Menu size={24} />
             </button>
-            <span className="text-[#BC4A54] cursor-pointer hidden md:flex items-center gap-2 border-b-2 border-[#BC4A54] h-16"><Database size={16}/> Visualizers</span>
-            <span className="text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-900 dark:text-gray-100 hidden md:flex items-center gap-2 h-16"><Code2 size={16}/> Sandbox</span>
+            <span className="text-[#AB526B] cursor-pointer hidden md:flex items-center gap-2 border-b-2 border-[#AB526B] h-16"><Database size={16}/> Visualizers</span>
+            <span className="text-[#2D1F23]/60 dark:text-[#BCA297] cursor-pointer hover:text-[#2D1F23] dark:text-[#F4EBC3] hidden md:flex items-center gap-2 h-16"><Code2 size={16}/> Sandbox</span>
           </div>
           <div className="flex items-center gap-3 md:gap-6">
-            <button onClick={() => navigate('/')} className="text-[#BC4A54] hover:text-[#BCA297] text-sm font-bold hidden md:flex items-center gap-2">
+            <button onClick={() => navigate('/')} className="text-[#AB526B] hover:text-[#BCA297] text-sm font-bold hidden md:flex items-center gap-2">
               <ArrowLeft size={16} /> Exit
             </button>
-            <div className="flex items-center gap-2 md:gap-3 bg-[#FDFBF7] dark:bg-[#252525] px-3 py-1.5 md:px-4 md:py-2 rounded-full border border-[#EBE0D3] dark:border-[#333]">
-              <div className="bg-[#D3DFC8] dark:bg-[#3A4A2F] p-1 rounded-full"><Star size={12} md:size={14} className="text-gray-900 dark:text-white fill-gray-900 dark:fill-white" /></div>
+            <div className="flex items-center gap-2 md:gap-3 bg-[#FAF7F2] dark:bg-[#5C4E49] px-3 py-1.5 md:px-4 md:py-2 rounded-full border border-[#EBE0D3] dark:border-[#5C4E49] dark:border-[#5C4E49]">
+              <div className="bg-[#D3DFC8] dark:bg-[#3A4A2F] p-1 rounded-full"><Star size={12} md:size={14} className="text-[#2D1F23] dark:text-[#F4EBC3] fill-gray-900 dark:fill-white" /></div>
               <div className="flex flex-col">
-                <span className="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase leading-none">Total XP</span>
+                <span className="text-[10px] text-[#2D1F23]/60 dark:text-[#BCA297] font-bold uppercase leading-none">Total XP</span>
                 <span className="text-xs md:text-sm font-black text-gray-900 dark:text-[#D3DFC8] leading-tight">{totalXP.toLocaleString()} XP</span>
               </div>
             </div>
@@ -149,15 +149,15 @@ export default function GameWorld() {
         {isMobileMenuOpen && (
           <div className="fixed inset-0 z-50 flex md:hidden">
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}></div>
-            <aside className="w-64 bg-white dark:bg-[#1A1A1A] border-r border-[#EBE0D3] dark:border-[#333] flex flex-col h-full relative z-10 shadow-2xl">
-              <div className="p-6 border-b border-[#EBE0D3] dark:border-[#333] flex items-center justify-between">
+            <aside className="w-64 bg-white dark:bg-[#423834] border-r border-[#EBE0D3] dark:border-[#5C4E49] dark:border-[#5C4E49] flex flex-col h-full relative z-10 shadow-2xl">
+              <div className="p-6 border-b border-[#EBE0D3] dark:border-[#5C4E49] dark:border-[#5C4E49] flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="bg-[#BC4A54] p-2 rounded-lg">
+                  <div className="bg-[#AB526B] p-2 rounded-lg">
                     <Code2 size={24} className="text-white" />
                   </div>
-                  <span className="text-xl font-bold text-[#BC4A54] dark:text-white tracking-wide">Code Nova</span>
+                  <span className="text-xl font-bold text-[#AB526B] dark:text-white tracking-wide">Code Nova</span>
                 </div>
-                <button onClick={() => setIsMobileMenuOpen(false)} className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                <button onClick={() => setIsMobileMenuOpen(false)} className="text-[#2D1F23]/60 dark:text-[#BCA297] hover:text-gray-900 dark:hover:text-white">
                   <X size={24} />
                 </button>
               </div>
@@ -167,7 +167,7 @@ export default function GameWorld() {
                     key={i} 
                     onClick={() => { setActiveTab(item.name); setIsMobileMenuOpen(false); }}
                     className={`flex items-center gap-3 px-6 py-3 cursor-pointer transition-colors ${
-                      activeTab === item.name ? 'bg-[#FDFBF7] dark:bg-[#252525] border-l-4 border-[#BC4A54] text-[#BC4A54] font-bold' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-[#252525]'
+                      activeTab === item.name ? 'bg-[#FAF7F2] dark:bg-[#5C4E49] border-l-4 border-[#AB526B] text-[#AB526B] font-bold' : 'text-[#2D1F23]/60 dark:text-[#BCA297] hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-[#5C4E49]'
                     }`}
                   >
                     {item.icon}
@@ -175,11 +175,11 @@ export default function GameWorld() {
                   </div>
                 ))}
               </nav>
-              <div className="px-6 py-4 border-t border-[#EBE0D3] dark:border-[#333]">
+              <div className="px-6 py-4 border-t border-[#EBE0D3] dark:border-[#5C4E49] dark:border-[#5C4E49]">
                 <button onClick={() => navigate('/')} className="w-full bg-[#333] hover:bg-[#444] text-white font-bold py-3 rounded-lg transition-colors text-sm mb-2 flex items-center justify-center gap-2">
                   <ArrowLeft size={16} /> Exit Game
                 </button>
-                <button onClick={() => window.location.href="/host"} className="w-full bg-[#BC4A54] hover:bg-[#a03e48] text-white font-bold py-3 rounded-lg transition-colors text-sm shadow-lg shadow-[#BC4A54]/20">Host Competition</button>
+                <button onClick={() => window.location.href="/host"} className="w-full bg-[#AB526B] hover:bg-[#a03e48] text-white font-bold py-3 rounded-lg transition-colors text-sm shadow-lg shadow-[#AB526B]/20">Host Competition</button>
               </div>
             </aside>
           </div>
@@ -192,8 +192,8 @@ export default function GameWorld() {
           <div className="p-4 md:p-8 max-w-7xl mx-auto w-full flex flex-col lg:flex-row gap-8">
             <div className="flex-1">
               <div className="mb-8">
-                <h1 className="text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tight">{activeTab}</h1>
-                <p className="text-gray-500 dark:text-gray-400 mt-2">Manage your progression and activities.</p>
+                <h1 className="text-3xl font-black text-[#2D1F23] dark:text-[#F4EBC3] uppercase tracking-tight">{activeTab}</h1>
+                <p className="text-[#2D1F23]/60 dark:text-[#BCA297] mt-2">Manage your progression and activities.</p>
               </div>
 
           {activeTab === 'Assessment' && (
@@ -204,18 +204,18 @@ export default function GameWorld() {
                 const currentLevelId = unlockedLevels[subject.id] || 1;
                 
                 return (
-                  <div key={subject.id} className="bg-white dark:bg-[#1A1A1A] border border-[#EBE0D3] dark:border-[#333] rounded-xl p-6 flex flex-col h-[320px] transition-all hover:border-[#BC4A54]/50">
+                  <div key={subject.id} className="bg-white dark:bg-[#423834] border border-[#EBE0D3] dark:border-[#5C4E49] dark:border-[#5C4E49] rounded-xl p-6 flex flex-col h-[320px] transition-all hover:border-[#AB526B]/50">
                     <div className="flex items-start justify-between mb-4">
-                      <div className={`p-3 rounded-lg ${isDs ? 'bg-[#BC4A54]/20 text-[#BC4A54]' : isAlgo ? 'bg-[#F0E2A4]/20 text-[#F0E2A4]' : 'bg-[#D3DFC8] dark:bg-[#3A4A2F]/20 text-[#BCA297]'}`}>
+                      <div className={`p-3 rounded-lg ${isDs ? 'bg-[#AB526B]/20 text-[#AB526B]' : isAlgo ? 'bg-[#F0E2A4]/20 text-[#F0E2A4]' : 'bg-[#D3DFC8] dark:bg-[#3A4A2F]/20 text-[#BCA297]'}`}>
                         {isDs ? <Database size={24} /> : isAlgo ? <Code2 size={24} /> : <BookOpen size={24} />}
                       </div>
-                      <div className="bg-[#FDFBF7] dark:bg-[#252525] px-3 py-1 rounded text-xs font-bold text-gray-700 dark:text-gray-300">
+                      <div className="bg-[#FAF7F2] dark:bg-[#5C4E49] px-3 py-1 rounded text-xs font-bold text-[#2D1F23] dark:text-[#F0E2A4]">
                         Level {currentLevelId}/6
                       </div>
                     </div>
                     
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{subject.title}</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 flex-1">
+                    <h3 className="text-xl font-bold text-[#2D1F23] dark:text-[#F4EBC3] mb-2">{subject.title}</h3>
+                    <p className="text-sm text-[#2D1F23]/60 dark:text-[#BCA297] mb-6 flex-1">
                       {isDs ? "Master fundamental data structures." : isAlgo ? "Learn essential algorithmic patterns." : "Understand Object-Oriented paradigms."}
                     </p>
                     
@@ -232,10 +232,10 @@ export default function GameWorld() {
           )}
 
           {activeTab === 'In-Progress Tests' && (
-            <div className="border border-[#EBE0D3] dark:border-[#333] rounded-xl bg-white dark:bg-[#1A1A1A] overflow-hidden p-12 flex flex-col items-center justify-center text-center">
+            <div className="border border-[#EBE0D3] dark:border-[#5C4E49] dark:border-[#5C4E49] rounded-xl bg-white dark:bg-[#423834] overflow-hidden p-12 flex flex-col items-center justify-center text-center">
               <Clock size={48} className="text-slate-500 mb-4" />
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">No In-Progress Tests</h2>
-              <p className="text-gray-500 dark:text-gray-400 max-w-md">You currently have no paused or ongoing assessments. Go to the Assessment tab to start a new level.</p>
+              <h2 className="text-xl font-bold text-[#2D1F23] dark:text-[#F4EBC3] mb-2">No In-Progress Tests</h2>
+              <p className="text-[#2D1F23]/60 dark:text-[#BCA297] max-w-md">You currently have no paused or ongoing assessments. Go to the Assessment tab to start a new level.</p>
               <button onClick={() => setActiveTab('Assessment')} className="mt-6 bg-[#C5CEAE] text-[#121212] px-6 py-2 rounded-lg font-bold hover:bg-[#F0E2A4] transition-colors">
                 Go to Assessments
               </button>
@@ -243,11 +243,11 @@ export default function GameWorld() {
           )}
 
           {activeTab === 'Past Results' && (
-            <div className="border border-[#EBE0D3] dark:border-[#333] rounded-xl bg-white dark:bg-[#1A1A1A] overflow-hidden">
+            <div className="border border-[#EBE0D3] dark:border-[#5C4E49] dark:border-[#5C4E49] rounded-xl bg-white dark:bg-[#423834] overflow-hidden">
               <div className="p-0">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-[#FDFBF7] dark:bg-[#252525] text-xs uppercase text-gray-500 dark:text-gray-400 border-b border-[#EBE0D3] dark:border-[#333]">
+                    <tr className="bg-[#FAF7F2] dark:bg-[#5C4E49] text-xs uppercase text-[#2D1F23]/60 dark:text-[#BCA297] border-b border-[#EBE0D3] dark:border-[#5C4E49] dark:border-[#5C4E49]">
                       <th className="px-6 py-4 font-semibold">Title</th>
                       <th className="px-6 py-4 font-semibold">Status</th>
                       <th className="px-6 py-4 font-semibold">Completion Date</th>
@@ -256,8 +256,8 @@ export default function GameWorld() {
                   <tbody>
                     {completedLevels.map((lvl, idx) => (
                       <tr key={idx} className="border-b border-[#BCA297]/10 hover:bg-[#202020] transition-colors">
-                        <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">{lvl.title}</td>
-                        <td className="px-6 py-4"><span className="text-xs font-bold text-[#BC4A54] bg-[#C5CEAE]/10 px-2 py-1 rounded">Passed</span></td>
+                        <td className="px-6 py-4 text-sm font-medium text-[#2D1F23] dark:text-[#F4EBC3]">{lvl.title}</td>
+                        <td className="px-6 py-4"><span className="text-xs font-bold text-[#AB526B] bg-[#C5CEAE]/10 px-2 py-1 rounded">Passed</span></td>
                         <td className="px-6 py-4 text-sm text-[#BCA297]">{lvl.date}</td>
                       </tr>
                     ))}
@@ -275,26 +275,26 @@ export default function GameWorld() {
               {competitions.map((comp, idx) => {
                 const isActive = comp.status === 'Active';
                 return (
-                  <div key={comp._id || idx} className="bg-white dark:bg-[#1A1A1A] border border-[#EBE0D3] dark:border-[#333] rounded-xl p-5 flex flex-col relative">
+                  <div key={comp._id || idx} className="bg-white dark:bg-[#423834] border border-[#EBE0D3] dark:border-[#5C4E49] dark:border-[#5C4E49] rounded-xl p-5 flex flex-col relative">
                     {isActive && (
                       <div className="absolute top-0 right-0 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg rounded-tr-xl flex items-center gap-1 animate-pulse">
                         <div className="w-1.5 h-1.5 rounded-full bg-white"></div> LIVE NOW
                       </div>
                     )}
                     <div className="flex justify-between items-start mb-2 pr-16">
-                      <h3 className="font-bold text-gray-900 dark:text-white text-base leading-tight">{comp.title}</h3>
+                      <h3 className="font-bold text-[#2D1F23] dark:text-[#F4EBC3] text-base leading-tight">{comp.title}</h3>
                     </div>
                     {comp.type === 'Global' && (
-                      <span className="inline-block bg-[#BC4A54] text-white text-[10px] font-bold px-2 py-0.5 rounded w-max mb-3">Global</span>
+                      <span className="inline-block bg-[#AB526B] text-white text-[10px] font-bold px-2 py-0.5 rounded w-max mb-3">Global</span>
                     )}
-                    <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1 mb-4 flex-1">
+                    <div className="text-xs text-[#2D1F23]/60 dark:text-[#BCA297] space-y-1 mb-4 flex-1">
                       <p>Date: <span className="text-gray-900 dark:text-[#D3DFC8]">{comp.dateString}</span></p>
                       {comp.prizePool && <p>Prize Pool: <span className="text-[#F0E2A4] font-bold">{comp.prizePool}</span></p>}
-                      {comp.difficulty && <p>Difficulty: <span className="text-[#BC4A54]">{comp.difficulty}</span></p>}
+                      {comp.difficulty && <p>Difficulty: <span className="text-[#AB526B]">{comp.difficulty}</span></p>}
                     </div>
                     
-                    <div className="mt-auto pt-4 border-t border-[#333]">
-                      <button onClick={() => setSelectedComp(comp)} className={`w-full text-xs font-bold py-2 px-3 rounded transition-colors ${comp.type === 'Global' ? 'bg-[#BC4A54] hover:bg-[#8e4257] text-white' : 'border border-[#BCA297] text-[#BCA297] hover:bg-[#D3DFC8] dark:bg-[#3A4A2F]/10'}`}>
+                    <div className="mt-auto pt-4 border-t border-[#5C4E49]">
+                      <button onClick={() => setSelectedComp(comp)} className={`w-full text-xs font-bold py-2 px-3 rounded transition-colors ${comp.type === 'Global' ? 'bg-[#AB526B] hover:bg-[#8E3B53] text-white' : 'border border-[#BCA297] text-[#BCA297] hover:bg-[#D3DFC8] dark:bg-[#3A4A2F]/10'}`}>
                         {comp.type === 'Global' ? 'View Competition' : 'Details'}
                       </button>
                     </div>
@@ -310,11 +310,11 @@ export default function GameWorld() {
           )}
 
           {activeTab === 'Leaderboards' && (
-            <div className="border border-[#EBE0D3] dark:border-[#333] rounded-xl bg-white dark:bg-[#1A1A1A] overflow-hidden">
+            <div className="border border-[#EBE0D3] dark:border-[#5C4E49] dark:border-[#5C4E49] rounded-xl bg-white dark:bg-[#423834] overflow-hidden">
               <div className="p-0">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-[#FDFBF7] dark:bg-[#252525] text-xs uppercase text-gray-500 dark:text-gray-400 border-b border-[#EBE0D3] dark:border-[#333]">
+                    <tr className="bg-[#FAF7F2] dark:bg-[#5C4E49] text-xs uppercase text-[#2D1F23]/60 dark:text-[#BCA297] border-b border-[#EBE0D3] dark:border-[#5C4E49] dark:border-[#5C4E49]">
                       <th className="px-6 py-4 font-semibold w-24 text-center">Rank</th>
                       <th className="px-6 py-4 font-semibold">Username</th>
                       <th className="px-6 py-4 font-semibold text-right">Total XP</th>
@@ -323,10 +323,10 @@ export default function GameWorld() {
                   <tbody>
                     {leaderboard.map((user, idx) => (
                       <tr key={idx} className="border-b border-[#BCA297]/10 hover:bg-[#202020] transition-colors">
-                        <td className="px-6 py-4 text-center font-bold text-gray-700 dark:text-gray-300">
-                          {idx === 0 ? <Medal size={18} className="inline text-yellow-400" /> : idx === 1 ? <Medal size={18} className="inline text-gray-700 dark:text-gray-300" /> : idx === 2 ? <Medal size={18} className="inline text-orange-400" /> : `#${idx + 1}`}
+                        <td className="px-6 py-4 text-center font-bold text-[#2D1F23] dark:text-[#F0E2A4]">
+                          {idx === 0 ? <Medal size={18} className="inline text-yellow-400" /> : idx === 1 ? <Medal size={18} className="inline text-[#2D1F23] dark:text-[#F0E2A4]" /> : idx === 2 ? <Medal size={18} className="inline text-orange-400" /> : `#${idx + 1}`}
                         </td>
-                        <td className="px-6 py-4 font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                        <td className="px-6 py-4 font-bold text-[#2D1F23] dark:text-[#F4EBC3] flex items-center gap-2">
                           <User size={14} className="text-slate-500" />
                           {user.username}
                         </td>
@@ -354,8 +354,8 @@ export default function GameWorld() {
                   />
                   
                   {/* Skill Badges */}
-                  <div className="bg-white dark:bg-[#1A1A1A] border border-[#EBE0D3] dark:border-[#333] rounded-xl p-5">
-                    <h3 className="text-gray-900 dark:text-white font-bold text-lg mb-4 flex items-center gap-2">
+                  <div className="bg-white dark:bg-[#423834] border border-[#EBE0D3] dark:border-[#5C4E49] dark:border-[#5C4E49] rounded-xl p-5">
+                    <h3 className="text-[#2D1F23] dark:text-[#F4EBC3] font-bold text-lg mb-4 flex items-center gap-2">
                       <Medal size={18} className="text-yellow-500" />
                       Skill Badges
                     </h3>
@@ -364,11 +364,11 @@ export default function GameWorld() {
                     ) : (
                       <div className="flex flex-wrap gap-3">
                         {userProfile.earnedBadges.map((badge, idx) => (
-                          <div key={idx} className="flex flex-col items-center bg-[#FDFBF7] dark:bg-[#252525] p-3 rounded-lg border border-slate-700/50 w-[100px] text-center" title={new Date(badge.awardedAt).toLocaleDateString()}>
+                          <div key={idx} className="flex flex-col items-center bg-[#FAF7F2] dark:bg-[#5C4E49] p-3 rounded-lg border border-slate-700/50 w-[100px] text-center" title={new Date(badge.awardedAt).toLocaleDateString()}>
                             <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mb-2 shadow-[0_0_15px_rgba(234,179,8,0.3)]">
-                              <Trophy size={24} className="text-gray-900 dark:text-white" />
+                              <Trophy size={24} className="text-[#2D1F23] dark:text-[#F4EBC3]" />
                             </div>
-                            <span className="text-[10px] font-bold text-gray-700 dark:text-gray-300 leading-tight">{badge.name}</span>
+                            <span className="text-[10px] font-bold text-[#2D1F23] dark:text-[#F0E2A4] leading-tight">{badge.name}</span>
                           </div>
                         ))}
                       </div>

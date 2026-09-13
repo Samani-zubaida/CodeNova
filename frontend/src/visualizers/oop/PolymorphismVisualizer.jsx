@@ -1,250 +1,185 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Terminal, ChevronDown, ChevronUp, Play, Plus, Trash2, Code2, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { 
+  User, Briefcase, Heart, Trophy, Music, Play, RotateCcw, Activity, Code2, Sparkles, CheckCircle2, Zap, ArrowDown
+} from 'lucide-react';
 import VisualizerNav from '../../components/layout/VisualizerNav';
 
-export default function PolymorphismVisualizer() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [shapesArray, setShapesArray] = useState(['Circle', 'Square', 'Triangle']);
-  const [activeIndex, setActiveIndex] = useState(null);
-  const [isIterating, setIsIterating] = useState(false);
-  const [drawnShapes, setDrawnShapes] = useState([]);
-  
-  // Console Output State
-  const [outputLines, setOutputLines] = useState([{msg: "> Polymorphism System Initialized.", isError: false}]);
-  const [isConsoleOpen, setIsConsoleOpen] = useState(true);
+export default function PolymorphismVisualizer({ isEmbedded = false }) {
+  const [activeRole, setActiveRole] = useState('developer'); // 'developer' | 'parent' | 'athlete' | 'musician'
+  const [activePulse, setActivePulse] = useState(null);
+  const [logMessage, setLogMessage] = useState("Polymorphism: 1 Person connected to 4 Subclass Forms in 1 line. Click any form to trigger performRole()!");
 
-  const logOutput = (msg, isError = false) => {
-    setOutputLines(prev => [...prev, { msg, isError }].slice(-8));
-  };
-
-  const handleAddShape = (type) => {
-    if (shapesArray.length >= 6) {
-      logOutput(`  Array full (max 6 items).`, true);
-      return;
+  const roles = [
+    {
+      id: 'developer',
+      title: 'Software Developer',
+      context: 'At Office',
+      emoji: '👨‍💻',
+      task: 'Build Web Apps 💻',
+      color: '#AB526B'
+    },
+    {
+      id: 'parent',
+      title: 'Loving Parent',
+      context: 'At Home',
+      emoji: '👨‍👩‍👧',
+      task: 'Cook & Care 🍲',
+      color: '#F0E2A4'
+    },
+    {
+      id: 'athlete',
+      title: 'Soccer Athlete',
+      context: 'On Field',
+      emoji: '⚽',
+      task: 'Score Goals ⚽',
+      color: '#C5CEAE'
+    },
+    {
+      id: 'musician',
+      title: 'Rock Musician',
+      context: 'On Stage',
+      emoji: '🎸',
+      task: 'Rock Out 🎸',
+      color: '#FAF7F2'
     }
-    setShapesArray([...shapesArray, type]);
-    logOutput(`> shapes.push(new ${type}())`, false);
-  };
+  ];
 
-  const handleRemoveShape = (index) => {
-    const newArr = [...shapesArray];
-    newArr.splice(index, 1);
-    setShapesArray(newArr);
-  };
+  const activeRoleObj = roles.find(r => r.id === activeRole);
 
-  const handleExecute = async () => {
-    if (isIterating || shapesArray.length === 0) return;
-    setIsIterating(true);
-    setDrawnShapes([]);
-    logOutput(`> renderShapes(shapes)`, false);
-    
-    for (let i = 0; i < shapesArray.length; i++) {
-      setActiveIndex(i);
-      logOutput(`  Iterating index [${i}]...`, false);
-      
-      await new Promise(r => setTimeout(r, 600));
-      
-      const type = shapesArray[i];
-      if (type === 'Circle') logOutput(`  shape.draw() -> Executing Circle's draw logic (rendering 360 degrees)`, false);
-      if (type === 'Square') logOutput(`  shape.draw() -> Executing Square's draw logic (rendering 4 equal sides)`, false);
-      if (type === 'Triangle') logOutput(`  shape.draw() -> Executing Triangle's draw logic (rendering 3 connected points)`, false);
-      if (type === 'Rectangle') logOutput(`  shape.draw() -> Executing Rectangle's draw logic (rendering 2 pairs of equal sides)`, false);
-      
-      setDrawnShapes(prev => [...prev, shapesArray[i]]);
-      
-      await new Promise(r => setTimeout(r, 1000));
-    }
-    
-    setActiveIndex(null);
-    setIsIterating(false);
-    logOutput(`> Execution complete.`, false);
-  };
+  const handleExecuteRole = async (roleId) => {
+    if (activePulse) return;
+    setActiveRole(roleId);
+    setActivePulse(roleId);
 
-  const getShapeClasses = (type) => {
-    if (type === 'Circle') return "rounded-full bg-red-500 w-24 h-24 shadow-[0_0_20px_rgba(239,68,68,0.5)]";
-    if (type === 'Square') return "rounded-lg bg-blue-500 w-24 h-24 shadow-[0_0_20px_rgba(59,130,246,0.5)]";
-    if (type === 'Rectangle') return "rounded-lg bg-yellow-500 w-32 h-20 shadow-[0_0_20px_rgba(234,179,8,0.5)]";
-    if (type === 'Triangle') return "w-0 h-0 border-l-[48px] border-l-transparent border-r-[48px] border-r-transparent border-b-[96px] border-b-green-500 drop-shadow-[0_0_20px_rgba(34,197,94,0.5)]";
-    return "";
+    const targetRole = roles.find(r => r.id === roleId);
+    setLogMessage(`⚡ DYNAMIC DISPATCH: Calling alex.performRole() -> Flowing down connection to ${targetRole.title}...`);
+
+    await new Promise(r => setTimeout(r, 1500));
+
+    setLogMessage(`✅ EXECUTED: ${targetRole.title} performed "${targetRole.task}"!`);
+    setActivePulse(null);
   };
 
   return (
-    <div className="fixed top-[64px] bottom-0 left-0 right-0 bg-gray-50 dark:bg-[#09090b] flex flex-col lg:flex-row overflow-hidden">
-      
-      {/* Left Sidebar: Controls & Output */}
-      <div className={`w-full lg:w-[350px] xl:w-[400px] h-1/2 lg:h-full bg-white/80 dark:bg-black/40 backdrop-blur-xl border-r border-b lg:border-b-0 border-gray-200 dark:border-white/10 shadow-2xl flex flex-col z-10 shrink-0 overflow-y-auto transition-all duration-300 ${isSidebarOpen ? "ml-0" : "-ml-[100%] lg:-ml-[400px]"}`}>
-        <div className="p-4 lg:p-6 flex flex-col gap-6 lg:gap-8 h-full">
-          
-          <VisualizerNav currentPath="/visualizer/polymorphism" />
+    <div className="w-full flex-1 flex flex-col items-center justify-between text-[#FAF7F2] font-sans select-none space-y-3">
+      {!isEmbedded && <VisualizerNav title="Polymorphism: Person & 4 Connected Forms" />}
 
+      {/* TOP HEADER */}
+      <div className="w-full max-w-6xl bg-[#331921]/90 backdrop-blur-xl border-2 border-[#C5CEAE] rounded-2xl p-4 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-3 rounded-2xl bg-[#C5CEAE] text-[#331921] font-extrabold shadow-lg">
+            <User size={26} />
+          </div>
           <div>
-            <h1 className="text-2xl lg:text-3xl font-black text-[var(--color-nova-brown)] tracking-tight mb-2">Polymorphism</h1>
-            <p className="text-xs lg:text-sm text-gray-500 font-medium">Treating instances of different subclasses through the same base class interface. One method call, different behaviors.</p>
+            <h3 className="text-base font-mono font-extrabold text-[#F0E2A4] uppercase tracking-wider">
+              POLYMORPHISM: 1 PERSON CONNECTED TO 4 FORMS
+            </h3>
+            <p className="text-xs text-[#BCA297]">
+              One Base Identity (<span className="text-[#F0E2A4] font-bold">Person alex</span>) connected to 4 Subclass Forms in 1 single line.
+            </p>
           </div>
-
-          {/* Configuration */}
-          <div className="flex flex-col gap-4 relative">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-200 dark:border-white/10 pb-2">Shape Array (Type: Shape[])</h3>
-            
-            <div className="flex flex-col gap-3 bg-black/5 dark:bg-white/5 p-4 rounded-lg border border-gray-200 dark:border-white/5">
-              <div className="grid grid-cols-2 gap-2">
-                <button disabled={isIterating} onClick={() => handleAddShape('Circle')} className="bg-red-500 text-white rounded text-xs font-bold py-2 flex items-center justify-center gap-1 hover:brightness-110 disabled:opacity-50"><Plus size={12}/> Circle</button>
-                <button disabled={isIterating} onClick={() => handleAddShape('Square')} className="bg-blue-500 text-white rounded text-xs font-bold py-2 flex items-center justify-center gap-1 hover:brightness-110 disabled:opacity-50"><Plus size={12}/> Square</button>
-                <button disabled={isIterating} onClick={() => handleAddShape('Triangle')} className="bg-green-500 text-white rounded text-xs font-bold py-2 flex items-center justify-center gap-1 hover:brightness-110 disabled:opacity-50"><Plus size={12}/> Triangle</button>
-                <button disabled={isIterating} onClick={() => handleAddShape('Rectangle')} className="bg-yellow-500 text-white rounded text-xs font-bold py-2 flex items-center justify-center gap-1 hover:brightness-110 disabled:opacity-50"><Plus size={12}/> Rectangle</button>
-              </div>
-
-              <div className="flex gap-2 overflow-x-auto pb-2 mt-2 pt-2 border-t border-gray-200 dark:border-white/10 relative min-h-[90px] items-center">
-                <AnimatePresence>
-                  {shapesArray.map((shape, i) => (
-                    <motion.div 
-                      key={`${i}-${shape}`}
-                      initial={{ scale: 0 }}
-                      animate={{ scale: activeIndex === i ? 1.1 : 1, y: activeIndex === i ? -10 : 0 }}
-                      exit={{ scale: 0 }}
-                      className={`flex-shrink-0 w-20 h-20 rounded-xl flex flex-col items-center justify-center relative border-2 ${activeIndex === i ? 'border-[var(--color-nova-brown)] bg-[var(--color-nova-brown)]/20 shadow-[0_0_20px_rgba(217,119,87,0.3)]' : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-[#161b22]'}`}
-                    >
-                      <span className="text-[10px] font-bold text-gray-500">Shape</span>
-                      <span className={`text-xs font-mono font-bold mt-1 ${activeIndex === i ? 'text-[var(--color-nova-brown)]' : ''}`}>{shape}</span>
-                      {!isIterating && (
-                        <button onClick={() => handleRemoveShape(i)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow hover:scale-110">
-                          <Trash2 size={10} />
-                        </button>
-                      )}
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-                {shapesArray.length === 0 && <span className="text-xs text-gray-500 italic">Empty Array</span>}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-4 relative">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-200 dark:border-white/10 pb-2">Polymorphic Function</h3>
-            
-            <div className="bg-[#0d1117] text-[#c9d1d9] p-4 rounded-xl font-mono text-xs leading-loose border border-white/10 relative shadow-inner">
-              <Code2 size={16} className="absolute top-4 right-4 text-gray-500" />
-              <span className="text-[#ff7b72]">function</span> <span className="text-[#d2a8ff]">renderShapes</span>(shapes) {'{'}<br/>
-              &nbsp;&nbsp;<span className="text-[#ff7b72]">for</span> (<span className="text-[#ff7b72]">let</span> shape <span className="text-[#ff7b72]">of</span> shapes) {'{'}<br/>
-              &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-[#8b949e] italic">// Same method call, different behavior!</span><br/>
-              &nbsp;&nbsp;&nbsp;&nbsp;<motion.span 
-                animate={{ backgroundColor: activeIndex !== null ? 'rgba(210,168,255,0.2)' : 'transparent' }}
-                className="inline-block px-1 rounded relative font-bold"
-              >
-                shape.<span className="text-[#d2a8ff]">draw</span>();
-                
-                {/* Method Call Animation packet */}
-                <AnimatePresence>
-                  {activeIndex !== null && (
-                    <motion.div 
-                      initial={{ opacity: 0, x: 0 }}
-                      animate={{ opacity: [0, 1, 0], x: 200 }}
-                      transition={{ duration: 0.6, ease: "easeOut" }}
-                      className="absolute top-1/2 -translate-y-1/2 left-full ml-2 text-[var(--color-nova-brown)] z-50 flex items-center gap-1 bg-white dark:bg-black px-2 py-0.5 rounded shadow-lg border border-[var(--color-nova-brown)]/30 font-bold text-[10px]"
-                    >
-                      <ArrowRight size={10} /> call()
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-                
-              </motion.span><br/>
-              &nbsp;&nbsp;{'}'}<br/>
-              {'}'}
-            </div>
-
-            <button 
-              disabled={isIterating || shapesArray.length === 0}
-              onClick={handleExecute}
-              className="bg-[var(--color-nova-brown)] text-white py-3 rounded-lg text-sm font-bold shadow-md hover:brightness-110 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 mt-2"
-            >
-              <Play size={16} /> Execute Loop
-            </button>
-          </div>
-          
-          <div className="mt-auto pt-8"></div>
         </div>
-      </div>
 
-      {/* Right Canvas: Visualization & Console */}
-      <div className="w-full lg:flex-1 h-1/2 lg:h-full flex flex-col relative overflow-hidden bg-gray-50/50 dark:bg-black/20">
-        {/* Sidebar Toggle Button */}
-        <button 
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="absolute top-4 left-4 z-50 p-2 bg-white/80 dark:bg-black/40 backdrop-blur border border-gray-200 dark:border-white/10 rounded shadow-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+        {/* Global Dispatch Button */}
+        <button
+          onClick={() => handleExecuteRole(activeRole)}
+          disabled={!!activePulse}
+          className="px-5 py-3 rounded-2xl bg-[#C5CEAE] hover:bg-[#A8B48D] text-[#331921] font-mono text-xs font-black shadow-xl transition-all flex items-center gap-2 disabled:opacity-40 hover:scale-105"
         >
-          {isSidebarOpen ? <ChevronLeft size={20} className="text-gray-600 dark:text-gray-300" /> : <ChevronRight size={20} className="text-gray-600 dark:text-gray-300" />}
+          <Play size={18} />
+          <span>RUN alex.performRole()</span>
         </button>
+      </div>
 
+      {/* TELEMETRY LOG BANNER */}
+      <div className="w-full max-w-6xl py-3 px-6 rounded-2xl bg-[#423834] border-2 border-[#5C4E49] text-center font-mono text-xs md:text-sm font-bold shadow-xl text-[#F0E2A4] flex items-center justify-center gap-3">
+        <Activity size={18} className="text-[#C5CEAE] animate-pulse" />
+        <span>{logMessage}</span>
+      </div>
+
+      {/* MAIN CONNECTED TREE CANVAS */}
+      <div className="w-full max-w-6xl bg-gradient-to-b from-[#140D0F] via-[#1E1417] to-[#2B1B21] border-2 border-[#5C4E49] rounded-3xl p-6 md:p-8 shadow-[0_0_90px_rgba(0,0,0,0.9)] relative overflow-hidden flex-1 flex flex-col items-center justify-between min-h-[480px]">
         
-        {/* Main Visualization Area */}
-        <div className="flex-1 flex flex-col p-8 lg:p-12 overflow-y-auto overflow-x-auto relative items-center min-h-[400px]">
-          
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[var(--color-nova-brown)] opacity-5 blur-[100px] rounded-full pointer-events-none"></div>
-
-          <h2 className="text-xl font-bold mb-8 text-gray-400 tracking-widest uppercase mt-4">Canvas Output</h2>
-
-          <div className="flex flex-wrap gap-8 justify-center items-center max-w-2xl mt-8">
-            <AnimatePresence>
-              {drawnShapes.map((shape, i) => (
-                <motion.div
-                  key={`${i}-${shape}`}
-                  initial={{ opacity: 0, scale: 0, rotate: -45 }}
-                  animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                  transition={{ type: 'spring', bounce: 0.5 }}
-                  className="flex flex-col items-center gap-4 relative"
-                >
-                  <motion.div 
-                    initial={{ opacity: 1, scale: 2 }}
-                    animate={{ opacity: 0, scale: 1 }}
-                    transition={{ duration: 0.5 }}
-                    className="absolute inset-0 border-2 border-[var(--color-nova-brown)] rounded-full -z-10"
-                  />
-                  <div className={getShapeClasses(shape)} />
-                  <span className="text-xs font-mono font-bold text-gray-500 uppercase tracking-widest">{shape}</span>
-                </motion.div>
-              ))}
-            </AnimatePresence>
+        {/* 1. TOP SINGLE PERSON NODE */}
+        <motion.div 
+          animate={{ scale: activePulse ? 1.05 : 1 }}
+          className="p-5 rounded-3xl bg-[#331921] border-4 border-[#F0E2A4] shadow-2xl font-mono text-center z-10 w-80 relative"
+        >
+          <div className="text-4xl mb-1">👤</div>
+          <div className="text-base font-extrabold text-[#F0E2A4]">Person alex</div>
+          <div className="text-xs text-[#BCA297]">Base Reference Type</div>
+          <div className="mt-2 px-3 py-1 rounded-full bg-[#423834] text-[10px] text-[#C5CEAE] font-bold">
+            Method Signature: performRole()
           </div>
+        </motion.div>
 
-          {drawnShapes.length === 0 && !isIterating && (
-            <div className="text-gray-400 font-mono text-sm mt-12 opacity-50 flex items-center gap-2">
-              <Play size={14} /> Click Execute Loop to draw...
-            </div>
-          )}
+        {/* CONNECTING SVG ARROWS NETWORK */}
+        <div className="w-full flex justify-center items-center my-2 relative z-0">
+          <div className="w-full max-w-4xl h-12 flex justify-between items-center relative">
+            {/* Horizontal Line */}
+            <div className="absolute top-1/2 left-8 right-8 h-1 bg-[#5C4E49] -translate-y-1/2" />
+            {/* Vertical Stem */}
+            <div className="absolute top-0 bottom-1/2 left-1/2 w-1 bg-[#5C4E49] -translate-x-1/2" />
 
+            {/* Glowing Connector Pulses */}
+            {roles.map(r => (
+              <div key={r.id} className="flex-1 flex justify-center relative">
+                <div className={`w-1 h-6 ${activePulse === r.id ? 'bg-[#F0E2A4] shadow-[0_0_15px_#F0E2A4]' : 'bg-[#5C4E49]'}`} />
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Output Console Panel */}
-        <div className={`w-full bg-[#0d1117] border-t border-white/10 flex flex-col shrink-0 font-mono shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-20 transition-all duration-300 ${isConsoleOpen ? 'h-48 lg:h-56' : 'h-10'}`}>
-          <div 
-            onClick={() => setIsConsoleOpen(!isConsoleOpen)}
-            className="flex items-center justify-between px-4 py-2 bg-[#161b22] border-b border-white/5 cursor-pointer hover:bg-[#1f2630] transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <Terminal size={14} className="text-gray-400" />
-              <span className="text-xs text-gray-400 font-bold tracking-wider">CONSOLE OUTPUT</span>
-            </div>
-            {isConsoleOpen ? <ChevronDown size={14} className="text-gray-400" /> : <ChevronUp size={14} className="text-gray-400" />}
-          </div>
-          <div className="p-4 overflow-y-auto flex-1 flex flex-col gap-1 text-sm">
-            <AnimatePresence initial={false}>
-              {outputLines.map((line, i) => (
-                <motion.div 
-                  key={`${i}-${line.msg}`}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className={`${line.msg.startsWith('>') ? 'text-[#7ee787]' : (line.isError ? 'text-red-400 ml-4 font-bold' : 'text-[#c9d1d9] ml-4 opacity-80')}`}
+        {/* 2. SINGLE HORIZONTAL LINE OF 4 FORMS */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 w-full z-10">
+          {roles.map(role => {
+            const isSelected = activeRole === role.id;
+            const isPulsing = activePulse === role.id;
+
+            return (
+              <motion.div
+                key={role.id}
+                animate={{ 
+                  scale: isPulsing ? 1.08 : isSelected ? 1.03 : 1,
+                  y: isPulsing ? -8 : 0
+                }}
+                className={`p-4 rounded-3xl bg-[#331921] border-4 shadow-2xl font-mono flex flex-col justify-between text-center space-y-3 transition-all relative ${
+                  isPulsing 
+                    ? 'shadow-[0_0_50px_#F0E2A4] bg-[#F0E2A4]/20' 
+                    : isSelected 
+                    ? 'shadow-[0_0_25px_rgba(240,226,164,0.4)]' 
+                    : ''
+                }`}
+                style={{ borderColor: role.color }}
+              >
+                <div>
+                  <div className="text-5xl mb-2">{role.emoji}</div>
+                  <h4 className="text-sm font-extrabold text-[#FAF7F2]">{role.title}</h4>
+                  <div className="text-[10px] text-[#BCA297]">{role.context}</div>
+                </div>
+
+                <div className="p-2 rounded-xl bg-[#423834] text-xs font-bold text-[#F0E2A4]">
+                  {role.task}
+                </div>
+
+                <button
+                  onClick={() => handleExecuteRole(role.id)}
+                  className="w-full py-2 rounded-xl bg-[#C5CEAE] hover:bg-[#A8B48D] text-[#331921] text-xs font-extrabold shadow-md transition-all"
                 >
-                  {line.msg}
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
+                  Select & Run performRole()
+                </button>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* CODE & CONCEPT FOOTER */}
+        <div className="w-full mt-4 pt-3 border-t border-white/10 font-mono text-xs text-center text-[#BCA297] flex items-center justify-center gap-2">
+          <span>💡 <strong className="text-[#F0E2A4]">Polymorphism Rule:</strong> All 4 forms sit in 1 horizontal line extending from <code className="text-[#C5CEAE]">Person alex</code>. Calling <code className="text-[#C5CEAE]">alex.performRole()</code> dynamically dispatches down to the active form!</span>
         </div>
 
       </div>
-
     </div>
   );
 }

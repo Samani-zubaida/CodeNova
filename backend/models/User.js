@@ -4,7 +4,12 @@ const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   email: { type: String, required: true, unique: true },
   passwordHash: { type: String, required: true },
-  
+
+  // Verification & Security
+  isVerified: { type: Boolean, default: false },
+  verificationTokenHash: { type: String, default: null },
+  verificationTokenExpiry: { type: Date, default: null },
+
   // Gamification & Retention
   activityLog: [{ type: String }], // Array of "YYYY-MM-DD"
   currentStreak: { type: Number, default: 0 },
@@ -16,5 +21,15 @@ const userSchema = new mongoose.Schema({
   }],
   xp: { type: Number, default: 0 },
 }, { timestamps: true });
+
+// Ensure sensitive fields are never exposed in JSON output
+userSchema.set('toJSON', {
+  transform: (doc, ret) => {
+    delete ret.passwordHash;
+    delete ret.verificationTokenHash;
+    delete ret.verificationTokenExpiry;
+    return ret;
+  }
+});
 
 module.exports = mongoose.model('User', userSchema);

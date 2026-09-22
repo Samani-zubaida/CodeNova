@@ -82,5 +82,85 @@
     "createdAt": "2026-09-06T10:57:46.348Z",
     "_id": "usr_1788692266348_tj1m6",
     "updatedAt": "2026-09-13T07:16:15.570Z"
+  },
+  {
+    "id": "usr_1790076994837_53a3e",
+    "username": "codenova_994699",
+    "email": "developer_1790076994699@gmail.com",
+    "passwordHash": "$2b$10$5plAC35YdkChJUGOUnltwuiahwKd..LVtycg8IS0oBiMsOf2ohXE2",
+    "activityLog": [
+      "2026-09-22"
+    ],
+    "currentStreak": 1,
+    "longestStreak": 1,
+    "earnedBadges": [
+      {
+        "badgeId": "welcome",
+        "name": "Novice Coder"
+      }
+    ],
+    "xp": 100,
+    "createdAt": "2026-09-22T11:36:34.837Z",
+    "_id": "usr_1790076994837_53a3e"
+  },
+  {
+    "id": "usr_1790077063622_prvou",
+    "username": "codenova_063411",
+    "email": "developer_1790077063411@gmail.com",
+    "passwordHash": "$2b$10$aCNYA6SELUgqEp1m2T866edMugFFkoqa8lFmI9jnO2waBrXegcgDa",
+    "activityLog": [
+      "2026-09-22"
+    ],
+    "currentStreak": 1,
+    "longestStreak": 1,
+    "earnedBadges": [
+      {
+        "badgeId": "welcome",
+        "name": "Novice Coder"
+      }
+    ],
+    "xp": 100,
+    "createdAt": "2026-09-22T11:37:43.623Z",
+    "_id": "usr_1790077063622_prvou"
+  },
+  {
+    "id": "usr_1790077107268_vpqs3",
+    "username": "codenova_106684",
+    "email": "developer_1790077106684@gmail.com",
+    "passwordHash": "$2b$10$vYUvsyexWu2L41jkH6MuBu2Qo2gn1ngIJyAKqfwzB5A0p.CIA754q",
+    "activityLog": [
+      "2026-09-22"
+    ],
+    "currentStreak": 1,
+    "longestStreak": 1,
+    "earnedBadges": [
+      {
+        "badgeId": "welcome",
+        "name": "Novice Coder"
+      }
+    ],
+    "xp": 100,
+    "createdAt": "2026-09-22T11:38:27.268Z",
+    "_id": "usr_1790077107268_vpqs3"
+  },
+  {
+    "id": "usr_1790077115145_zploz",
+    "username": "codenova_114542",
+    "email": "developer_1790077114542@gmail.com",
+    "passwordHash": "$2b$10$EHsIH6e3sXImFQZ5scU7vex62L2Uwivq8lSI8TStaqYdBraA/F5XW",
+    "activityLog": [
+      "2026-09-22"
+    ],
+    "currentStreak": 1,
+    "longestStreak": 1,
+    "earnedBadges": [
+      {
+        "badgeId": "welcome",
+        "name": "Novice Coder"
+      }
+    ],
+    "xp": 100,
+    "createdAt": "2026-09-22T11:38:35.145Z",
+    "_id": "usr_1790077115145_zploz"
   }
 ]

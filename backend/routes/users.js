@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const User = require('../models/User');
 const storage = require('../services/storage');
+const emailService = require('../services/emailService');
 const router = express.Router();
 
 const isDbConnected = () => mongoose.connection.readyState === 1;
@@ -23,7 +24,7 @@ router.post('/record-activity', async (req, res) => {
     try {
       let user = await User.findOne({ username }).maxTimeMS(2000);
       if (!user) {
-        user = new User({ username, email: username.toLowerCase() + '@local.dev', passwordHash: 'mock' });
+        return res.status(404).json({ error: 'User not found' });
       }
 
       const today = getTodayStr();
@@ -68,6 +69,11 @@ router.post('/record-activity', async (req, res) => {
   }
 
   // Local storage fallback
+  const localUser = storage.findUserByUsername(username);
+  if (!localUser) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
   const result = storage.recordActivity(username);
   return res.json(result);
 });
@@ -110,7 +116,7 @@ router.get('/:username', async (req, res) => {
   return res.status(404).json({ error: 'User not found' });
 });
 
-// Award badge
+// Award badge with REAL email notification
 router.post('/award-badge', async (req, res) => {
   const { username, badgeId, badgeName } = req.body;
   if (!username || !badgeId || !badgeName) {
@@ -129,6 +135,19 @@ router.post('/award-badge', async (req, res) => {
 
         user.earnedBadges.push({ badgeId, name: badgeName, awardedAt: new Date() });
         await user.save();
+
+        // Dispatch real email notification to user's registered real email address
+        if (user.email && !user.email.endsWith('@local.dev')) {
+          emailService.sendAccountNotificationEmail({
+            to: user.email,
+            username: user.username,
+            title: `Badge Unlocked: ${badgeName}! 🏆`,
+            message: `Congratulations! You just earned the "${badgeName}" badge on CodeNova for your algorithmic milestones. Check your profile to see your updated badges and XP!`,
+            actionUrl: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/game`,
+            actionText: 'View Badges in CodeNova'
+          }).catch(err => console.error('[Badge Email Notification Error]:', err.message));
+        }
+
         return res.json({ success: true, badges: user.earnedBadges });
       }
     } catch (error) {
@@ -139,10 +158,68 @@ router.post('/award-badge', async (req, res) => {
   // Local storage fallback
   const result = storage.awardBadge(username, badgeId, badgeName);
   if (result) {
+    const localUser = storage.findUserByUsername(username);
+    if (localUser && localUser.email && !localUser.email.endsWith('@local.dev')) {
+      emailService.sendAccountNotificationEmail({
+        to: localUser.email,
+        username: localUser.username,
+        title: `Badge Unlocked: ${badgeName}! 🏆`,
+        message: `Congratulations! You just earned the "${badgeName}" badge on CodeNova. Check your profile to view your badges and XP!`,
+        actionUrl: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/game`,
+        actionText: 'View Badges in CodeNova'
+      }).catch(err => console.error('[Badge Email Notification Error]:', err.message));
+    }
     return res.json(result);
   }
 
   return res.status(404).json({ error: 'User not found' });
+});
+
+// Direct user email notification endpoint
+router.post('/notify', async (req, res) => {
+  const { username, title, message, actionUrl, actionText } = req.body;
+  if (!username || !title || !message) {
+    return res.status(400).json({ error: 'Username, title, and message are required' });
+  }
+
+  let recipientEmail = null;
+  let targetUsername = username;
+
+  if (isDbConnected()) {
+    try {
+      const user = await User.findOne({ username }).maxTimeMS(2000);
+      if (user && user.email) {
+        recipientEmail = user.email;
+        targetUsername = user.username;
+      }
+    } catch (e) {}
+  }
+
+  if (!recipientEmail) {
+    const localUser = storage.findUserByUsername(username);
+    if (localUser && localUser.email) {
+      recipientEmail = localUser.email;
+      targetUsername = localUser.username;
+    }
+  }
+
+  if (!recipientEmail || recipientEmail.endsWith('@local.dev')) {
+    return res.status(404).json({ error: 'No valid verified email found for this user.' });
+  }
+
+  try {
+    const result = await emailService.sendAccountNotificationEmail({
+      to: recipientEmail,
+      username: targetUsername,
+      title,
+      message,
+      actionUrl,
+      actionText
+    });
+    return res.json({ success: true, message: 'Notification email dispatched.', result });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to send notification email: ' + err.message });
+  }
 });
 
 module.exports = router;

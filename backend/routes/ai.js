@@ -22,25 +22,36 @@ router.post('/hint', async (req, res) => {
     let hint = "Think about the time complexity or standard design patterns that fit this scenario."; // Fallback
 
     if (process.env.OPENROUTER_API_KEY) {
-      const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
-        model: 'google/gemini-2.5-flash',
-        messages: [{ role: 'user', content: prompt }]
-      }, {
-        headers: {
-          'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-          'Content-Type': 'application/json'
+      try {
+        const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
+          model: 'openrouter/free',
+          messages: [{ role: 'user', content: prompt }]
+        }, {
+          headers: {
+            'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 15000
+        });
+        if (response.data.choices?.[0]?.message?.content) {
+          hint = response.data.choices[0].message.content;
         }
-      });
-      hint = response.data.choices[0].message.content;
-    } else if (process.env.GEMINI_API_KEY) {
+      } catch (orErr) {
+        console.warn("OpenRouter hint attempt failed, checking fallback:", orErr.message);
+      }
+    } else if (process.env.GEMINI_API_KEY || process.env.Gemini_API_KEY) {
       // Alternate fallback if they decide to use native Gemini SDK
-      const { GoogleGenAI } = require('@google/genai');
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt
-      });
-      hint = response.text;
+      try {
+        const { GoogleGenAI } = require('@google/genai');
+        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.Gemini_API_KEY });
+        const response = await ai.models.generateContent({
+          model: 'gemini-2.0-flash',
+          contents: prompt
+        });
+        if (response.text) hint = response.text;
+      } catch (gemErr) {
+        console.warn("Gemini hint attempt failed:", gemErr.message);
+      }
     }
 
     // Deduct XP

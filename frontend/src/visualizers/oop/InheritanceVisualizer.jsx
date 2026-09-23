@@ -1,413 +1,492 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  GitMerge, ArrowUp, RefreshCw, Sparkles, CheckCircle2, Play, Layers, Activity, Shield, Zap, ArrowDown, Code2
+  GitFork, ArrowRight, RotateCcw, Sparkles, CheckCircle2,
+  Code2, Shield, Play, Info, Zap, BookOpen
 } from 'lucide-react';
-import VisualizerNav from '../../components/layout/VisualizerNav';
+import { ClassNodeCard } from './inheritance/ClassNodeCard';
+import { CodeModal } from './inheritance/CodeModal';
+import { InheritanceConduits } from './inheritance/InheritanceConduits';
+import { INHERITANCE_CLASSES as CLASSES } from './data/inheritanceData';
+import useAppStore from '../../store/useAppStore';
 
-export default function InheritanceVisualizer({ isEmbedded = false }) {
-  const [activeTab, setActiveTab] = useState('single'); // 'single' | 'multilevel' | 'hierarchical' | 'multiple' | 'hybrid'
-  const [activePulse, setActivePulse] = useState(null); // node ID where pulse is currently located
-  const [activeCodeLine, setActiveCodeLine] = useState(1);
-  const [logMessage, setLogMessage] = useState("Select an inheritance tree and click any method button to trigger method delegation!");
+export default function InheritanceVisualizer({ isEmbedded = false, onNext, onReturnToCatalog }) {
+  // Animation timeline state:
+  // 'intro' -> 'delivering_traits' -> 'specialization' -> 'completed'
+  const [phase, setPhase] = useState('intro');
+  const [hoveredNode, setHoveredNode] = useState(null); // 'parent' | 'child1' | 'child2' | null
+  const [selectedNode, setSelectedNode] = useState(null); // 'child1' | 'child2' | null
+  const [activeCodeModalTab, setActiveCodeModalTab] = useState(null);
+  const [highlightedMembers, setHighlightedMembers] = useState([]);
+  const [requestCount, setRequestCount] = useState(0);
+  const timeoutsRef = useRef([]);
 
-  // Method Delegation Execution Simulation
-  const triggerMethod = async (targetNode, parentNode, methodName, isOverridden = false, codeLineNum = 1) => {
-    if (activePulse) return;
-    setActiveCodeLine(codeLineNum);
-
-    if (isOverridden) {
-      setActivePulse(targetNode);
-      setLogMessage(`⚡ EXECUTED DIRECTLY IN CHILD (${targetNode}): ${methodName}() [Method Overridden]`);
-      await new Promise(r => setTimeout(r, 1400));
-      setActivePulse(null);
-      return;
-    }
-
-    // Step 1: Target Child Node receives call
-    setActivePulse(targetNode);
-    setLogMessage(`🔍 METHOD CALL: ${targetNode}.${methodName}() -> Not found in ${targetNode}, delegating up...`);
-    await new Promise(r => setTimeout(r, 900));
-
-    // Step 2: Pulse surges UP to Parent Node
-    setActivePulse(parentNode);
-    setLogMessage(`⬆️ DELEGATED TO PARENT CLASS (${parentNode}): Executed ${parentNode}.${methodName}()!`);
-    await new Promise(r => setTimeout(r, 1400));
-
-    setActivePulse(null);
+  const clearAllTimeouts = () => {
+    timeoutsRef.current.forEach(t => clearTimeout(t));
+    timeoutsRef.current = [];
   };
 
+  // Educational step progression timeline
+  const startTimeline = () => {
+    clearAllTimeouts();
+    setPhase('intro');
+    setHighlightedMembers([]);
+    setSelectedNode(null);
+
+    // 0s - 3s: Phase 1: Base Class Person Definition
+    // 3s - 8s: Phase 2: Trait Delivery Stream (particles travel to Child1 & Child2)
+    const t1 = setTimeout(() => {
+      setPhase('delivering_traits');
+      setHighlightedMembers(['skinTone', 'wearsGlasses', 'hairColor', 'height']);
+    }, 3000);
+
+    // 8s - 13s: Phase 3: Children Specialization & Overrides
+    const t2 = setTimeout(() => {
+      setPhase('specialization');
+      setHighlightedMembers(['hairColor', 'height', 'skinTone', 'eyeColor']);
+    }, 8000);
+
+    // 13s+: Phase 4: Full Hierarchical Tree Ready
+    const t3 = setTimeout(() => {
+      setPhase('completed');
+    }, 13000);
+
+    timeoutsRef.current = [t1, t2, t3];
+  };
+
+  useEffect(() => {
+    startTimeline();
+    return () => clearAllTimeouts();
+  }, [requestCount]);
+
+  const handleReplay = () => {
+    setRequestCount(prev => prev + 1);
+  };
+
+  const handleManualTransmit = () => {
+    clearAllTimeouts();
+    setPhase('delivering_traits');
+    setHighlightedMembers(['skinTone', 'wearsGlasses', 'hairColor', 'height']);
+    const t1 = setTimeout(() => {
+      setPhase('specialization');
+    }, 4500);
+    const t2 = setTimeout(() => {
+      setPhase('completed');
+    }, 8500);
+    timeoutsRef.current = [t1, t2];
+  };
+
+  const handleSelectChild = (childId) => {
+    clearAllTimeouts();
+    setSelectedNode(childId);
+    setPhase('delivering_traits');
+
+    if (childId === 'child1' || childId === 'student') {
+      setHighlightedMembers(['skinTone', 'wearsGlasses']);
+      const t1 = setTimeout(() => {
+        setPhase('specialization');
+        setHighlightedMembers(['hairColor', 'height']);
+      }, 3500);
+      timeoutsRef.current = [t1];
+    } else if (childId === 'child2' || childId === 'employee') {
+      setHighlightedMembers(['hairColor', 'height']);
+      const t1 = setTimeout(() => {
+        setPhase('specialization');
+        setHighlightedMembers(['skinTone', 'eyeColor']);
+      }, 3500);
+      timeoutsRef.current = [t1];
+    }
+  };
+
+  // Status info panel
+  const getStatusInfo = () => {
+    switch (phase) {
+      case 'intro':
+        return {
+          step: "STEP 1 / 4",
+          title: "Base Class Person",
+          desc: "Person is the superclass. Declares base genetic properties: dusky skin, brown hair, tall height, and glasses.",
+          tag: "BASE CLASS DEFINITION",
+          badgeBg: "bg-amber-500/10 border-amber-500/30 text-amber-300"
+        };
+      case 'delivering_traits':
+        return {
+          step: "STEP 2 / 4",
+          title: "Hierarchical Trait Transmission",
+          desc: "Base properties stream down from Person to both Child1 and Child2 along the inheritance conduits.",
+          tag: "TRANSMITTING TRAITS",
+          badgeBg: "bg-sky-500/10 border-sky-500/30 text-sky-300"
+        };
+      case 'specialization':
+        return {
+          step: "STEP 3 / 4",
+          title: "Specialization & Overrides",
+          desc: "Child1 overrides hairColor to black and height to shorter. Child2 introduces fair skin and blue eyes.",
+          tag: "OVERRIDES & SPECIALIZATION",
+          badgeBg: "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+        };
+      case 'completed':
+      default:
+        return {
+          step: "STEP 4 / 4",
+          title: "Hierarchical Tree Complete",
+          desc: "One parent (Person) successfully inherited by multiple children (Child1 & Child2). Click any class to inspect.",
+          tag: "HIERARCHICAL COMPLETE",
+          badgeBg: "bg-indigo-500/10 border-indigo-500/30 text-indigo-300"
+        };
+    }
+  };
+
+  const status = getStatusInfo();
+
+  // Active highlights
+  const isParentHovered = hoveredNode === 'parent';
+  const isChild1Active = hoveredNode === 'child1' || hoveredNode === 'student' || selectedNode === 'child1' || selectedNode === 'student';
+  const isChild2Active = hoveredNode === 'child2' || hoveredNode === 'employee' || selectedNode === 'child2' || selectedNode === 'employee';
+
+  const isLeftConduitActive = isChild1Active || phase === 'delivering_traits' || phase === 'specialization';
+  const isRightConduitActive = isChild2Active || phase === 'delivering_traits' || phase === 'specialization';
+
+  const { theme } = useAppStore();
+  const isDark = theme === 'dark' || !theme;
+  const isWarm = theme === 'warm';
+
+  const containerBgClass = isDark
+    ? 'bg-[#080C16] text-slate-100'
+    : isWarm
+    ? 'bg-[#FDFBF7] text-[#2D1F23]'
+    : 'bg-[#F8FAFC] text-slate-900';
+
+  const defPanelCardClass = isDark
+    ? 'bg-[#090D17]/90 border-amber-500/25 text-slate-300'
+    : isWarm
+    ? 'bg-[#FAF7F2]/95 border-amber-600/30 text-[#2D1F23] shadow-lg'
+    : 'bg-white/95 border-amber-500/30 text-slate-800 shadow-xl';
+
+  const statusPillClass = isDark
+    ? 'bg-[#090D17]/85 border-white/10 text-amber-300'
+    : isWarm
+    ? 'bg-[#FAF7F2]/90 border-[#EBE0D3] text-amber-800'
+    : 'bg-white/95 border-slate-200 text-amber-800 shadow-md';
+
+  const relationshipBadgeClass = isDark
+    ? 'bg-slate-950 border-amber-500/40 text-amber-300'
+    : isWarm
+    ? 'bg-[#FAF7F2] border-amber-600/40 text-amber-800'
+    : 'bg-white border-amber-500/40 text-amber-800 shadow-sm';
+
+  const footerClass = isDark
+    ? 'bg-[#080C16]/95 border-white/10 text-white'
+    : isWarm
+    ? 'bg-[#FDFBF7]/95 border-[#EBE0D3] text-[#2D1F23]'
+    : 'bg-white/95 border-slate-200 text-slate-800 shadow-xl';
+
   return (
-    <div className="w-full flex-1 flex flex-col items-center justify-between text-[#FAF7F2] font-sans select-none space-y-3">
-      {!isEmbedded && <VisualizerNav title="Inheritance: Big Tree & Relationships" />}
+    <div className={`relative w-full min-h-full flex flex-col items-center justify-between select-none ${containerBgClass} font-sans transition-colors duration-300`}>
+      
+      {/* ── 1. ATMOSPHERIC DEEP COSMIC BACKGROUND ── */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        {/* Top Center Warm Amber Aurora (Person Parent Level) */}
+        <div className="absolute top-[3%] left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-gradient-to-tr from-amber-600/15 via-orange-500/10 to-yellow-500/5 rounded-full blur-[150px] pointer-events-none" />
 
-      {/* TOP TOPOLOGY TAB HEADER */}
-      <div className="w-full max-w-6xl bg-[#331921]/90 backdrop-blur-xl border-2 border-[#C5CEAE] rounded-2xl p-4 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-3 rounded-2xl bg-[#C5CEAE] text-[#331921] font-extrabold shadow-lg">
-            <GitMerge size={26} />
-          </div>
-          <div>
-            <h3 className="text-base font-mono font-extrabold text-[#F0E2A4] uppercase tracking-wider">
-              INHERITANCE CLASS TREES & RELATIONSHIPS
-            </h3>
-            <p className="text-xs text-[#BCA297]">
-              Clear hierarchy trees showing <span className="text-[#F0E2A4] font-bold">extends</span> & <span className="text-[#C5CEAE] font-bold">implements</span> relationships.
-            </p>
-          </div>
-        </div>
+        {/* Bottom Left Emerald Aurora (Child1 Level) */}
+        <div className="absolute bottom-[10%] left-[8%] w-[520px] h-[320px] bg-emerald-600/15 rounded-full blur-[140px] pointer-events-none" />
 
-        {/* Big Tab Selector */}
-        <div className="flex flex-wrap items-center gap-2 font-mono text-xs">
+        {/* Bottom Right Indigo Aurora (Child2 Level) */}
+        <div className="absolute bottom-[10%] right-[8%] w-[520px] h-[320px] bg-indigo-600/15 rounded-full blur-[140px] pointer-events-none" />
+
+        {/* Minimal Futuristic Coordinate Grid */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#38bdf806_1px,transparent_1px),linear-gradient(to_bottom,#38bdf806_1px,transparent_1px)] bg-[size:44px_44px] opacity-60" />
+
+        {/* Floating Stardust Particles */}
+        <div className="absolute inset-0">
           {[
-            { id: 'single', label: '1. Single Tree' },
-            { id: 'multilevel', label: '2. Multilevel Chain' },
-            { id: 'hierarchical', label: '3. Hierarchical Tree' },
-            { id: 'multiple', label: '4. Multiple Interfaces' },
-            { id: 'hybrid', label: '5. Hybrid Hierarchy' }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => { setActiveTab(tab.id); setLogMessage(`Loaded ${tab.label}.`); }}
-              className={`px-4 py-2 rounded-xl font-extrabold transition-all text-xs ${
-                activeTab === tab.id 
-                  ? 'bg-[#C5CEAE] text-[#331921] shadow-lg scale-105 ring-2 ring-white' 
-                  : 'bg-[#423834] text-[#BCA297] hover:bg-[#5C4E49]'
-              }`}
-            >
-              {tab.label}
-            </button>
+            { top: '15%', left: '18%', size: '3px', col: '#F59E0B' },
+            { top: '25%', left: '82%', size: '2px', col: '#10B981' },
+            { top: '65%', left: '12%', size: '3px', col: '#6366F1' },
+            { top: '75%', left: '86%', size: '2px', col: '#38BDF8' },
+          ].map((pt, i) => (
+            <motion.div
+              key={i}
+              animate={{ y: [0, -10, 0], opacity: [0.3, 0.8, 0.3] }}
+              transition={{ repeat: Infinity, duration: 4 + i, ease: "easeInOut" }}
+              className="absolute rounded-full"
+              style={{
+                top: pt.top,
+                left: pt.left,
+                width: pt.size,
+                height: pt.size,
+                backgroundColor: pt.col,
+                boxShadow: `0 0 10px ${pt.col}`
+              }}
+            />
           ))}
         </div>
       </div>
 
-      {/* DYNAMIC TELEMETRY LOG BANNER */}
-      <div className="w-full max-w-6xl py-3 px-6 rounded-2xl bg-[#423834] border-2 border-[#5C4E49] text-center font-mono text-xs md:text-sm font-bold shadow-xl text-[#F0E2A4] flex items-center justify-center gap-3">
-        <Activity size={18} className="text-[#C5CEAE] animate-pulse" />
-        <span>{logMessage}</span>
+      {/* ── 2. TOP-LEFT HIERARCHICAL INHERITANCE DEFINITION PANEL ── */}
+      <div className="hidden xl:flex absolute top-5 left-6 z-30 max-w-xs flex-col pointer-events-none">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+          className={`p-4 rounded-2xl border backdrop-blur-xl shadow-2xl flex flex-col gap-2 ${defPanelCardClass}`}
+        >
+          {/* Header with Hierarchical Badge */}
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-lg bg-amber-500/15 border border-amber-500/35 text-amber-500">
+              <GitFork size={15} />
+            </div>
+            <div>
+              <span className={`font-mono text-xs font-black tracking-wider uppercase ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                HIERARCHICAL INHERITANCE
+              </span>
+              <span className={`block text-[10px] font-mono ${isDark ? 'text-amber-300/80' : 'text-amber-700'}`}>
+                1 Parent Class → Multiple Child Subclasses
+              </span>
+            </div>
+          </div>
+
+          {/* Explanation Body */}
+          <p className={`text-xs leading-relaxed font-sans ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+            In <strong>Hierarchical Inheritance</strong>, one base class (<strong className={isDark ? 'text-amber-300' : 'text-amber-700'}>Person</strong>) acts as the parent for multiple subclasses (<strong className={isDark ? 'text-emerald-300' : 'text-emerald-700'}>Child1</strong> & <strong className={isDark ? 'text-indigo-300' : 'text-indigo-700'}>Child2</strong>), which inherit shared properties while introducing their own specializations.
+          </p>
+
+          {/* Live Step Badge */}
+          <div className={`flex items-center justify-between pt-2 border-t ${isDark ? 'border-white/10' : 'border-slate-200'} font-mono text-[10px]`}>
+            <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>{status.step}:</span>
+            <span className={`px-2 py-0.5 rounded-full font-bold border ${status.badgeBg}`}>
+              {status.tag}
+            </span>
+          </div>
+        </motion.div>
       </div>
 
-      {/* MAIN BIG TREE CANVAS & CODE PANEL SPLIT */}
-      <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 items-stretch">
+      {/* ── 3. TOP-RIGHT LIVE STATUS PILL ── */}
+      <div className="hidden sm:flex absolute top-5 right-6 z-30 pointer-events-none">
+        <motion.div
+          key={status.title}
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`px-3.5 py-1.5 rounded-full border backdrop-blur-md flex items-center gap-2 font-mono text-xs font-bold shadow-lg ${statusPillClass}`}
+        >
+          <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shadow-[0_0_8px_#F59E0B]" />
+          <span>{status.title}</span>
+        </motion.div>
+      </div>
+
+      {/* ======================================================================
+          ── 4. FAMILY TREE GRAPH CANVAS (PARENT ON TOP, CHILDREN BELOW) ──
+          ====================================================================== */}
+      <div className="relative z-20 w-full flex-1 flex flex-col items-center justify-center px-4 max-w-6xl mx-auto pt-3 pb-12 sm:pb-16 my-auto min-h-max">
         
-        {/* BIG TREE DIAGRAM CANVAS (2 COLUMNS) */}
-        <div className="lg:col-span-2 bg-gradient-to-b from-[#140D0F] via-[#1E1417] to-[#2B1B21] border-2 border-[#5C4E49] rounded-3xl p-6 md:p-8 shadow-[0_0_90px_rgba(0,0,0,0.9)] relative overflow-hidden flex flex-col items-center justify-center min-h-[460px]">
-          
-          <AnimatePresence mode="wait">
-            
-            {/* ========================================================================= */}
-            {/* 1. SINGLE INHERITANCE TREE (Animal -> Dog) */}
-            {/* ========================================================================= */}
-            {activeTab === 'single' && (
-              <motion.div
-                key="single-tree"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.05 }}
-                className="flex flex-col items-center justify-between w-full max-w-lg space-y-6 my-auto z-10"
-              >
-                {/* PARENT CLASS CARD */}
-                <motion.div 
-                  animate={{ 
-                    scale: activePulse === 'Animal' ? 1.05 : 1,
-                    borderColor: activePulse === 'Animal' ? '#F0E2A4' : '#F0E2A4'
-                  }}
-                  className={`w-full p-5 rounded-3xl bg-[#331921] border-4 shadow-2xl font-mono transition-all relative ${
-                    activePulse === 'Animal' ? 'bg-[#F0E2A4]/20 shadow-[0_0_50px_#F0E2A4]' : ''
-                  }`}
-                >
-                  <div className="flex items-center justify-between border-b border-white/20 pb-2 mb-3">
-                    <span className="text-base font-extrabold text-[#F0E2A4]">class Animal</span>
-                    <span className="px-3 py-1 rounded-full bg-[#F0E2A4] text-[#331921] text-xs font-black">SUPERCLASS</span>
-                  </div>
-                  <div className="space-y-1 text-xs text-[#FAF7F2]">
-                    <div><span className="text-[#AB526B]">protected</span> String species = "Canine";</div>
-                    <div><span className="text-[#C5CEAE]">public void</span> <strong className="text-[#F0E2A4]">eat()</strong> &#123; System.out.println("Eating..."); &#125;</div>
-                  </div>
-                </motion.div>
-
-                {/* RELATIONSHIP ARROW BADGE */}
-                <div className="flex flex-col items-center relative my-1">
-                  <div className="px-4 py-1.5 rounded-full bg-[#C5CEAE] text-[#331921] font-mono text-xs font-black shadow-lg border-2 border-white flex items-center gap-1 z-10">
-                    <ArrowUp size={14} /> extends (Inherits From)
-                  </div>
-                  <div className="w-1 h-10 bg-[#C5CEAE]" />
-                </div>
-
-                {/* CHILD CLASS CARD */}
-                <motion.div 
-                  animate={{ 
-                    scale: activePulse === 'Dog' ? 1.05 : 1,
-                    borderColor: activePulse === 'Dog' ? '#C5CEAE' : '#C5CEAE'
-                  }}
-                  className={`w-full p-5 rounded-3xl bg-[#331921] border-4 shadow-2xl font-mono transition-all ${
-                    activePulse === 'Dog' ? 'bg-[#C5CEAE]/20 shadow-[0_0_50px_#C5CEAE]' : ''
-                  }`}
-                >
-                  <div className="flex items-center justify-between border-b border-white/20 pb-2 mb-3">
-                    <span className="text-base font-extrabold text-[#C5CEAE]">class Dog extends Animal</span>
-                    <span className="px-3 py-1 rounded-full bg-[#C5CEAE] text-[#331921] text-xs font-black">SUBCLASS</span>
-                  </div>
-                  <div className="space-y-1 text-xs text-[#FAF7F2] mb-4">
-                    <div><span className="text-[#C5CEAE]">public void</span> <strong className="text-[#C5CEAE]">bark()</strong> &#123; System.out.println("Woof!"); &#125;</div>
-                  </div>
-
-                  {/* ACTION BUTTONS */}
-                  <div className="flex items-center gap-3 pt-2 border-t border-white/10">
-                    <button 
-                      onClick={() => triggerMethod('Dog', 'Animal', 'eat', false, 12)}
-                      className="flex-1 py-2.5 rounded-xl bg-[#F0E2A4] hover:bg-[#D6C88B] text-[#331921] text-xs font-extrabold shadow-lg transition-all"
-                    >
-                      call dog.eat() [Delegates Up]
-                    </button>
-                    <button 
-                      onClick={() => triggerMethod('Dog', 'Dog', 'bark', true, 13)}
-                      className="flex-1 py-2.5 rounded-xl bg-[#C5CEAE] hover:bg-[#A8B48D] text-[#331921] text-xs font-extrabold shadow-lg transition-all"
-                    >
-                      call dog.bark() [Direct Child]
-                    </button>
-                  </div>
-                </motion.div>
-
-              </motion.div>
-            )}
-
-            {/* ========================================================================= */}
-            {/* 2. MULTILEVEL INHERITANCE TREE (Organism -> Mammal -> Dog) */}
-            {/* ========================================================================= */}
-            {activeTab === 'multilevel' && (
-              <motion.div
-                key="multilevel-tree"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.05 }}
-                className="flex flex-col items-center justify-between w-full max-w-lg space-y-4 my-auto z-10"
-              >
-                {/* GRANDPARENT CARD */}
-                <motion.div 
-                  animate={{ scale: activePulse === 'Organism' ? 1.05 : 1 }}
-                  className={`w-full p-4 rounded-2xl bg-[#331921] border-3 border-[#F0E2A4] shadow-xl font-mono ${
-                    activePulse === 'Organism' ? 'bg-[#F0E2A4]/20 shadow-[0_0_35px_#F0E2A4]' : ''
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-extrabold text-[#F0E2A4]">class Organism</span>
-                    <span className="text-xs text-[#BCA297]">breathe()</span>
-                  </div>
-                </motion.div>
-
-                <div className="px-3 py-1 rounded-full bg-[#5C4E49] text-[#F0E2A4] font-mono text-[10px] font-bold">
-                  ⬆️ extends
-                </div>
-
-                {/* PARENT CARD */}
-                <motion.div 
-                  animate={{ scale: activePulse === 'Mammal' ? 1.05 : 1 }}
-                  className={`w-full p-4 rounded-2xl bg-[#331921] border-3 border-[#C5CEAE] shadow-xl font-mono ${
-                    activePulse === 'Mammal' ? 'bg-[#C5CEAE]/20 shadow-[0_0_35px_#C5CEAE]' : ''
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-extrabold text-[#C5CEAE]">class Mammal extends Organism</span>
-                    <span className="text-xs text-[#BCA297]">feedMilk()</span>
-                  </div>
-                </motion.div>
-
-                <div className="px-3 py-1 rounded-full bg-[#5C4E49] text-[#C5CEAE] font-mono text-[10px] font-bold">
-                  ⬆️ extends
-                </div>
-
-                {/* CHILD CARD */}
-                <motion.div 
-                  animate={{ scale: activePulse === 'Dog' ? 1.05 : 1 }}
-                  className={`w-full p-4 rounded-2xl bg-[#331921] border-3 border-[#AB526B] shadow-xl font-mono ${
-                    activePulse === 'Dog' ? 'bg-[#AB526B]/20 shadow-[0_0_35px_#AB526B]' : ''
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-extrabold text-[#AB526B]">class Dog extends Mammal</span>
-                    <span className="text-xs text-[#BCA297]">bark()</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => triggerMethod('Dog', 'Organism', 'breathe', false, 5)} className="flex-1 py-2 rounded-xl bg-[#F0E2A4] text-[#331921] text-xs font-bold">
-                      breathe() [2 Levels Up]
-                    </button>
-                    <button onClick={() => triggerMethod('Dog', 'Mammal', 'feedMilk', false, 8)} className="flex-1 py-2 rounded-xl bg-[#C5CEAE] text-[#331921] text-xs font-bold">
-                      feedMilk() [1 Level Up]
-                    </button>
-                  </div>
-                </motion.div>
-
-              </motion.div>
-            )}
-
-            {/* ========================================================================= */}
-            {/* 3. HIERARCHICAL INHERITANCE TREE (Shape -> Circle, Square, Triangle) */}
-            {/* ========================================================================= */}
-            {activeTab === 'hierarchical' && (
-              <motion.div
-                key="hierarchical-tree"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.05 }}
-                className="flex flex-col items-center justify-between w-full space-y-6 my-auto z-10"
-              >
-                {/* PARENT CARD */}
-                <motion.div 
-                  animate={{ scale: activePulse === 'Shape' ? 1.08 : 1 }}
-                  className="p-5 rounded-3xl bg-[#331921] border-4 border-[#F0E2A4] text-center font-mono shadow-2xl w-72"
-                >
-                  <span className="text-base font-extrabold text-[#F0E2A4] block">class Shape</span>
-                  <span className="text-xs text-[#BCA297]">public void draw()</span>
-                </motion.div>
-
-                <div className="px-4 py-1 rounded-full bg-[#C5CEAE] text-[#331921] font-mono text-xs font-black">
-                  ⬆️ 3 Children extend Shape
-                </div>
-
-                {/* 3 CHILDREN CARDS */}
-                <div className="grid grid-cols-3 gap-4 w-full">
-                  {[
-                    { name: 'Circle', color: '#AB526B' },
-                    { name: 'Square', color: '#C5CEAE' },
-                    { name: 'Triangle', color: '#FAF7F2' }
-                  ].map(child => (
-                    <motion.div
-                      key={child.name}
-                      animate={{ scale: activePulse === child.name ? 1.05 : 1 }}
-                      className="p-4 rounded-2xl bg-[#331921] border-3 flex flex-col items-center text-center space-y-2 font-mono shadow-xl"
-                      style={{ borderColor: child.color }}
-                    >
-                      <span className="text-sm font-extrabold" style={{ color: child.color }}>{child.name}</span>
-                      <button
-                        onClick={() => triggerMethod(child.name, 'Shape', 'draw', false, 15)}
-                        className="w-full py-2 rounded-xl bg-[#423834] hover:bg-[#5C4E49] text-[#F0E2A4] text-xs font-bold border border-white/10"
-                      >
-                        draw()
-                      </button>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-
-            {/* ========================================================================= */}
-            {/* 4. MULTIPLE INTERFACES (Flyable + Mammal -> Bat) */}
-            {/* ========================================================================= */}
-            {activeTab === 'multiple' && (
-              <motion.div
-                key="multiple-tree"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.05 }}
-                className="flex flex-col items-center justify-between w-full space-y-6 my-auto z-10"
-              >
-                <div className="grid grid-cols-2 gap-6 w-full">
-                  <motion.div animate={{ scale: activePulse === 'Flyable' ? 1.05 : 1 }} className="p-4 rounded-2xl bg-[#331921] border-3 border-[#F0E2A4] text-center font-mono shadow-xl">
-                    <span className="text-sm font-extrabold text-[#F0E2A4] block">interface Flyable</span>
-                    <span className="text-xs text-[#BCA297]">fly()</span>
-                  </motion.div>
-
-                  <motion.div animate={{ scale: activePulse === 'Mammal' ? 1.05 : 1 }} className="p-4 rounded-2xl bg-[#331921] border-3 border-[#C5CEAE] text-center font-mono shadow-xl">
-                    <span className="text-sm font-extrabold text-[#C5CEAE] block">class Mammal</span>
-                    <span className="text-xs text-[#BCA297]">walk()</span>
-                  </motion.div>
-                </div>
-
-                <div className="px-4 py-1 rounded-full bg-[#AB526B] text-white font-mono text-xs font-black">
-                  ⬆️ implements Flyable, extends Mammal
-                </div>
-
-                <motion.div animate={{ scale: activePulse === 'Bat' ? 1.05 : 1 }} className="w-full p-5 rounded-3xl bg-[#331921] border-4 border-[#AB526B] font-mono shadow-2xl flex items-center justify-between">
-                  <div>
-                    <span className="text-base font-extrabold text-[#AB526B] block">class Bat</span>
-                    <span className="text-xs text-[#BCA297]">Inherits both interfaces!</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <button onClick={() => triggerMethod('Bat', 'Flyable', 'fly', false, 18)} className="px-4 py-2 rounded-xl bg-[#F0E2A4] text-[#331921] text-xs font-extrabold">
-                      bat.fly()
-                    </button>
-                    <button onClick={() => triggerMethod('Bat', 'Mammal', 'walk', false, 20)} className="px-4 py-2 rounded-xl bg-[#C5CEAE] text-[#331921] text-xs font-extrabold">
-                      bat.walk()
-                    </button>
-                  </div>
-                </motion.div>
-              </motion.div>
-            )}
-
-            {/* ========================================================================= */}
-            {/* 5. HYBRID HIERARCHY */}
-            {/* ========================================================================= */}
-            {activeTab === 'hybrid' && (
-              <motion.div
-                key="hybrid-tree"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.05 }}
-                className="flex flex-col items-center justify-between w-full space-y-6 my-auto z-10"
-              >
-                <motion.div animate={{ scale: activePulse === 'Entity' ? 1.05 : 1 }} className="p-4 rounded-2xl bg-[#331921] border-3 border-[#F0E2A4] text-center font-mono w-64 shadow-xl">
-                  <span className="text-sm font-extrabold text-[#F0E2A4] block">class Entity</span>
-                  <span className="text-xs text-[#BCA297]">takeDamage()</span>
-                </motion.div>
-
-                <div className="grid grid-cols-2 gap-4 w-full">
-                  <motion.div animate={{ scale: activePulse === 'Hero' ? 1.05 : 1 }} className="p-4 rounded-2xl bg-[#331921] border-2 border-[#C5CEAE] text-center font-mono text-xs">
-                    <span className="font-extrabold text-[#C5CEAE] block mb-2">Hero extends Entity</span>
-                    <button onClick={() => triggerMethod('Hero', 'Entity', 'takeDamage', false, 22)} className="w-full py-1.5 rounded-lg bg-[#C5CEAE] text-[#331921] font-bold">
-                      super.takeDamage()
-                    </button>
-                  </motion.div>
-
-                  <motion.div animate={{ scale: activePulse === 'Monster' ? 1.05 : 1 }} className="p-4 rounded-2xl bg-[#331921] border-2 border-[#AB526B] text-center font-mono text-xs">
-                    <span className="font-extrabold text-[#AB526B] block mb-2">Monster extends Entity</span>
-                    <button onClick={() => triggerMethod('Monster', 'Entity', 'takeDamage', false, 24)} className="w-full py-1.5 rounded-lg bg-[#AB526B] text-white font-bold">
-                      super.takeDamage()
-                    </button>
-                  </motion.div>
-                </div>
-              </motion.div>
-            )}
-
-          </AnimatePresence>
-
+        {/* Quick Navigation Chips */}
+        <div className="flex items-center justify-center gap-1.5 sm:gap-2 mb-3 z-30 flex-wrap">
+          <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-semibold mr-1">
+            Focus Class:
+          </span>
+          <button
+            onClick={() => {
+              setSelectedNode(null);
+              document.getElementById('node-parent')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }}
+            className="px-3 py-1 rounded-full bg-amber-500/10 hover:bg-amber-500/25 border border-amber-500/35 text-amber-300 font-mono text-[10.5px] font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-xs flex items-center gap-1"
+          >
+            <span>👨 Person (Base Class)</span>
+          </button>
+          <button
+            onClick={() => {
+              handleSelectChild('child1');
+              document.getElementById('node-child1')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }}
+            className="px-3 py-1 rounded-full bg-emerald-500/10 hover:bg-emerald-500/25 border border-emerald-500/35 text-emerald-300 font-mono text-[10.5px] font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-xs flex items-center gap-1"
+          >
+            <span>🌱 Child1 (Subclass)</span>
+          </button>
+          <button
+            onClick={() => {
+              handleSelectChild('child2');
+              document.getElementById('node-child2')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }}
+            className="px-3 py-1 rounded-full bg-indigo-500/10 hover:bg-indigo-500/25 border border-indigo-500/35 text-indigo-300 font-mono text-[10.5px] font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-xs flex items-center gap-1"
+          >
+            <span>🌟 Child2 (Subclass)</span>
+          </button>
         </div>
 
-        {/* CODE & CODE HIGHLIGHT PANEL (1 COLUMN) */}
-        <div className="bg-[#1E1417] border-2 border-[#5C4E49] rounded-3xl p-5 shadow-2xl flex flex-col justify-between font-mono text-xs">
-          <div className="flex items-center gap-2 border-b border-white/10 pb-3 text-[#F0E2A4] font-extrabold">
-            <Code2 size={18} />
-            <span>Synchronized Code View</span>
-          </div>
+        {/* ── ROW 1: PARENT CLASS (BASE CLASS: PERSON) ── */}
+        <div className="relative flex flex-col items-center z-30">
+          <ClassNodeCard
+            classData={CLASSES.parent}
+            isHovered={isParentHovered}
+            isDimmed={isChild1Active || isChild2Active}
+            onMouseEnter={() => setHoveredNode('parent')}
+            onMouseLeave={() => setHoveredNode(null)}
+            onOpenCode={(tab) => setActiveCodeModalTab(tab)}
+            isInheritanceActive={true}
+            highlightedMembers={highlightedMembers}
+          />
 
-          <div className="space-y-1.5 py-4 overflow-x-auto text-[11px] leading-relaxed">
-            <div className={activeCodeLine === 1 ? 'bg-[#F0E2A4]/20 text-[#F0E2A4] font-bold px-2 py-0.5 rounded' : 'text-[#BCA297]'}>
-              1: class Animal &#123;
-            </div>
-            <div className={activeCodeLine === 2 ? 'bg-[#F0E2A4]/20 text-[#F0E2A4] font-bold px-2 py-0.5 rounded' : 'text-[#BCA297]'}>
-              2:   void eat() &#123; System.out.println("Eating"); &#125;
-            </div>
-            <div className={activeCodeLine === 3 ? 'bg-[#F0E2A4]/20 text-[#F0E2A4] font-bold px-2 py-0.5 rounded' : 'text-[#BCA297]'}>
-              3: &#125;
-            </div>
-            <div className="text-[#5C4E49]">-------------------</div>
-            <div className={activeCodeLine === 12 ? 'bg-[#C5CEAE]/20 text-[#C5CEAE] font-bold px-2 py-0.5 rounded' : 'text-[#BCA297]'}>
-              12: class Dog extends Animal &#123;
-            </div>
-            <div className={activeCodeLine === 13 ? 'bg-[#C5CEAE]/20 text-[#C5CEAE] font-bold px-2 py-0.5 rounded' : 'text-[#BCA297]'}>
-              13:   void bark() &#123; System.out.println("Woof"); &#125;
-            </div>
-            <div className={activeCodeLine === 14 ? 'bg-[#C5CEAE]/20 text-[#C5CEAE] font-bold px-2 py-0.5 rounded' : 'text-[#BCA297]'}>
-              14: &#125;
-            </div>
+          {/* Golden Parent Emitter Hub */}
+          <div className="relative w-8 h-8 -mt-2 flex items-center justify-center z-30">
+            <div className="w-4 h-4 rounded-full bg-amber-500 shadow-[0_0_18px_#F59E0B] border-2 border-white animate-pulse" />
           </div>
+        </div>
 
-          <div className="p-3 rounded-2xl bg-[#331921] border border-[#5C4E49] text-[10px] text-[#BCA297]">
-            💡 <strong className="text-[#F0E2A4]">Inheritance Rule:</strong> Subclasses inherit all non-private properties and methods from their Parent classes automatically!
-          </div>
+        {/* ── ROW 2: DUAL INHERITANCE CONDUITS (SVG BEZIER PATHS) ── */}
+        <InheritanceConduits
+          phase={phase}
+          isLeftConduitActive={isLeftConduitActive}
+          isRightConduitActive={isRightConduitActive}
+        />
+
+        {/* ── ROW 3: SUBCLASSES (CHILD1 & CHILD2 ALIGNED SIDE-BY-SIDE) ── */}
+        <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-8 justify-items-center z-30">
+          
+          {/* Child 1 Card */}
+          <ClassNodeCard
+            classData={CLASSES.child1}
+            isHovered={isChild1Active}
+            isSelected={selectedNode === 'child1' || selectedNode === 'student'}
+            isDimmed={isParentHovered ? false : (isChild2Active && !isChild1Active)}
+            onMouseEnter={() => setHoveredNode('child1')}
+            onMouseLeave={() => setHoveredNode(null)}
+            onSelectNode={() => handleSelectChild('child1')}
+            onOpenCode={(tab) => setActiveCodeModalTab(tab || 'Child1')}
+            isInheritanceActive={true}
+            highlightedMembers={highlightedMembers}
+          />
+
+          {/* Child 2 Card */}
+          <ClassNodeCard
+            classData={CLASSES.child2}
+            isHovered={isChild2Active}
+            isSelected={selectedNode === 'child2' || selectedNode === 'employee'}
+            isDimmed={isParentHovered ? false : (isChild1Active && !isChild2Active)}
+            onMouseEnter={() => setHoveredNode('child2')}
+            onMouseLeave={() => setHoveredNode(null)}
+            onSelectNode={() => handleSelectChild('child2')}
+            onOpenCode={(tab) => setActiveCodeModalTab(tab || 'Child2')}
+            isInheritanceActive={true}
+            highlightedMembers={highlightedMembers}
+          />
         </div>
 
       </div>
+
+      {/* ── 5. FINAL HIERARCHICAL INHERITANCE TAKEAWAY ── */}
+      <AnimatePresence>
+        {phase === 'completed' && (
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative z-20 mb-3 text-center max-w-2xl px-4 pointer-events-none"
+          >
+            <div className="font-mono text-xs tracking-wider uppercase font-black text-amber-500 mb-1 flex items-center justify-center gap-1.5">
+              <CheckCircle2 size={13} className="text-emerald-500" />
+              <span>HIERARCHICAL INHERITANCE PRINCIPLE</span>
+            </div>
+            <p className={`text-xs sm:text-sm font-medium leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+              <strong className={isDark ? 'text-amber-300' : 'text-amber-700'}>Person</strong> passes its base code foundation to multiple subclasses. <strong className={isDark ? 'text-emerald-300' : 'text-emerald-700'}>Child1</strong> inherits dusky skin & specs while overriding hair to black. <strong className={isDark ? 'text-indigo-300' : 'text-indigo-700'}>Child2</strong> inherits brown hair & tall height while defining fair skin & blue eyes.
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── 6. PERSISTENT CONTROLS FOOTER DOCK ── */}
+      <footer className={`sticky bottom-0 z-40 w-full px-4 sm:px-8 py-2.5 sm:py-3 flex flex-wrap items-center justify-between gap-3 border-t backdrop-blur-xl shrink-0 shadow-2xl transition-colors duration-300 ${footerClass}`}>
+        
+        {/* Left: Replay & Trait Trigger */}
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={handleReplay}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-mono font-bold border transition-all hover:scale-105 active:scale-95 shadow-md cursor-pointer ${
+              isDark 
+                ? 'bg-white/5 hover:bg-white/10 text-slate-200 border-white/10' 
+                : isWarm 
+                ? 'bg-[#EBE0D3]/50 hover:bg-[#EBE0D3] text-[#2D1F23] border-[#D9CAB9]' 
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-200'
+            }`}
+          >
+            <RotateCcw size={13} className="text-amber-500" />
+            <span>Replay Flow</span>
+          </button>
+
+          <button
+            onClick={handleManualTransmit}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-mono font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30 transition-all hover:scale-105 active:scale-95 shadow-md cursor-pointer"
+          >
+            <Zap size={13} className="text-amber-500" />
+            <span>Transmit Traits</span>
+          </button>
+        </div>
+
+        {/* Center: Live Step Pills */}
+        <div className="hidden lg:flex items-center gap-1 font-mono text-[10px]">
+          {[
+            { id: 'intro', label: '1. Base Person' },
+            { id: 'delivering_traits', label: '2. Trait Delivery' },
+            { id: 'specialization', label: '3. Specialization' },
+            { id: 'completed', label: '4. Complete' },
+          ].map(st => {
+            const isActive = phase === st.id;
+            return (
+              <button
+                key={st.id}
+                onClick={() => {
+                  clearAllTimeouts();
+                  setPhase(st.id);
+                  if (st.id === 'delivering_traits') setHighlightedMembers(['skinTone', 'wearsGlasses', 'hairColor', 'height']);
+                  if (st.id === 'specialization') setHighlightedMembers(['hairColor', 'height', 'skinTone', 'eyeColor']);
+                }}
+                className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                  isActive 
+                    ? 'bg-amber-500/20 text-amber-500 font-bold border border-amber-500/40 shadow-xs' 
+                    : isDark ? 'text-slate-400 opacity-50 hover:opacity-100 hover:bg-white/5' : 'text-slate-500 opacity-60 hover:opacity-100 hover:bg-black/5'
+                }`}
+              >
+                {st.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Right: View Java Architecture & Next OOP Concept */}
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => setActiveCodeModalTab('HierarchicalDemo')}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono font-bold border transition-all hover:scale-105 active:scale-95 cursor-pointer ${
+              isDark 
+                ? 'bg-white/5 hover:bg-white/10 text-slate-300 border-white/10' 
+                : isWarm 
+                ? 'bg-[#EBE0D3]/50 hover:bg-[#EBE0D3] text-[#2D1F23] border-[#D9CAB9]' 
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-200'
+            }`}
+          >
+            <BookOpen size={13} className="text-amber-500" />
+            <span className="hidden sm:inline">Compare All 3 Classes</span>
+            <span className="sm:hidden">Java Code</span>
+          </button>
+
+          {onNext && (
+            <button
+              onClick={onNext}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-mono font-bold bg-amber-500 hover:bg-amber-600 text-slate-950 font-black shadow-lg shadow-amber-500/25 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            >
+              <span>Next: Polymorphism</span>
+              <ArrowRight size={13} />
+            </button>
+          )}
+        </div>
+      </footer>
+
+      {/* ── 7. JAVA ARCHITECTURE CODE MODAL ── */}
+      <CodeModal
+        isOpen={Boolean(activeCodeModalTab)}
+        onClose={() => setActiveCodeModalTab(null)}
+        initialTab={activeCodeModalTab || 'Person'}
+      />
+
     </div>
   );
 }

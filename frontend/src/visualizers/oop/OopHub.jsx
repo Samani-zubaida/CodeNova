@@ -1,117 +1,40 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
-import { Link, useLocation, useSearchParams } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ArrowLeft, Lock, Shield, GitFork, RefreshCw, Sparkles, Box, 
-  ArrowRight, LayoutGrid, MonitorPlay, ChevronRight
-} from 'lucide-react';
+import { useLocation, useSearchParams, useNavigate, useParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Sparkles, Box } from 'lucide-react';
+import useAppStore from '../../store/useAppStore';
+import { OOP_CATALOG } from './data/oopCatalogData';
+import { ConceptCard } from './components/catalog/ConceptCard';
+import { OopSubNavbar } from './components/common/OopSubNavbar';
+import InheritanceInPrepView from './inheritance/InheritanceInPrepView';
+
+// Re-export OOP_CATALOG for backwards compatibility
+export { OOP_CATALOG };
 
 // Dynamic Code-Splitting for the 4 Full-Screen Visualizers
 const EncapsulationVisualizer = lazy(() => import('./EncapsulationVisualizer'));
 const AbstractionVisualizer = lazy(() => import('./AbstractionVisualizer'));
 const InheritanceVisualizer = lazy(() => import('./InheritanceVisualizer'));
+const SingleInheritanceVisualizer = lazy(() => import('./SingleInheritanceVisualizer'));
 const PolymorphismVisualizer = lazy(() => import('./PolymorphismVisualizer'));
 
 const OopLoadingFallback = () => (
-  <div className="w-full h-[600px] flex flex-col items-center justify-center gap-4 text-[#BCA297]">
-    <div className="w-16 h-16 rounded-2xl bg-[#AB526B]/20 flex items-center justify-center text-[#F0E2A4] border border-[#AB526B]/40 animate-pulse">
+  <div className="w-full h-[550px] flex flex-col items-center justify-center gap-4 text-slate-400 dark:text-slate-300">
+    <div className="w-16 h-16 rounded-2xl bg-[#AB526B]/20 flex items-center justify-center text-[#F43F5E] border border-[#F43F5E]/40 animate-pulse shadow-lg">
       <Box size={32} className="animate-spin" style={{ animationDuration: '3s' }} />
     </div>
-    <span className="text-xs font-mono font-bold tracking-widest text-[#F0E2A4] uppercase">
-      Booting Visual Engine...
+    <span className="text-xs font-mono font-bold tracking-widest text-[#F43F5E] uppercase">
+      Booting Simulation Engine...
     </span>
   </div>
 );
 
-// 4 SVG GRAPHIC PREVIEWS FOR THE CARDS
-const EncapsulationGraphic = () => (
-  <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="100" height="100" rx="16" fill="#331921" />
-    <circle cx="50" cy="50" r="32" fill="#423834" stroke="#AB526B" strokeWidth="3" />
-    <circle cx="50" cy="50" r="22" fill="#331921" stroke="#F0E2A4" strokeWidth="2" strokeDasharray="4 2" />
-    <circle cx="50" cy="50" r="8" fill="#AB526B" />
-  </svg>
-);
-
-const AbstractionGraphic = () => (
-  <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="100" height="100" rx="16" fill="#331921" />
-    <circle cx="50" cy="40" r="24" fill="#423834" stroke="#C5CEAE" strokeWidth="3" />
-    <line x1="50" y1="40" x2="68" y2="28" stroke="#AB526B" strokeWidth="3" strokeLinecap="round" />
-    <line x1="20" y1="75" x2="80" y2="75" stroke="#5C4E49" strokeWidth="2" strokeDasharray="3 3" />
-    <rect x="35" y="78" width="8" height="12" rx="2" fill="#BCA297" />
-    <rect x="57" y="78" width="8" height="12" rx="2" fill="#BCA297" />
-  </svg>
-);
-
-const InheritanceGraphic = () => (
-  <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="100" height="100" rx="16" fill="#331921" />
-    <rect x="35" y="16" width="30" height="18" rx="6" fill="#423834" stroke="#BCA297" strokeWidth="2" />
-    <line x1="50" y1="34" x2="50" y2="52" stroke="#C5CEAE" strokeWidth="2" />
-    <rect x="35" y="52" width="30" height="18" rx="6" fill="#423834" stroke="#C5CEAE" strokeWidth="2" />
-    <line x1="50" y1="70" x2="50" y2="82" stroke="#AB526B" strokeWidth="2" />
-    <rect x="35" y="82" width="30" height="14" rx="4" fill="#AB526B" />
-  </svg>
-);
-
-const PolymorphismGraphic = () => (
-  <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="100" height="100" rx="16" fill="#331921" />
-    <circle cx="50" cy="30" r="14" fill="#423834" stroke="#F0E2A4" strokeWidth="2" />
-    <path d="M38 44 L 24 64 M 50 44 L 50 64 M 62 44 L 76 64" stroke="#F0E2A4" strokeWidth="2" strokeLinecap="round" />
-    <circle cx="24" cy="74" r="8" fill="#AB526B" />
-    <rect x="44" y="68" width="12" height="12" rx="2" fill="#F0E2A4" />
-    <polygon points="76,66 68,80 84,80" fill="#C5CEAE" />
-  </svg>
-);
-
-export const OOP_CATALOG = [
-  {
-    id: 'encapsulation',
-    name: 'Encapsulation',
-    category: 'Information Hiding & Access Control',
-    tag: 'Private Core & Shield Deflection',
-    path: '/visualizer/encapsulation',
-    graphic: <EncapsulationGraphic />,
-    icon: Lock,
-    color: '#AB526B'
-  },
-  {
-    id: 'abstraction',
-    name: 'Abstraction',
-    category: 'Interface Separation',
-    tag: 'Cockpit Controls vs 4-Piston Engine',
-    path: '/visualizer/abstraction',
-    graphic: <AbstractionGraphic />,
-    icon: Shield,
-    color: '#C5CEAE'
-  },
-  {
-    id: 'inheritance',
-    name: 'Inheritance',
-    category: 'Hierarchical Reuse & super()',
-    tag: 'RPG Evolution & Conduit Flow',
-    path: '/visualizer/inheritance',
-    graphic: <InheritanceGraphic />,
-    icon: GitFork,
-    color: '#BCA297'
-  },
-  {
-    id: 'polymorphism',
-    name: 'Polymorphism',
-    category: 'Dynamic Dispatch & Overriding',
-    tag: 'One Call -> Battle Arena Dispatch',
-    path: '/visualizer/polymorphism',
-    graphic: <PolymorphismGraphic />,
-    icon: RefreshCw,
-    color: '#F0E2A4'
-  }
-];
-
-export default function OopHub({ defaultConcept }) {
+export default function OopHub({ defaultConcept, defaultType }) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { type: paramType } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { theme } = useAppStore();
 
   const queryConcept = searchParams.get('concept');
   const initialConcept = defaultConcept || queryConcept || location.state?.concept;
@@ -119,6 +42,19 @@ export default function OopHub({ defaultConcept }) {
   // View mode: 'catalog' (4 Cards Grid) vs 'studio' (Full-Screen Visualizer)
   const [viewMode, setViewMode] = useState(initialConcept ? 'studio' : 'catalog');
   const [activeConcept, setActiveConcept] = useState(initialConcept || 'encapsulation');
+
+  // Sub-navbar dropdown for Inheritance
+  const activeInheritanceType = paramType || defaultType || 'hierarchical';
+  const [inheritanceDropdownOpen, setInheritanceDropdownOpen] = useState(false);
+
+  const handleSelectInheritanceType = (itype) => {
+    setInheritanceDropdownOpen(false);
+    if (itype === 'hierarchical') {
+      navigate('/oop/inheritance/hierarchical');
+    } else {
+      navigate(`/oop/inheritance/${itype}`);
+    }
+  };
 
   useEffect(() => {
     const target = defaultConcept || searchParams.get('concept') || location.state?.concept;
@@ -139,174 +75,126 @@ export default function OopHub({ defaultConcept }) {
     setSearchParams({});
   };
 
-  const renderStudioVisualizer = () => {
+  // ── STUDIO MODE: FULL-SCREEN VISUALIZER WITH UNIFIED SUB-NAVBAR ──
+  if (viewMode === 'studio') {
+    const isEncapsulation = activeConcept === 'encapsulation';
+
     return (
-      <Suspense fallback={<OopLoadingFallback />}>
-        {activeConcept === 'encapsulation' && <EncapsulationVisualizer isEmbedded={true} />}
-        {activeConcept === 'abstraction' && <AbstractionVisualizer isEmbedded={true} />}
-        {activeConcept === 'inheritance' && <InheritanceVisualizer isEmbedded={true} />}
-        {activeConcept === 'polymorphism' && <PolymorphismVisualizer isEmbedded={true} />}
-      </Suspense>
+      <div className={`w-full h-full overflow-hidden flex flex-col ${
+        isEncapsulation ? 'bg-[#080C16] text-[#FAF7F2]' : ''
+      } font-sans relative transition-colors duration-300`}>
+        {/* Unified, theme-aware sub-navbar */}
+        <OopSubNavbar
+          activeConcept={activeConcept}
+          onSelectConcept={handleEnterCard}
+          onReturnToCatalog={handleReturnToCatalog}
+          activeInheritanceType={activeInheritanceType}
+          onSelectInheritanceType={handleSelectInheritanceType}
+          inheritanceDropdownOpen={inheritanceDropdownOpen}
+          setInheritanceDropdownOpen={setInheritanceDropdownOpen}
+        />
+
+        {/* Studio Viewport Canvas */}
+        <div className="w-full flex-1 relative overflow-y-auto overflow-x-hidden flex flex-col [scrollbar-width:thin] [scrollbar-color:rgba(56,189,248,0.35)_transparent]">
+          <Suspense fallback={<OopLoadingFallback />}>
+            {activeConcept === 'encapsulation' && (
+              <EncapsulationVisualizer 
+                isEmbedded={true}
+                onNext={() => handleEnterCard('abstraction')}
+                onReturnToCatalog={handleReturnToCatalog}
+              />
+            )}
+            {activeConcept === 'abstraction' && (
+              <AbstractionVisualizer isEmbedded={true} />
+            )}
+            {activeConcept === 'inheritance' && (
+              activeInheritanceType === 'single' ? (
+                <SingleInheritanceVisualizer 
+                  isEmbedded={true}
+                  onNext={() => handleEnterCard('polymorphism')}
+                  onReturnToCatalog={handleReturnToCatalog}
+                />
+              ) : activeInheritanceType === 'hierarchical' ? (
+                <InheritanceVisualizer 
+                  isEmbedded={true}
+                  onNext={() => handleEnterCard('polymorphism')}
+                  onReturnToCatalog={handleReturnToCatalog}
+                />
+              ) : (
+                <InheritanceInPrepView 
+                  type={activeInheritanceType}
+                  onSwitchType={(t) => handleSelectInheritanceType(t)}
+                  onSwitchToHierarchical={() => handleSelectInheritanceType('hierarchical')}
+                />
+              )
+            )}
+            {activeConcept === 'polymorphism' && (
+              <PolymorphismVisualizer isEmbedded={true} />
+            )}
+          </Suspense>
+        </div>
+      </div>
     );
-  };
+  }
 
-  const activeItem = OOP_CATALOG.find(c => c.id === activeConcept) || OOP_CATALOG[0];
-
+  // ── CATALOG MODE: 4 PILLARS DISCOVERY DASHBOARD ──
   return (
-    <div className="w-full min-h-screen bg-[#331921] text-[#FAF7F2] flex flex-col font-sans selection:bg-[#AB526B] selection:text-white">
+    <div className="w-full flex-1 flex flex-col font-sans relative overflow-x-hidden transition-colors duration-300">
       
-      {/* HEADER NAVBAR */}
-      <header className="h-16 px-4 md:px-8 border-b border-[#5C4E49] bg-[#331921]/95 backdrop-blur-md flex items-center justify-between z-30 sticky top-0 shadow-lg">
+      {/* Ambient Aurora Background Glows */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div className="absolute -top-[12%] -left-[8%] w-[55vw] h-[55vw] max-w-[650px] max-h-[650px] rounded-full blur-[150px] opacity-15 dark:opacity-20 bg-[#F43F5E]" />
+        <div className="absolute -top-[10%] -right-[8%] w-[50vw] h-[50vw] max-w-[600px] max-h-[600px] rounded-full blur-[160px] opacity-15 dark:opacity-20 bg-[#10B981]" />
+        <div className="absolute -bottom-[15%] -left-[10%] w-[55vw] h-[55vw] max-w-[650px] max-h-[650px] rounded-full blur-[170px] opacity-15 dark:opacity-20 bg-[#38BDF8]" />
+        <div className="absolute -bottom-[12%] -right-[8%] w-[50vw] h-[50vw] max-w-[600px] max-h-[600px] rounded-full blur-[160px] opacity-15 dark:opacity-20 bg-[#F59E0B]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:32px_32px] opacity-60" />
+      </div>
+
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 flex-1 flex flex-col justify-center">
         
-        {/* Left: Navigation */}
-        <div className="flex items-center gap-3">
-          <Link 
-            to="/visualizer" 
-            className="flex items-center gap-2 text-xs font-bold text-[#BCA297] hover:text-[#FAF7F2] transition-colors px-3 py-1.5 rounded-xl hover:bg-[#423834] border border-transparent hover:border-[#5C4E49]"
+        {/* Hero Header */}
+        <div className="text-center max-w-3xl mx-auto mb-10 md:mb-12">
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-mono font-bold tracking-wide uppercase shadow-xs mb-4 bg-white/70 dark:bg-slate-800/80 border border-slate-200/80 dark:border-white/10 text-slate-800 dark:text-[#FAF7F2] backdrop-blur-md"
           >
-            <ArrowLeft size={16} />
-            <span className="hidden sm:inline">Visualizers</span>
-          </Link>
-          <div className="h-5 w-px bg-[#5C4E49]" />
-
-          {viewMode === 'studio' ? (
-            <button
-              onClick={handleReturnToCatalog}
-              className="flex items-center gap-2 text-xs font-bold text-[#F0E2A4] hover:text-white transition-colors px-3 py-1.5 rounded-xl bg-[#423834] border border-[#5C4E49]"
-            >
-              <LayoutGrid size={14} />
-              <span>← All 4 Pillars</span>
-            </button>
-          ) : (
-            <span className="font-bold text-sm text-[#FAF7F2]">
-              Code Nova &bull; 4 Pillars of OOP
-            </span>
-          )}
+            <Sparkles size={14} className="text-[#F43F5E] animate-pulse" />
+            <span>Interactive OOP Universe &bull; Real-Time Studio</span>
+          </motion.div>
+          
+          <motion.h1 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white"
+          >
+            The 4 Core Pillars of <span className="bg-gradient-to-r from-[#F43F5E] via-[#38BDF8] to-[#10B981] bg-clip-text text-transparent">OOP</span>
+          </motion.h1>
+          
+          <motion.p 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-sm sm:text-base text-slate-600 dark:text-slate-300 mt-3 font-normal leading-relaxed"
+          >
+            Explore object-oriented architecture through hands-on, live-rendered laboratories.
+            Click any pillar below to test private vaults, engine abstractions, class hierarchy trees, and dynamic role dispatch.
+          </motion.p>
         </div>
 
-        {/* Center: Pillar Pills in Studio View */}
-        {viewMode === 'studio' && (
-          <div className="hidden md:flex items-center gap-1.5 bg-[#423834] p-1.5 rounded-2xl border border-[#5C4E49]">
-            {OOP_CATALOG.map((item) => {
-              const IconComp = item.icon;
-              const isActive = activeConcept === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleEnterCard(item.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    isActive
-                      ? 'bg-[#AB526B] text-white shadow-lg scale-105 border border-[#FAF7F2]/30'
-                      : 'text-[#BCA297] hover:text-[#FAF7F2] hover:bg-[#331921]'
-                  }`}
-                >
-                  <IconComp size={14} style={{ color: isActive ? '#FAF7F2' : item.color }} />
-                  <span>{item.name}</span>
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Right: Badge */}
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#423834] border border-[#5C4E49] text-xs font-mono text-[#F0E2A4]">
-          <Sparkles size={13} className="text-[#AB526B] animate-pulse" />
-          <span className="hidden sm:inline">Interactive Studio</span>
+        {/* 4 Pillars Card Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {OOP_CATALOG.map((item, idx) => (
+            <ConceptCard
+              key={item.id}
+              item={item}
+              index={idx}
+              onEnter={handleEnterCard}
+            />
+          ))}
         </div>
-      </header>
-
-      {/* MAIN VIEW */}
-      <main className="flex-1 flex flex-col items-center w-full">
-        {viewMode === 'catalog' ? (
-          /* ============================================================
-             MODE 1: THE 4 CARDS CATALOG PAGE
-             ============================================================ */
-          <div className="p-6 md:p-12 max-w-7xl mx-auto w-full flex-1 flex flex-col justify-center">
-            
-            <div className="text-center max-w-2xl mx-auto mb-10">
-              <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-[#AB526B]/20 text-[#AB526B] border border-[#AB526B]/40 inline-flex items-center gap-1.5 mb-3">
-                <Sparkles size={13} /> Select a Pillar to Enter Visualization
-              </span>
-              <h1 className="text-3xl md:text-4xl font-black text-[#FAF7F2] tracking-tight">
-                The 4 Core Pillars of OOP
-              </h1>
-              <p className="text-sm text-[#BCA297] mt-2">
-                Click any card to launch its spacious, real-time animated simulation playground equipped with a dedicated Play button!
-              </p>
-            </div>
-
-            {/* 4 CARDS GRID */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {OOP_CATALOG.map((item) => {
-                const IconComp = item.icon;
-
-                return (
-                  <motion.div
-                    key={item.id}
-                    whileHover={{ scale: 1.03, y: -4 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handleEnterCard(item.id)}
-                    className="group cursor-pointer rounded-3xl p-5 bg-[#423834] border-2 border-[#5C4E49] hover:border-[#AB526B] shadow-2xl transition-all duration-300 flex flex-col justify-between relative overflow-hidden"
-                  >
-                    <div>
-                      {/* Animated Graphic Box */}
-                      <div className="w-full h-36 rounded-2xl overflow-hidden mb-4 p-3 bg-[#331921] border border-[#5C4E49] group-hover:border-[#AB526B]/50 transition-colors">
-                        {item.graphic}
-                      </div>
-
-                      <div className="flex items-center gap-2 mb-1">
-                        <div 
-                          className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-                          style={{ backgroundColor: `${item.color}25`, border: `1px solid ${item.color}60` }}
-                        >
-                          <IconComp size={15} style={{ color: item.color }} />
-                        </div>
-                        <h3 className="font-bold text-lg text-[#FAF7F2] group-hover:text-[#F0E2A4] transition-colors">
-                          {item.name}
-                        </h3>
-                      </div>
-
-                      <div className="text-xs font-mono text-[#C5CEAE] mt-1 font-semibold">
-                        {item.category}
-                      </div>
-                      <div className="text-[11px] font-mono text-[#BCA297] mt-0.5">
-                        &bull; {item.tag}
-                      </div>
-                    </div>
-
-                    <div className="mt-6 pt-3 border-t border-[#5C4E49] flex items-center justify-between">
-                      <span className="text-xs font-bold text-[#F0E2A4] group-hover:underline flex items-center gap-1">
-                        Enter Visualization
-                      </span>
-                      <ArrowRight size={16} className="text-[#AB526B] group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-
-          </div>
-        ) : (
-          /* ============================================================
-             MODE 2: FULL-SCREEN ANIMATED VISUALIZER STUDIO
-             ============================================================ */
-          <div className="w-full flex-1 flex flex-col p-4 md:p-6 max-w-7xl mx-auto">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeConcept}
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                transition={{ duration: 0.2 }}
-                className="w-full flex-1 flex flex-col"
-              >
-                {renderStudioVisualizer()}
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        )}
-      </main>
-
+      </div>
     </div>
   );
 }

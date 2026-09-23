@@ -8,6 +8,7 @@ import HostDashboard from './game/HostDashboard';
 import Home from './pages/Home';
 import Intro from './pages/Intro';
 import Auth from './pages/Auth';
+import VerifyEmail from './pages/VerifyEmail';
 import useAppStore from './store/useAppStore';
 
 // Data Structures
@@ -45,7 +46,17 @@ function AppContent() {
   const isHome = location.pathname === '/';
   const isIntro = location.pathname === '/intro';
   const isVisualizerHub = location.pathname === '/visualizer';
-  const isFullscreen = isHome || isIntro || isVisualizerHub;
+  const isAuth = location.pathname === '/auth';
+  const isVerifyEmail = location.pathname === '/verify-email';
+  const isFullscreen = isHome || isIntro || isAuth || isVerifyEmail;
+  const isAppStudio = location.pathname === '/sandbox' || location.pathname === '/game' || location.pathname === '/host';
+  const isOopRoute = location.pathname === '/oop' || 
+    location.pathname === '/oops' || 
+    location.pathname.startsWith('/visualizer/oop') ||
+    location.pathname.startsWith('/visualizer/encapsulation') ||
+    location.pathname.startsWith('/visualizer/abstraction') ||
+    location.pathname.startsWith('/visualizer/inheritance') ||
+    location.pathname.startsWith('/visualizer/polymorphism');
   const { theme } = useAppStore();
 
   React.useEffect(() => {
@@ -63,20 +74,21 @@ function AppContent() {
   }, [theme]);
 
   const themeClass = theme === 'dark' 
-    ? 'dark bg-[#331921] text-[#F4EBC3]' 
+    ? (isOopRoute ? 'dark bg-black text-[#FAF7F2]' : 'dark bg-[#331921] text-[#F4EBC3]') 
     : theme === 'warm' 
     ? 'warm bg-[#F4EBC3] text-[#2D1F23]' 
-    : 'bg-[#FAF7F2] text-[#2D1F23]';
+    : (isOopRoute ? 'bg-[#FAF9F6] text-[#2D1F23]' : 'bg-[#FAF7F2] text-[#2D1F23]');
 
   return (
     <div className={isFullscreen ? '' : `min-h-screen ${themeClass} font-sans transition-colors duration-300`}>
       {!isFullscreen && <Navbar />}
       
-      <main className={isFullscreen ? '' : 'pt-16 min-h-screen'}>
+      <main className={isFullscreen ? '' : isAppStudio ? 'h-[calc(100vh-64px)] overflow-hidden' : isOopRoute ? 'min-h-[calc(100vh-64px)] flex flex-col' : 'min-h-[calc(100vh-64px)] pb-16'}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/intro" element={<Intro />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/visualizer" element={<VisualizerDashboard />} />
           
           {/* DS Routes */}
@@ -98,6 +110,8 @@ function AppContent() {
           <Route path="/visualizer/map" element={<MapVisualizer />} />
 
           {/* OOP Routes */}
+          <Route path="/oop" element={<OopHub />} />
+          <Route path="/oops" element={<OopHub />} />
           <Route path="/visualizer/oop" element={<OopHub />} />
           <Route path="/visualizer/oops" element={<OopHub />} />
           <Route path="/visualizer/encapsulation" element={<OopHub defaultConcept="encapsulation" />} />

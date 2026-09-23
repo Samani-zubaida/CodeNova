@@ -256,19 +256,7 @@ export default function HeapVisualizer() {
     addLog(`> Switched algorithm mode to ${HEAP_ALGORITHMS.find(a => a.id === activeAlgo)?.name}.`);
 
     if (activeAlgo === 'operations') {
-      const initialArr = heapType === 'min' ? [15, 25, 35, 45, 60, 80] : [90, 75, 60, 45, 30, 20];
-      setHeap(initialArr);
-      setActiveVariables({
-        rootVal: initialArr[0],
-        size: initialArr.length,
-        heapType,
-        lastIndex: initialArr.length - 1
-      });
-      setExplanation({
-        action: `${heapType === 'min' ? 'Min' : 'Max'}-Heap Ready`,
-        intuition: `In a ${heapType}-heap, parent is always ${heapType === 'min' ? '≤' : '≥'} both of its children.`,
-        next: "Insert element to watch Bubble-Up (Sift-Up) or Extract Root."
-      });
+      buildOperationsDemo(heapType);
     } else if (activeAlgo === 'heapify') {
       resetHeapify(heapifyInput);
     } else if (activeAlgo === 'heapSort') {
@@ -277,6 +265,90 @@ export default function HeapVisualizer() {
       resetKth(kthInput, kthVal);
     }
   }, [activeAlgo, heapType]);
+
+  // =========================================================================
+  // DEMO: MIN / MAX HEAP DYNAMIC OPERATIONS ANIMATION
+  // =========================================================================
+  const buildOperationsDemo = (type = heapType) => {
+    const isMin = type === 'min';
+    let h = isMin ? [15, 25, 35, 45, 60, 80] : [90, 75, 60, 45, 30, 20];
+    const recorded = [];
+
+    recorded.push({
+      action: `${isMin ? 'Min' : 'Max'}-Heap Initial State`,
+      intuition: `Binary heap guarantees parent is ${isMin ? '≤' : '≥'} both children. Stored as contiguous array.`,
+      next: `Insert ${isMin ? 20 : 85} into heap.`,
+      heapState: [...h],
+      highlight: [0],
+      variables: { heapType: type, size: h.length, root: h[0] },
+      line: 1
+    });
+
+    const insertVal = isMin ? 20 : 85;
+    h.push(insertVal);
+    const leafIdx = h.length - 1;
+    recorded.push({
+      action: `INSERT ${insertVal}: Placed at index [${leafIdx}] as rightmost leaf`,
+      intuition: "Always insert new elements at the end of the array to maintain complete binary tree structure.",
+      next: "Compare with parent and bubble up (sift up).",
+      heapState: [...h],
+      highlight: [leafIdx],
+      variables: { inserted: insertVal, index: leafIdx, size: h.length },
+      line: 6
+    });
+
+    const parentIdx = Math.floor((leafIdx - 1) / 2);
+    const temp = h[parentIdx];
+    h[parentIdx] = h[leafIdx];
+    h[leafIdx] = temp;
+    recorded.push({
+      action: `⚡ SIFT-UP: Swapped ${insertVal} with parent ${temp} at index [${parentIdx}]`,
+      intuition: `${insertVal} is ${isMin ? '<' : '>'} parent ${temp}. Swapping restores the ${type}-heap property!`,
+      next: `Extract root element (${h[0]}).`,
+      heapState: [...h],
+      highlight: [parentIdx, leafIdx],
+      variables: { swapped: [parentIdx, leafIdx], newRoot: h[0] },
+      line: 8
+    });
+
+    const extracted = h[0];
+    const lastVal = h.pop();
+    h[0] = lastVal;
+    recorded.push({
+      action: `EXTRACT-${isMin ? 'MIN' : 'MAX'}(): Removed root ${extracted}, moved last leaf ${lastVal} to root`,
+      intuition: "Root is the extremum (O(1) read). Moving the last element to root maintains the complete tree shape.",
+      next: "Sift-Down (Bubble-Down) from root to restore heap invariant.",
+      heapState: [...h],
+      highlight: [0],
+      variables: { extracted, rootTemp: lastVal, size: h.length },
+      line: 12
+    });
+
+    const leftChild = 1;
+    const rightChild = 2;
+    let targetChild = leftChild;
+    if (rightChild < h.length) {
+      if (isMin ? h[rightChild] < h[leftChild] : h[rightChild] > h[leftChild]) {
+        targetChild = rightChild;
+      }
+    }
+    const tVal = h[targetChild];
+    h[targetChild] = h[0];
+    h[0] = tVal;
+    recorded.push({
+      action: `⚡ SIFT-DOWN: Swapped root ${lastVal} with child ${tVal} at index [${targetChild}]`,
+      intuition: `Sift-down trickles the element down the tree in O(log n) height comparisons until valid.`,
+      next: "Heap property fully restored! Ready for further operations.",
+      heapState: [...h],
+      highlight: [0, targetChild],
+      variables: { newRoot: h[0], size: h.length, status: 'RESTORED' },
+      line: 15
+    });
+
+    setSteps(recorded);
+    setCurrentStepIdx(0);
+    applyHeapStep(recorded[0]);
+  };
 
   // =========================================================================
   // ALGORITHM 1: MIN / MAX HEAP DYNAMIC OPERATIONS
@@ -791,7 +863,14 @@ export default function HeapVisualizer() {
 
   // Playback dispatcher
   const handlePlayPause = () => {
-    if (steps.length === 0) return;
+    if (steps.length === 0) {
+      if (activeAlgo === 'operations') buildOperationsDemo(heapType);
+      else if (activeAlgo === 'heapify') resetHeapify(heapifyInput);
+      else if (activeAlgo === 'heapSort') resetHeapSort(heapSortInput);
+      else if (activeAlgo === 'kthElement') resetKth(kthInput, kthVal);
+      setIsPlaying(true);
+      return;
+    }
     if (currentStepIdx >= steps.length - 1) {
       setCurrentStepIdx(0);
       applyHeapStep(steps[0]);
@@ -1116,21 +1195,20 @@ export default function HeapVisualizer() {
       category="ds"
       controls={renderControls}
       playback={
-        activeAlgo !== 'operations' ? (
-          <VisualizerPlaybackBar
-            isPlaying={isPlaying}
-            onPlayPause={handlePlayPause}
-            onStepForward={handleStepForward}
-            onStepBack={handleStepBackward}
-            onReset={handleReset}
-            speed={playbackSpeed}
-            onSpeedChange={setPlaybackSpeed}
-            currentStep={currentStepIdx}
-            totalSteps={steps.length}
-            isVoiceEnabled={isVoiceEnabled}
-            onToggleVoice={() => setIsVoiceEnabled(v => !v)}
-          />
-        ) : null
+        <VisualizerPlaybackBar
+          isPlaying={isPlaying}
+          onPlayPause={handlePlayPause}
+          onStepForward={handleStepForward}
+          onStepBack={handleStepBackward}
+          onReset={handleReset}
+          speed={playbackSpeed}
+          onSpeedChange={setPlaybackSpeed}
+          currentStep={currentStepIdx}
+          totalSteps={Math.max(steps.length, 1)}
+          stepDescription={explanation.action || 'Heap simulation ready'}
+          isVoiceEnabled={isVoiceEnabled}
+          onToggleVoice={() => setIsVoiceEnabled(v => !v)}
+        />
       }
       rightPanel={renderRightPanel}
       consoleOutput={logs}

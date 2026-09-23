@@ -19,6 +19,7 @@ import ResponsiveVisualizerShell from '../../components/visualizer/ResponsiveVis
 import VisualizerPlaybackBar from '../../components/visualizer/VisualizerPlaybackBar';
 import ComplexityBadge from '../../components/visualizer/ComplexityBadge';
 import CodeInspector from '../../components/visualizer/CodeInspector';
+import QuickCornerCard from '../../components/visualizer/QuickCornerCard';
 
 // 15 Array & Sorting/Searching Algorithms Suite
 const ARRAY_ALGORITHMS = [
@@ -525,6 +526,25 @@ export default function ArrayVisualizer() {
     setIsPlaying(true);
   };
 
+  const handleAddElement = () => {
+    const val = Number(inputValue);
+    if (!isNaN(val) && inputValue.trim() !== '') {
+      setArray(prev => [...prev, val]);
+      setInputValue('');
+      handleReset();
+      log(`> Appended ${val} to array.`);
+    }
+  };
+
+  const handleRemoveElement = () => {
+    if (array.length > 0) {
+      const removed = array[array.length - 1];
+      setArray(prev => prev.slice(0, -1));
+      handleReset();
+      log(`> Removed element ${removed} from array.`);
+    }
+  };
+
   const currentAlgoMeta = ARRAY_ALGORITHMS.find(a => a.id === selectedAlgo) || ARRAY_ALGORITHMS[0];
   const currentCode = ARRAY_CODE_TEMPLATES[selectedAlgo] || ARRAY_CODE_TEMPLATES.binary_search;
 
@@ -541,6 +561,56 @@ export default function ArrayVisualizer() {
       currentPath="/visualizer/array"
       category="ds"
       consoleOutput={consoleLogs}
+      cornerCard={
+        <QuickCornerCard
+          title="Array Quick Actions"
+          subtitle="Instant Target & Array Ops"
+          position="top-left"
+          targetInput={{
+            label: selectedAlgo === 'two_sum' ? "Target Sum" : "Search Target",
+            value: selectedAlgo === 'two_sum' ? targetSum : searchTarget,
+            onChange: (v) => selectedAlgo === 'two_sum' ? setTargetSum(v) : setSearchTarget(v),
+            onSearch: handleExecuteCurrentAlgo,
+            placeholder: selectedAlgo === 'two_sum' ? "Sum (e.g. 81)..." : "Target (e.g. 67)..."
+          }}
+          addInput={{
+            label: "Append Element",
+            value: inputValue,
+            onChange: setInputValue,
+            onAdd: handleAddElement,
+            placeholder: "Number"
+          }}
+          removeInput={{
+            label: "Pop Element",
+            hint: "Removes rightmost element",
+            onRemove: handleRemoveElement
+          }}
+          customActions={
+            <div className="flex items-center gap-1.5 w-full pt-1">
+              <button
+                onClick={() => {
+                  const shuffled = [...array].sort(() => Math.random() - 0.5);
+                  setArray(shuffled);
+                  handleReset();
+                  log('> Array randomized.');
+                }}
+                className="flex-1 py-1 rounded-xl bg-gray-100 dark:bg-[#423834] hover:bg-gray-200 dark:hover:bg-[#5C4E49] text-[10px] font-mono font-bold text-gray-700 dark:text-[#F0E2A4] transition-colors flex items-center justify-center gap-1"
+                title="Randomize Array"
+              >
+                <span>🎲 Randomize</span>
+              </button>
+              <button
+                onClick={handleExecuteCurrentAlgo}
+                className="flex-1 py-1 rounded-xl bg-[#BC4A54] hover:bg-[#a63d46] text-white text-[10px] font-mono font-bold transition-all flex items-center justify-center gap-1"
+                title="Run Current Algorithm"
+              >
+                <Play size={10} className="fill-white" />
+                <span>Run</span>
+              </button>
+            </div>
+          }
+        />
+      }
       controls={
         <div className="flex flex-col gap-3.5">
           

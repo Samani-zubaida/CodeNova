@@ -293,29 +293,29 @@ export default function QueueHub() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-[#331921] border-2 border-[#5C4E49] rounded-3xl p-5 shadow-xl flex flex-col justify-between hover:border-[#AB526B] transition-all group relative overflow-hidden"
+                className="bg-white dark:bg-[#423834] rounded-2xl p-4 md:p-5 shadow-sm border border-[#EBE0D3]/50 dark:border-[#5C4E49] hover:shadow-md transition-all duration-300 group flex flex-col justify-between"
               >
                 <div>
                   {/* Card Graphic Header */}
-                  <div className="w-full h-32 rounded-2xl overflow-hidden mb-4 border border-[#5C4E49]/40 shadow-inner group-hover:scale-105 transition-transform duration-300">
+                  <div className="w-full h-32 rounded-xl overflow-hidden mb-4 bg-gray-50 dark:bg-[#5C4E49] flex items-center justify-center group-hover:scale-[1.02] transition-transform duration-300">
                     {item.graphic}
                   </div>
 
                   {/* Badge & Title */}
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] font-mono font-extrabold px-2.5 py-0.5 rounded-full bg-[#AB526B] text-white">
+                    <span className="text-[10px] font-mono font-extrabold px-2.5 py-0.5 rounded-full bg-[#AB526B]/10 text-[#AB526B] dark:text-[#F0E2A4] border border-[#AB526B]/20">
                       {item.tag}
                     </span>
-                    <span className="text-[10px] font-mono text-[#BCA297]">
+                    <span className="text-[10px] font-mono text-gray-400 dark:text-gray-300">
                       {item.category}
                     </span>
                   </div>
 
-                  <h3 className="text-base font-extrabold text-[#FAF7F2] font-mono group-hover:text-[#F0E2A4] transition-colors mb-2">
+                  <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 group-hover:text-[#AB526B] transition-colors mb-2">
                     {item.name}
                   </h3>
 
-                  <p className="text-xs text-[#BCA297] line-clamp-3 leading-relaxed">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-3 leading-relaxed">
                     {item.desc}
                   </p>
                 </div>
@@ -323,7 +323,7 @@ export default function QueueHub() {
                 {/* Launch Button */}
                 <Link
                   to={`/visualizer/queue/${item.id}`}
-                  className="mt-5 w-full py-2.5 rounded-xl bg-[#AB526B] hover:bg-[#8F3E53] text-white text-xs font-mono font-black shadow-lg transition-all flex items-center justify-center gap-2 group-hover:gap-3"
+                  className="mt-5 w-full py-2.5 rounded-xl bg-[#AB526B] hover:bg-[#8F3E53] text-white text-xs font-mono font-bold shadow-xs transition-all flex items-center justify-center gap-2 group-hover:gap-3"
                 >
                   <span>Enter Visualization</span>
                   <ArrowRight size={14} />

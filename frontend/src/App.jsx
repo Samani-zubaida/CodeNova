@@ -15,6 +15,7 @@ import ArrayHub from './visualizers/ds/ArrayHub';
 import Array3DVisualizer from './visualizers/ds/Array3DVisualizer';
 import StringHub from './visualizers/ds/StringHub';
 import StringVisualizer from './visualizers/ds/StringVisualizer';
+import StackHub from './visualizers/ds/StackHub';
 import StackVisualizer from './visualizers/ds/StackVisualizer';
 import QueueHub from './visualizers/ds/QueueHub';
 import QueueVisualizer from './visualizers/ds/QueueVisualizer';
@@ -43,7 +44,8 @@ function AppContent() {
   const location = useLocation();
   const isHome = location.pathname === '/';
   const isIntro = location.pathname === '/intro';
-  const isFullscreen = isHome || isIntro;
+  const isVisualizerHub = location.pathname === '/visualizer';
+  const isFullscreen = isHome || isIntro || isVisualizerHub;
   const { theme } = useAppStore();
 
   React.useEffect(() => {
@@ -88,9 +90,10 @@ function AppContent() {
           <Route path="/visualizer/string/:algoId" element={<StringVisualizer />} />
           <Route path="/visualizer/tree" element={<TreeHub />} />
           <Route path="/visualizer/tree/:algoId" element={<TreeGraphVisualizer />} />
-          <Route path="/visualizer/stack" element={<StackVisualizer />} />
+          <Route path="/visualizer/stack" element={<StackHub />} />
+          <Route path="/visualizer/stack/:algoId" element={<StackVisualizer />} />
           <Route path="/visualizer/queue" element={<QueueHub />} />
-          <Route path="/visualizer/queue/:algoId" element={<QueueHub />} />
+          <Route path="/visualizer/queue/:algoId" element={<QueueVisualizer />} />
           <Route path="/visualizer/heap" element={<HeapVisualizer />} />
           <Route path="/visualizer/map" element={<MapVisualizer />} />
 
@@ -104,6 +107,7 @@ function AppContent() {
 
           {/* Crypto Routes */}
           <Route path="/visualizer/crypto" element={<CryptoHub />} />
+          <Route path="/visualizer/crypto/:algoId" element={<CryptoHub />} />
           <Route path="/visualizer/cryptography" element={<CryptoHub />} />
           <Route path="/visualizer/caesar" element={<CryptoHub defaultAlgo="caesar" />} />
           <Route path="/visualizer/vigenere" element={<CryptoHub defaultAlgo="vigenere" />} />

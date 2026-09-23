@@ -1,868 +1,1814 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback, useEffect, Suspense } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { 
-  LayoutGrid, 
-  Code2, 
-  Gamepad2, 
-  Sparkles, 
-  Search, 
-  Sun, 
-  Circle, 
-  Moon, 
-  ChevronDown, 
-  ArrowRight,
-  LogOut,
-  LogIn
-} from 'lucide-react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import {
+  PerspectiveCamera,
+  Sparkles,
+  Html,
+  Sky,
+  Environment,
+  SoftShadows,
+} from '@react-three/drei';
+import { motion, AnimatePresence } from 'framer-motion';
+import * as THREE from 'three';
 import useAppStore from '../store/useAppStore';
+import {
+  ArrowLeft, Sun, Moon, Circle, LogOut, LogIn,
+  ArrowRight, ChevronDown, ChevronLeft, ChevronRight,
+} from 'lucide-react';
+import AppleDataStructuresView from '../components/visualizer/AppleDataStructuresView';
+import AppleCryptoView from '../components/visualizer/AppleCryptoView';
 
-/* ========================================================================= */
-/* 1. HERO 3D ISOMETRIC ILLUSTRATION                                        */
-/* ========================================================================= */
-const HeroIllustration = () => (
-  <svg viewBox="0 0 520 220" className="w-full h-full object-contain" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="hillGradLight" x1="200" y1="0" x2="500" y2="220" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stopColor="#C5CEAE" stopOpacity="0.45" />
-        <stop offset="100%" stopColor="#FAF7F2" stopOpacity="0.1" />
-      </linearGradient>
-      <linearGradient id="hillGradDark" x1="200" y1="0" x2="500" y2="220" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stopColor="#30382D" stopOpacity="0.8" />
-        <stop offset="100%" stopColor="#331921" stopOpacity="0.2" />
-      </linearGradient>
-      <filter id="softShadow" x="-10%" y="-10%" width="130%" height="130%">
-        <feDropShadow dx="0" dy="6" stdDeviation="8" floodColor="#331921" floodOpacity="0.2" />
-      </filter>
-    </defs>
+/* ─────────────────────────────────────────────────────────────
+   PALETTE & DATA
+   ───────────────────────────────────────────────────────────── */
+const PALETTE = {
+  red:   { light: '#AB526B', dark: '#331921', text: '#FAF7F2', textDark: '#F4EBC3' },
+  sage:  { light: '#C5CEAE', dark: '#2A2E25', text: '#2D1F23', textDark: '#F4EBC3' },
+  brown: { light: '#BCA297', dark: '#2A211C', text: '#2D1F23', textDark: '#F4EBC3' },
+  wheat: { light: '#F0E2A4', dark: '#2A2615', text: '#2D1F23', textDark: '#F4EBC3' },
+};
 
-    {/* Smooth Sage Green Hill (Adapts to #30382D in dark mode) */}
-    <path 
-      d="M120 220 C 180 120, 290 60, 520 70 L 520 220 Z" 
-      className="fill-[url(#hillGradLight)] dark:fill-[url(#hillGradDark)]"
-    />
-
-    {/* Floating Isometric 3D Cube 1 (Sage: #C5CEAE in light, #30382D in dark) */}
-    <g transform="translate(195, 80)">
-      <polygon points="18,0 36,10 18,20 0,10" className="fill-[#E2E8D2] dark:fill-[#434F3F]" />
-      <polygon points="0,10 18,20 18,40 0,30" className="fill-[#C5CEAE] dark:fill-[#30382D]" />
-      <polygon points="18,20 36,10 36,30 18,40" className="fill-[#A9B58E] dark:fill-[#252C23]" />
-    </g>
-
-    {/* Floating Isometric 3D Cube 2 (Rose: #AB526B in light, #331921 in dark) */}
-    <g transform="translate(205, 30)">
-      <polygon points="14,0 28,8 14,16 0,8" className="fill-[#C5637D] dark:fill-[#48232F]" />
-      <polygon points="0,8 14,16 14,32 0,24" className="fill-[#AB526B] dark:fill-[#331921]" />
-      <polygon points="14,16 28,8 28,24 14,32" className="fill-[#8E3B53] dark:fill-[#251218]" />
-    </g>
-
-    {/* Floating Isometric 3D Cube 3 (Rosy Brown: #BCA297 in light, #423834 in dark) */}
-    <g transform="translate(180, 120)">
-      <polygon points="14,0 28,8 14,16 0,8" className="fill-[#E8D1CB] dark:fill-[#5C4E49]" />
-      <polygon points="0,8 14,16 14,30 0,22" className="fill-[#BCA297] dark:fill-[#423834]" />
-      <polygon points="14,16 28,8 28,22 14,30" className="fill-[#A4877B] dark:fill-[#322A27]" />
-    </g>
-
-    {/* 3D Laptop */}
-    <g transform="translate(230, 80)" filter="url(#softShadow)">
-      {/* Keyboard Base Shadow */}
-      <ellipse cx="110" cy="115" rx="90" ry="18" fill="#000" opacity="0.1" />
-
-      {/* Keyboard Surface */}
-      <polygon points="20,95 160,75 220,115 80,135" className="fill-[#E5D9D2] dark:fill-[#423834] stroke-[#BCA297] dark:stroke-[#5C4E49]" strokeWidth="1" />
-      <polygon points="20,95 80,135 80,138 20,98" className="fill-[#A4877B] dark:fill-[#322A27]" />
-      <polygon points="80,135 220,115 220,118 80,138" className="fill-[#8C7064] dark:fill-[#251F1D]" />
-
-      {/* Trackpad */}
-      <polygon points="85,122 120,117 132,126 97,131" className="fill-[#FDFBF7] dark:fill-[#5C4E49]" opacity="0.5" />
-
-      {/* Laptop Screen */}
-      <g transform="translate(30, -35)">
-        <polygon points="30,30 145,15 145,95 30,110" className="fill-[#BCA297] dark:fill-[#423834]" />
-        <polygon points="32,28 147,13 147,93 32,108" className="fill-[#2C1820] dark:fill-[#251218]" />
-        {/* Screen Interior: #24141A in light, #331921 in dark */}
-        <polygon points="36,33 143,19 143,89 36,103" className="fill-[#24141A] dark:fill-[#331921]" />
-
-        {/* Code Lines on Screen */}
-        <line x1="42" y1="42" x2="65" y2="39" stroke="#AB526B" strokeWidth="2.5" strokeLinecap="round" />
-        <line x1="70" y1="38" x2="105" y2="34" stroke="#F0E2A4" strokeWidth="2.5" strokeLinecap="round" />
-        <line x1="50" y1="50" x2="85" y2="45" stroke="#C5CEAE" strokeWidth="2" strokeLinecap="round" />
-        <line x1="90" y1="45" x2="125" y2="40" stroke="#F4EBC3" strokeWidth="2" strokeLinecap="round" />
-        <line x1="58" y1="58" x2="110" y2="51" stroke="#AB526B" strokeWidth="2" strokeLinecap="round" />
-        <line x1="58" y1="66" x2="95" y2="61" stroke="#F0E2A4" strokeWidth="2" strokeLinecap="round" />
-        <line x1="50" y1="74" x2="75" y2="70" stroke="#C5CEAE" strokeWidth="2" strokeLinecap="round" />
-      </g>
-    </g>
-
-    {/* Floating Graph Visualizer Card (Beside screen) */}
-    <g transform="translate(360, 60)" filter="url(#softShadow)">
-      <rect x="0" y="0" width="85" height="65" rx="8" className="fill-[#FDFBF7] dark:fill-[#423834] stroke-[#EBE0D3] dark:stroke-[#5C4E49]" strokeWidth="1.5" />
-      <g stroke="#AB526B" strokeWidth="1.2" opacity="0.75">
-        <line x1="20" y1="20" x2="50" y2="15" />
-        <line x1="50" y1="15" x2="70" y2="35" />
-        <line x1="20" y1="20" x2="35" y2="48" />
-        <line x1="35" y1="48" x2="70" y2="35" />
-        <line x1="20" y1="20" x2="70" y2="35" strokeDasharray="2 2" stroke="#C5CEAE" />
-      </g>
-      <circle cx="20" cy="20" r="4.5" fill="#AB526B" />
-      <circle cx="50" cy="15" r="3.5" fill="#C5CEAE" />
-      <circle cx="70" cy="35" r="4" fill="#F0E2A4" />
-      <circle cx="35" cy="48" r="3.5" fill="#BCA297" />
-    </g>
-
-    {/* Potted Plant */}
-    <g transform="translate(450, 110)">
-      <polygon points="12,45 32,45 36,65 8,65" className="fill-[#FDFBF7] dark:fill-[#423834] stroke-[#EBE0D3] dark:stroke-[#5C4E49]" strokeWidth="1" />
-      <ellipse cx="22" cy="45" rx="10" ry="3" className="fill-[#BCA297] dark:fill-[#5C4E49]" />
-      <path d="M22 45 Q 15 25 10 18" stroke="#A9B58E" strokeWidth="2" fill="none" strokeLinecap="round" />
-      <ellipse cx="10" cy="18" rx="5" ry="8" transform="rotate(-30 10 18)" className="fill-[#C5CEAE] dark:fill-[#30382D]" />
-      <path d="M22 45 Q 22 20 22 10" stroke="#8E9B73" strokeWidth="2.2" fill="none" strokeLinecap="round" />
-      <ellipse cx="22" cy="10" rx="5" ry="9" className="fill-[#A9B58E] dark:fill-[#434F3F]" />
-      <path d="M22 45 Q 30 25 35 20" stroke="#A9B58E" strokeWidth="2" fill="none" strokeLinecap="round" />
-      <ellipse cx="35" cy="20" rx="5" ry="8" transform="rotate(35 35 20)" className="fill-[#C5CEAE] dark:fill-[#30382D]" />
-    </g>
-  </svg>
-);
-
-/* ========================================================================= */
-/* 2. CARD GRAPHIC SVGS WITH EXACT DARK SHADES                               */
-/* ========================================================================= */
-
-// Array Suite: Light #E8C5C8 -> Dark #331921 (Indian Red Dark)
-const ArrayCardGraphic = () => (
-  <svg width="100%" height="100%" viewBox="0 0 120 70" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="120" height="70" rx="14" className="fill-[#E8C5C8] dark:fill-[#331921]" fillOpacity="0.85" />
-    <g transform="translate(14, 20)">
-      <rect x="0" y="0" width="20" height="28" rx="4" className="fill-[#FDFBF7] dark:fill-[#423834] stroke-[#2D1F23] dark:stroke-[#5C4E49]" strokeWidth="1.2" />
-      <text x="10" y="19" fontSize="13" fontWeight="bold" className="fill-[#2D1F23] dark:fill-[#F4EBC3]" textAnchor="middle" fontFamily="monospace">0</text>
-      
-      <rect x="24" y="0" width="20" height="28" rx="4" className="fill-[#FDFBF7] dark:fill-[#423834] stroke-[#2D1F23] dark:stroke-[#5C4E49]" strokeWidth="1.2" />
-      <text x="34" y="19" fontSize="13" fontWeight="bold" className="fill-[#2D1F23] dark:fill-[#F4EBC3]" textAnchor="middle" fontFamily="monospace">1</text>
-      
-      <rect x="48" y="0" width="20" height="28" rx="4" className="fill-[#FDFBF7] dark:fill-[#423834] stroke-[#2D1F23] dark:stroke-[#5C4E49]" strokeWidth="1.2" />
-      <text x="58" y="19" fontSize="13" fontWeight="bold" className="fill-[#2D1F23] dark:fill-[#F4EBC3]" textAnchor="middle" fontFamily="monospace">2</text>
-      
-      <rect x="72" y="0" width="20" height="28" rx="4" className="fill-[#FDFBF7] dark:fill-[#423834] stroke-[#2D1F23] dark:stroke-[#5C4E49]" strokeWidth="1.2" />
-      <text x="82" y="19" fontSize="13" fontWeight="bold" className="fill-[#2D1F23] dark:fill-[#F4EBC3]" textAnchor="middle" fontFamily="monospace">3</text>
-    </g>
-  </svg>
-);
-
-// Graph Suite: Light #C5CEAE -> Dark #30382D (Silver / Sage Dark)
-const GraphCardGraphic = () => (
-  <svg width="100%" height="100%" viewBox="0 0 120 70" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="120" height="70" rx="14" className="fill-[#C5CEAE] dark:fill-[#30382D]" fillOpacity="0.85" />
-    <g className="stroke-[#2D1F23] dark:stroke-[#F4EBC3]" strokeWidth="1.2">
-      <line x1="30" y1="36" x2="60" y2="20" />
-      <line x1="60" y1="20" x2="90" y2="35" />
-      <line x1="30" y1="36" x2="48" y2="55" />
-      <line x1="48" y1="55" x2="90" y2="35" />
-    </g>
-    <circle cx="30" cy="36" r="7.5" fill="#AB526B" className="stroke-[#2D1F23] dark:stroke-[#30382D]" strokeWidth="1.2" />
-    <circle cx="60" cy="20" r="7" className="fill-[#FDFBF7] dark:fill-[#F4EBC3] stroke-[#2D1F23] dark:stroke-[#30382D]" strokeWidth="1.2" />
-    <circle cx="90" cy="35" r="8" className="fill-[#FDFBF7] dark:fill-[#F0E2A4] stroke-[#2D1F23] dark:stroke-[#30382D]" strokeWidth="1.2" />
-    <circle cx="48" cy="55" r="7" className="fill-[#FDFBF7] dark:fill-[#F4EBC3] stroke-[#2D1F23] dark:stroke-[#30382D]" strokeWidth="1.2" />
-  </svg>
-);
-
-// String: Light #F0E2A4 -> Dark #5B3E18 (Wheat Dark)
-const StringCardGraphic = () => (
-  <svg width="100%" height="100%" viewBox="0 0 120 70" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="120" height="70" rx="14" className="fill-[#F0E2A4] dark:fill-[#5B3E18]" fillOpacity="0.85" />
-    <text x="32" y="32" fontSize="22" fontWeight="bold" className="fill-[#8C6E2E] dark:fill-[#F0E2A4]" fontFamily="serif">“</text>
-    <text x="82" y="32" fontSize="22" fontWeight="bold" className="fill-[#8C6E2E] dark:fill-[#F0E2A4]" fontFamily="serif">”</text>
-    <g className="stroke-[#8C6E2E] dark:stroke-[#F0E2A4]" strokeWidth="2.5" strokeLinecap="round">
-      <line x1="38" y1="46" x2="52" y2="46" />
-      <line x1="58" y1="46" x2="72" y2="46" />
-      <line x1="78" y1="46" x2="92" y2="46" />
-    </g>
-  </svg>
-);
-
-// Stack: Light #E8D1CB -> Dark #423834 (Rosy Brown Dark)
-const StackCardGraphic = () => (
-  <svg width="100%" height="100%" viewBox="0 0 120 70" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="120" height="70" rx="14" className="fill-[#E8D1CB] dark:fill-[#423834]" fillOpacity="0.85" />
-    <g transform="translate(38, 12)">
-      {/* Bottom Layer */}
-      <polygon points="18,34 36,26 54,34 36,42" fill="#AB526B" className="stroke-[#2D1F23] dark:stroke-[#5C4E49]" strokeWidth="1" />
-      <polygon points="18,34 36,42 36,47 18,39" fill="#8E3B53" className="stroke-[#2D1F23] dark:stroke-[#5C4E49]" strokeWidth="1" />
-      <polygon points="36,42 54,34 54,39 36,47" fill="#8E3B53" className="stroke-[#2D1F23] dark:stroke-[#5C4E49]" strokeWidth="1" />
-
-      {/* Middle Layer */}
-      <polygon points="18,22 36,14 54,22 36,30" className="fill-[#FDFBF7] dark:fill-[#5C4E49] stroke-[#2D1F23] dark:stroke-[#331921]" strokeWidth="1" />
-      <polygon points="18,22 36,30 36,35 18,27" className="fill-[#BCA297] dark:fill-[#48232F] stroke-[#2D1F23] dark:stroke-[#331921]" strokeWidth="1" />
-      <polygon points="36,30 54,22 54,27 36,35" className="fill-[#BCA297] dark:fill-[#48232F] stroke-[#2D1F23] dark:stroke-[#331921]" strokeWidth="1" />
-
-      {/* Top Layer */}
-      <polygon points="18,10 36,2 54,10 36,18" className="fill-[#FDFBF7] dark:fill-[#F4EBC3] stroke-[#2D1F23] dark:stroke-[#331921]" strokeWidth="1" />
-      <polygon points="18,10 36,18 36,23 18,15" className="fill-[#BCA297] dark:fill-[#5C4E49] stroke-[#2D1F23] dark:stroke-[#331921]" strokeWidth="1" />
-      <polygon points="36,18 54,10 54,15 36,23" className="fill-[#BCA297] dark:fill-[#5C4E49] stroke-[#2D1F23] dark:stroke-[#331921]" strokeWidth="1" />
-      
-      {/* Upward Arrow */}
-      <g className="stroke-[#AB526B] dark:stroke-[#F0E2A4]" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" transform="translate(62, 5)">
-        <line x1="0" y1="36" x2="0" y2="10" />
-        <polyline points="-4,15 0,9 4,15" fill="none" />
-      </g>
-    </g>
-  </svg>
-);
-
-// Queue: Light #C5CEAE -> Dark #30382D (Silver / Sage Dark)
-const QueueCardGraphic = () => (
-  <svg width="100%" height="100%" viewBox="0 0 120 70" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="120" height="70" rx="14" className="fill-[#C5CEAE] dark:fill-[#30382D]" fillOpacity="0.85" />
-    <g transform="translate(18, 22)">
-      <rect x="18" y="0" width="18" height="24" rx="3" className="fill-[#FDFBF7] dark:fill-[#423834] stroke-[#2D1F23] dark:stroke-[#5C4E49]" strokeWidth="1.2" />
-      <circle cx="27" cy="12" r="2.5" className="fill-[#2D1F23] dark:fill-[#F4EBC3]" />
-
-      <rect x="38" y="0" width="18" height="24" rx="3" className="fill-[#FDFBF7] dark:fill-[#423834] stroke-[#2D1F23] dark:stroke-[#5C4E49]" strokeWidth="1.2" />
-      <circle cx="47" cy="12" r="2.5" className="fill-[#2D1F23] dark:fill-[#F4EBC3]" />
-
-      <rect x="58" y="0" width="18" height="24" rx="3" className="fill-[#FDFBF7] dark:fill-[#423834] stroke-[#2D1F23] dark:stroke-[#5C4E49]" strokeWidth="1.2" />
-      <circle cx="67" cy="12" r="2.5" className="fill-[#2D1F23] dark:fill-[#F4EBC3]" />
-
-      <g className="stroke-[#2D1F23] dark:stroke-[#F4EBC3]" strokeWidth="1.5" strokeLinecap="round">
-        <line x1="0" y1="12" x2="12" y2="12" />
-        <polyline points="8,8 12,12 8,16" fill="none" />
-      </g>
-
-      <g className="stroke-[#AB526B] dark:stroke-[#F0E2A4]" strokeWidth="2" strokeLinecap="round">
-        <line x1="80" y1="12" x2="94" y2="12" />
-        <polyline points="89,8 94,12 89,16" fill="none" />
-      </g>
-    </g>
-  </svg>
-);
-
-// Linked List: Light #E8C5C8 -> Dark #331921 (Indian Red Dark)
-const LinkedListCardGraphic = () => (
-  <svg width="100%" height="100%" viewBox="0 0 120 70" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="120" height="70" rx="14" className="fill-[#E8C5C8] dark:fill-[#331921]" fillOpacity="0.85" />
-    <g transform="translate(20, 22)">
-      <rect x="0" y="0" width="30" height="24" rx="4" className="fill-[#FDFBF7] dark:fill-[#423834] stroke-[#2D1F23] dark:stroke-[#5C4E49]" strokeWidth="1.2" />
-      <line x1="18" y1="0" x2="18" y2="24" className="stroke-[#2D1F23] dark:stroke-[#5C4E49]" strokeWidth="1" />
-      <circle cx="9" cy="12" r="2.5" fill="#AB526B" />
-      <circle cx="24" cy="12" r="2" className="fill-[#2D1F23] dark:fill-[#F4EBC3]" />
-
-      <g className="stroke-[#2D1F23] dark:stroke-[#F4EBC3]" strokeWidth="1.5" strokeLinecap="round">
-        <line x1="30" y1="12" x2="48" y2="12" />
-        <polyline points="44,8 48,12 44,16" fill="none" />
-      </g>
-
-      <rect x="50" y="0" width="30" height="24" rx="4" className="fill-[#FDFBF7] dark:fill-[#423834] stroke-[#2D1F23] dark:stroke-[#5C4E49]" strokeWidth="1.2" />
-      <line x1="68" y1="0" x2="68" y2="24" className="stroke-[#2D1F23] dark:stroke-[#5C4E49]" strokeWidth="1" />
-      <circle cx="59" cy="12" r="2.5" fill="#AB526B" />
-      <line x1="72" y1="7" x2="76" y2="17" stroke="#BCA297" strokeWidth="1.5" />
-    </g>
-  </svg>
-);
-
-// Tree: Light #F0E2A4 -> Dark #5B3E18 (Wheat Dark)
-const TreeCardGraphic = () => (
-  <svg width="100%" height="100%" viewBox="0 0 120 70" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="120" height="70" rx="14" className="fill-[#F0E2A4] dark:fill-[#5B3E18]" fillOpacity="0.85" />
-    <g className="stroke-[#8C6E2E] dark:stroke-[#F0E2A4]" strokeWidth="1.2">
-      <line x1="60" y1="18" x2="42" y2="36" />
-      <line x1="60" y1="18" x2="78" y2="36" />
-      <line x1="42" y1="36" x2="32" y2="52" />
-      <line x1="42" y1="36" x2="50" y2="52" />
-      <line x1="78" y1="36" x2="70" y2="52" />
-      <line x1="78" y1="36" x2="88" y2="52" />
-    </g>
-    <circle cx="60" cy="18" r="6.5" className="fill-[#FDFBF7] dark:fill-[#F4EBC3] stroke-[#8C6E2E] dark:stroke-[#5B3E18]" strokeWidth="1.2" />
-    <circle cx="42" cy="36" r="5.5" className="fill-[#FDFBF7] dark:fill-[#F4EBC3] stroke-[#8C6E2E] dark:stroke-[#5B3E18]" strokeWidth="1.2" />
-    <circle cx="78" cy="36" r="5.5" className="fill-[#FDFBF7] dark:fill-[#F4EBC3] stroke-[#8C6E2E] dark:stroke-[#5B3E18]" strokeWidth="1.2" />
-    <circle cx="32" cy="52" r="4" fill="#AB526B" className="stroke-[#8C6E2E] dark:stroke-[#5B3E18]" strokeWidth="1" />
-    <circle cx="50" cy="52" r="4" className="fill-[#FDFBF7] dark:fill-[#F4EBC3] stroke-[#8C6E2E] dark:stroke-[#5B3E18]" strokeWidth="1" />
-    <circle cx="70" cy="52" r="4" className="fill-[#FDFBF7] dark:fill-[#F4EBC3] stroke-[#8C6E2E] dark:stroke-[#5B3E18]" strokeWidth="1" />
-    <circle cx="88" cy="52" r="4" fill="#AB526B" className="stroke-[#8C6E2E] dark:stroke-[#5B3E18]" strokeWidth="1" />
-  </svg>
-);
-
-// Heap: Light #E8D1CB -> Dark #625233 (Bisque Dark)
-const HeapCardGraphic = () => (
-  <svg width="100%" height="100%" viewBox="0 0 120 70" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="120" height="70" rx="14" className="fill-[#E8D1CB] dark:fill-[#625233]" fillOpacity="0.85" />
-    <g className="stroke-[#2D1F23] dark:stroke-[#F4EBC3]" strokeWidth="1.2">
-      <line x1="60" y1="18" x2="46" y2="38" />
-      <line x1="60" y1="18" x2="74" y2="38" />
-      <line x1="46" y1="38" x2="38" y2="54" />
-      <line x1="46" y1="38" x2="54" y2="54" />
-      <line x1="74" y1="38" x2="66" y2="54" />
-      <line x1="74" y1="38" x2="82" y2="54" />
-    </g>
-    <circle cx="60" cy="18" r="7" fill="#AB526B" className="stroke-[#2D1F23] dark:stroke-[#625233]" strokeWidth="1.2" />
-    <circle cx="46" cy="38" r="6" className="fill-[#FDFBF7] dark:fill-[#F4EBC3] stroke-[#2D1F23] dark:stroke-[#625233]" strokeWidth="1.2" />
-    <circle cx="74" cy="38" r="6" className="fill-[#FDFBF7] dark:fill-[#F4EBC3] stroke-[#2D1F23] dark:stroke-[#625233]" strokeWidth="1.2" />
-    <circle cx="38" cy="54" r="4.5" className="fill-[#FDFBF7] dark:fill-[#F0E2A4] stroke-[#2D1F23] dark:stroke-[#625233]" strokeWidth="1" />
-    <circle cx="54" cy="54" r="4.5" className="fill-[#FDFBF7] dark:fill-[#F0E2A4] stroke-[#2D1F23] dark:stroke-[#625233]" strokeWidth="1" />
-    <circle cx="66" cy="54" r="4.5" className="fill-[#FDFBF7] dark:fill-[#F0E2A4] stroke-[#2D1F23] dark:stroke-[#625233]" strokeWidth="1" />
-    <circle cx="82" cy="54" r="4.5" className="fill-[#FDFBF7] dark:fill-[#F0E2A4] stroke-[#2D1F23] dark:stroke-[#625233]" strokeWidth="1" />
-  </svg>
-);
-
-
-// OOP: Light #C5CEAE -> Dark #30382D (Soft Sage Dark)
-const OOPCardGraphic = () => (
-  <svg width="100%" height="100%" viewBox="0 0 120 70" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="120" height="70" rx="14" className="fill-[#C5CEAE] dark:fill-[#30382D]" fillOpacity="0.85" />
-    <g transform="translate(18, 14)">
-      <rect x="0" y="0" width="38" height="42" rx="8" className="fill-[#FDFBF7] dark:fill-[#423834] stroke-[#2D1F23] dark:stroke-[#5C4E49]" strokeWidth="1.2" />
-      <text x="19" y="14" fontSize="7" fill="#AB526B" textAnchor="middle" fontWeight="bold">Class</text>
-      <line x1="6" y1="20" x2="32" y2="20" stroke="#BCA297" strokeWidth="1" />
-      <circle cx="12" cy="28" r="2" fill="#AB526B" />
-      <text x="17" y="30.5" fontSize="6.5" fill="#2D1F23" className="dark:fill-[#F4EBC3]" fontFamily="monospace">data</text>
-      
-      <g className="stroke-[#AB526B] dark:stroke-[#F0E2A4]" strokeWidth="1.5" strokeLinecap="round">
-        <line x1="42" y1="21" x2="56" y2="21" />
-        <polyline points="52,17 56,21 52,25" fill="none" />
-      </g>
-
-      <rect x="60" y="6" width="26" height="30" rx="6" className="fill-[#FDFBF7] dark:fill-[#423834] stroke-[#AB526B] dark:stroke-[#F0E2A4]" strokeWidth="1.2" />
-      <text x="73" y="18" fontSize="6" fill="#2D1F23" className="dark:fill-[#F4EBC3]" textAnchor="middle" fontWeight="bold">Object</text>
-      <circle cx="73" cy="27" r="4" fill="#AB526B" />
-    </g>
-  </svg>
-);
-
-// Cryptography: Light #E8C5C8 -> Dark #331921 (Rose/Dark)
-const CryptoCardGraphic = () => (
-  <svg width="100%" height="100%" viewBox="0 0 120 70" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="120" height="70" rx="14" className="fill-[#E8C5C8] dark:fill-[#331921]" fillOpacity="0.9" />
-    <g transform="translate(38, 12)">
-      <path d="M22 6 L 40 14 V 28 C 40 38, 22 46, 22 46 C 22 46, 4 38, 4 28 V 14 Z" className="fill-[#FDFBF7] dark:fill-[#423834] stroke-[#AB526B] dark:stroke-[#F0E2A4]" strokeWidth="1.5" />
-      <rect x="16" y="24" width="12" height="10" rx="2" fill="#AB526B" />
-      <path d="M18 24 V 20 C 18 17.5, 26 17.5, 26 20 V 24" stroke="#AB526B" strokeWidth="1.8" fill="none" />
-      <circle cx="22" cy="28" r="1.2" fill="#FAF7F2" />
-    </g>
-  </svg>
-);
-
-/* ========================================================================= */
-/* 3. ALGORITHM CARDS DATA                                                   */
-/* ========================================================================= */
-const ALGO_CARDS = [
+const CATEGORIES = [
   {
-    id: 'array',
-    title: 'Array Suite',
-    subtitle: '16 Types & Algos • Dedicated 3D Spatial Simulator',
-    path: '/visualizer/array',
-    badge: '16 Algos',
-    graphic: <ArrayCardGraphic />,
-    tags: [
-      { name: 'Binary Search', path: '/visualizer/array/binary_search' },
-      { name: 'Quick Sort', path: '/visualizer/array/quicksort' },
-      { name: '+14 more', path: '/visualizer/array' }
-    ]
+    id: 'dsa', palette: 'red', label: 'DATA STRUCTURES', headline: 'Algorithms &\nData Structures',
+    tagline: '8 structures · 40+ algorithms',
+    spineColors: ['#AB526B','#C96B85','#7A3048','#D4888A','#8B4560','#E0A0A8','#5A2535','#C07888','#AA6070','#BF5065'],
+    icon: '⟨⟩',
+    items: [
+      { id:'array', name:'Array Suite', sub:'16 Algos', path:'/visualizer/array', icon:'[ ]',
+        desc:'Contiguous memory structures, multi-dimensional grids, pointer algorithms, and sorting suites.',
+        subtopics:[
+          { id:'static_array', name:'Static 1D Array', tag:'O(1)', desc:'Fixed-size contiguous memory allocation.', path:'/visualizer/array/static_array' },
+          { id:'dynamic_array', name:'Dynamic Array (Vector)', tag:'O(1)*', desc:'Geometric capacity doubling with amortized O(1) append.', path:'/visualizer/array/dynamic_array' },
+          { id:'matrix_2d', name:'2D Matrix / Grid', tag:'O(1)', desc:'Multi-dimensional grid mapped into 1D RAM in row-major order.', path:'/visualizer/array/matrix_2d' },
+          { id:'binary_search', name:'Binary Search', tag:'O(log n)', desc:'Logarithmic divide-and-conquer search on sorted arrays.', path:'/visualizer/array/binary_search' },
+          { id:'quick_sort', name:'Quick Sort', tag:'O(n log n)', desc:'Partition-exchange sorting using pivot selection.', path:'/visualizer/array/quick_sort' },
+          { id:'merge_sort', name:'Merge Sort', tag:'O(n log n)', desc:'Stable divide-and-conquer sorting with auxiliary buffers.', path:'/visualizer/array/merge_sort' },
+          { id:'two_sum', name:'Two Sum (Two Pointers)', tag:'O(n)', desc:'Converging opposite pointers to find target sums.', path:'/visualizer/array/two_sum' },
+          { id:'kadane', name:"Kadane's Algorithm", tag:'O(n)', desc:'Dynamic programming maximum subarray sum tracker.', path:'/visualizer/array/kadane' },
+        ]
+      },
+      { id:'graph', name:'Graph Suite', sub:'8 Algos', path:'/visualizer/graph', icon:'◎',
+        desc:'Network topologies, pathfinding heuristics, minimum spanning trees, and flow networks.',
+        subtopics:[
+          { id:'bfs', name:'BFS', tag:'O(V+E)', desc:'Level-order queue traversal finding shortest paths.', path:'/visualizer/graph/bfs' },
+          { id:'dfs', name:'DFS', tag:'O(V+E)', desc:'Recursive branch exploration and backtracking.', path:'/visualizer/graph/dfs' },
+          { id:'dijkstra', name:"Dijkstra's", tag:'O(E log V)', desc:'Greedy shortest path relaxation on weighted graphs.', path:'/visualizer/graph/dijkstra' },
+          { id:'astar', name:'A* Pathfinding', tag:'Heuristic', desc:'Informed heuristic search on navigation grids.', path:'/visualizer/graph/astar' },
+          { id:'prim', name:"Prim's MST", tag:'O(E log V)', desc:'Greedy Minimum Spanning Tree expansion.', path:'/visualizer/graph/prim' },
+          { id:'kruskal', name:"Kruskal's", tag:'O(E log E)', desc:'DSU-based MST construction by sorted edge weights.', path:'/visualizer/graph/kruskal' },
+          { id:'bellman_ford', name:'Bellman-Ford', tag:'O(V·E)', desc:'Negative weight edge relaxation and cycle detection.', path:'/visualizer/graph/bellman_ford' },
+          { id:'topological', name:'Topological Sort', tag:'O(V+E)', desc:'DAG dependency resolution order.', path:'/visualizer/graph/topological' },
+        ]
+      },
+      { id:'linkedlist', name:'Linked List', sub:'5 Operations', path:'/visualizer/linkedlist', icon:'→',
+        desc:'Pointer-linked memory nodes with dynamic insertion, deletion, and cycle detection.',
+        subtopics:[
+          { id:'singly', name:'Singly Linked List', tag:'O(1) Head', desc:'Linear sequence with head insertion and deletion.', path:'/visualizer/linkedlist' },
+          { id:'doubly', name:'Doubly Linked List', tag:'O(1) Ends', desc:'Bidirectional nodes with prev and next pointer links.', path:'/visualizer/linkedlist' },
+          { id:'circular', name:'Circular Linked List', tag:'Ring', desc:'Ring structure where tail points back to head.', path:'/visualizer/linkedlist' },
+          { id:'floyd_cycle', name:"Floyd's Cycle Detection", tag:'O(n)', desc:"Hare & Tortoise two-pointer cycle detection.", path:'/visualizer/linkedlist' },
+          { id:'reverse_list', name:'Reverse Linked List', tag:'O(n) In-place', desc:'In-place pointer reversal.', path:'/visualizer/linkedlist' },
+        ]
+      },
+      { id:'tree', name:'Tree Suite', sub:'5 Traversals', path:'/visualizer/tree', icon:'△',
+        desc:'Hierarchical node graphs, binary search trees, and self-balancing rotation algorithms.',
+        subtopics:[
+          { id:'bst_search', name:'Binary Search Tree', tag:'O(log n)', desc:'Ordered binary tree with left < root < right invariant.', path:'/visualizer/tree' },
+          { id:'avl_tree', name:'AVL Tree', tag:'Balanced', desc:'Height-balanced binary tree using LL/RR/LR/RL rotations.', path:'/visualizer/tree' },
+          { id:'inorder', name:'In-Order Traversal', tag:'O(n)', desc:'Left → Root → Right traversal.', path:'/visualizer/tree' },
+          { id:'preorder', name:'Pre-Order Traversal', tag:'O(n)', desc:'Root → Left → Right traversal.', path:'/visualizer/tree' },
+          { id:'level_order', name:'Level-Order (BFS)', tag:'Queue', desc:'Breadth-first traversal level by level.', path:'/visualizer/tree' },
+        ]
+      },
+      { id:'stack', name:'Stack', sub:'LIFO Structure', path:'/visualizer/stack', icon:'↑',
+        desc:'Last-In First-Out storage with Push, Pop, Peek operations.',
+        subtopics:[
+          { id:'array_stack', name:'Array-Based Stack', tag:'O(1)', desc:'Fixed/dynamic stack with top pointer tracking.', path:'/visualizer/stack' },
+          { id:'balanced_parens', name:'Balanced Parentheses', tag:'Syntax', desc:'Parsing bracket pairs using a stack frame.', path:'/visualizer/stack' },
+          { id:'monotonic_stack', name:'Monotonic Stack', tag:'O(n)', desc:'Maintaining elements in monotonic order.', path:'/visualizer/stack' },
+          { id:'min_stack', name:'Min Stack', tag:'O(1) Aux', desc:'Retrieving the minimum element in constant time.', path:'/visualizer/stack' },
+        ]
+      },
+      { id:'queue', name:'Queue', sub:'FIFO Structure', path:'/visualizer/queue', icon:'▶',
+        desc:'First-In First-Out buffering pipeline for processing streams.',
+        subtopics:[
+          { id:'linear_queue', name:'Linear FIFO Queue', tag:'O(1)', desc:'FIFO queue with head and tail index tracking.', path:'/visualizer/queue' },
+          { id:'circular_queue', name:'Circular Queue', tag:'Optimal', desc:'Memory-recycling queue with modulo indexing.', path:'/visualizer/queue' },
+          { id:'deque', name:'Double-Ended Queue', tag:'O(1) Ends', desc:'Push and pop from both front and rear ends.', path:'/visualizer/queue' },
+          { id:'priority_queue', name:'Priority Queue', tag:'O(log n)', desc:'Extracts highest priority elements first.', path:'/visualizer/queue' },
+        ]
+      },
+      { id:'heap', name:'Heap', sub:'Priority Queue', path:'/visualizer/heap', icon:'◬',
+        desc:'Complete binary trees maintaining heap properties for fast extremal selection.',
+        subtopics:[
+          { id:'min_heap', name:'Min-Heap', tag:'O(1) Peek', desc:'Parent always less than or equal to its children.', path:'/visualizer/heap' },
+          { id:'max_heap', name:'Max-Heap', tag:'O(1) Peek', desc:'Parent always greater than or equal to its children.', path:'/visualizer/heap' },
+          { id:'heapify', name:'Heapify Algorithm', tag:'O(n) Build', desc:'Bottom-up sift-down construction from unsorted array.', path:'/visualizer/heap' },
+          { id:'heap_sort', name:'Heap Sort', tag:'O(n log n)', desc:'In-place sorting by iteratively extracting the root.', path:'/visualizer/heap' },
+        ]
+      },
+      { id:'string', name:'String', sub:'4 Algorithms', path:'/visualizer/string', icon:'" "',
+        desc:'Character array manipulation, substring searching, and automata.',
+        subtopics:[
+          { id:'kmp', name:'KMP Pattern Matching', tag:'O(n+m)', desc:'Knuth-Morris-Pratt search using π prefix table.', path:'/visualizer/string' },
+          { id:'rabin_karp', name:'Rabin-Karp Rolling Hash', tag:'O(n+m)', desc:'Hash-based substring search using polynomial checksums.', path:'/visualizer/string' },
+          { id:'z_algo', name:'Z-Algorithm', tag:'O(n+m)', desc:'Longest common prefix array computation.', path:'/visualizer/string' },
+          { id:'palindrome', name:'Longest Palindrome', tag:'O(n²)', desc:'Expand-around-center palindromic substring discovery.', path:'/visualizer/string' },
+        ]
+      },
+    ],
   },
   {
-    id: 'graph',
-    title: 'Graph Suite',
-    subtitle: 'Network traversals, paths & structural analysis',
-    path: '/visualizer/graph',
-    badge: '15 Algos',
-    graphic: <GraphCardGraphic />,
-    tags: [
-      { name: 'BFS', path: '/visualizer/graph/bfs' },
-      { name: 'DFS', path: '/visualizer/graph/dfs' },
-      { name: 'Dijkstra', path: '/visualizer/graph/dijkstra' },
-      { name: '+11 more', path: '/visualizer/graph' }
-    ]
+    id: 'oop', palette: 'sage', label: 'OBJECT ORIENTED', headline: 'OOP\nPillars',
+    tagline: '4 core concepts · live simulation',
+    spineColors: ['#6B8F5E','#A0BF88','#4A6B3A','#B8D0A0','#5A7F50','#C8D8B0','#3A5830','#90A878','#7A9868','#D0E0B8'],
+    icon: '{}',
+    items: [
+      { id:'encapsulation', name:'Encapsulation', sub:'Data hiding', path:'/visualizer/encapsulation', icon:'⬛',
+        desc:'Bundling state with behavior and hiding internal representation behind public interfaces.',
+        subtopics:[
+          { id:'private_fields', name:'Private / Protected Fields', tag:'Access Modifiers', desc:'Restricting direct state access.', path:'/visualizer/encapsulation' },
+          { id:'getters_setters', name:'Getters & Setter Invariants', tag:'Validation', desc:'Mediating access with validation logic.', path:'/visualizer/encapsulation' },
+        ]
+      },
+      { id:'inheritance', name:'Inheritance', sub:'Class hierarchy', path:'/visualizer/inheritance', icon:'↑',
+        desc:'Deriving specialized classes from base classes and reusing code architectures.',
+        subtopics:[
+          { id:'subclasses', name:'Subclasses & Super', tag:'Hierarchy', desc:'Extending base class methods with super() calls.', path:'/visualizer/inheritance' },
+          { id:'method_override', name:'Method Overriding', tag:'Polymorphic', desc:'Redefining parent behavior with specialized child implementations.', path:'/visualizer/inheritance' },
+        ]
+      },
+      { id:'polymorphism', name:'Polymorphism', sub:'Many forms', path:'/visualizer/polymorphism', icon:'◈',
+        desc:'Processing objects differently based on their data type or class hierarchy.',
+        subtopics:[
+          { id:'dynamic_dispatch', name:'Dynamic Method Dispatch', tag:'Runtime', desc:'Invoking polymorphic method implementations via vtables.', path:'/visualizer/polymorphism' },
+          { id:'interfaces', name:'Interface Contracts', tag:'Decoupling', desc:'Decoupling client from concrete implementation.', path:'/visualizer/polymorphism' },
+        ]
+      },
+      { id:'abstraction', name:'Abstraction', sub:'Interface design', path:'/visualizer/abstraction', icon:'◻',
+        desc:'Exposing essential characteristics while hiding background implementation details.',
+        subtopics:[
+          { id:'abstract_classes', name:'Abstract Base Classes', tag:'Blueprints', desc:'Templates enforcing child classes to provide method bodies.', path:'/visualizer/abstraction' },
+          { id:'api_design', name:'API Surface Design', tag:'Clean Code', desc:'Designing minimal public interfaces.', path:'/visualizer/abstraction' },
+        ]
+      },
+    ],
   },
   {
-    id: 'string',
-    title: 'String',
-    subtitle: 'Immutable vs Mutable',
-    path: '/visualizer/string',
-    badge: null,
-    graphic: <StringCardGraphic />,
-    tags: [
-      { name: 'KMP', path: '/visualizer/string' },
-      { name: 'Rabin-Karp', path: '/visualizer/string' },
-      { name: '+2 more', path: '/visualizer/string' }
-    ]
+    id: 'crypto', palette: 'brown', label: 'CRYPTOGRAPHY', headline: 'Ciphers &\nProtocols',
+    tagline: '13 algorithms · encrypt & decrypt',
+    spineColors: ['#8B6050','#C4907A','#6A4535','#DAA890','#7A5545','#BF9880','#5A3828','#D0B0A0','#A07060','#C0A090'],
+    icon: '🔒',
+    items: [
+      {
+        id: 'aes',
+        name: 'AES-256 (Rijndael)',
+        sub: 'Symmetric Block',
+        category: 'modern',
+        categoryLabel: 'Modern Standards',
+        securityProperty: 'Confidentiality',
+        complexity: '14 Rounds · 128-bit',
+        path: '/visualizer/aes',
+        icon: '⊞',
+        desc: 'Advanced Encryption Standard securing global communications using 14 rounds of substitution and permutation matrices.',
+        subtopics: [
+          { id: 'aes_subbytes', name: 'SubBytes (S-Box Substitution)', tag: 'Non-linear', desc: 'Non-linear byte substitution using the Rijndael S-box table to resist differential cryptanalysis.', path: '/visualizer/aes' },
+          { id: 'aes_shiftrows', name: 'ShiftRows Transformation', tag: 'Permutation', desc: 'Cyclically shifts the last three rows of the 4x4 state matrix by 1, 2, and 3 bytes.', path: '/visualizer/aes' },
+          { id: 'aes_mixcolumns', name: 'MixColumns Matrix Math', tag: 'Diffusion', desc: 'Linear transformation mixing column 4-byte vectors over Galois Field GF(2⁸).', path: '/visualizer/aes' },
+          { id: 'aes_addroundkey', name: 'AddRoundKey & Schedule', tag: 'Key Mixing', desc: 'Bitwise XOR with derived round keys generated from the 256-bit master key schedule.', path: '/visualizer/aes' }
+        ]
+      },
+      {
+        id: 'rsa',
+        name: 'RSA Cryptosystem',
+        sub: 'Asymmetric KeyGen',
+        category: 'modern',
+        categoryLabel: 'Modern Standards',
+        securityProperty: 'Confidentiality & Auth',
+        complexity: 'O(K³)',
+        path: '/visualizer/rsa',
+        icon: '🔑',
+        desc: 'Public-key cryptosystem based on the computational intractability of factoring products of large primes n = p · q.',
+        subtopics: [
+          { id: 'rsa_keygen', name: 'Prime Factoring & KeyGen', tag: 'Euler Totient', desc: 'Selecting primes p & q, computing modulus n and Euler totient φ(n) = (p-1)(q-1).', path: '/visualizer/rsa' },
+          { id: 'rsa_encrypt', name: 'Modular Exponentiation c = mᵉ mod n', tag: 'Trapdoor', desc: 'Encrypting messages using public exponent (e, n) via repeated squaring.', path: '/visualizer/rsa' },
+          { id: 'rsa_decrypt', name: 'Private Decryption m = cᵈ mod n', tag: 'Inverses', desc: 'Inverting ciphertext using private modular inverse exponent d = e⁻¹ mod φ(n).', path: '/visualizer/rsa' }
+        ]
+      },
+      {
+        id: 'dh',
+        name: 'Diffie-Hellman Key Exchange',
+        sub: 'Key Exchange Protocol',
+        category: 'keyexchange',
+        categoryLabel: 'Key Exchange & Auth',
+        securityProperty: 'PFS & Key Agreement',
+        complexity: 'O(log P)',
+        path: '/visualizer/dh',
+        icon: '↔',
+        desc: 'Groundbreaking protocol allowing Alice and Bob to establish a shared secret key across an unencrypted public wire.',
+        subtopics: [
+          { id: 'dh_params', name: 'Public Generator & Modulus (g, p)', tag: 'Discrete Log', desc: 'Agreeing on a large prime modulus p and primitive root generator g.', path: '/visualizer/dh' },
+          { id: 'dh_exchange', name: 'Public Key Mixing A=gᵃ mod p', tag: 'Shared Secret', desc: 'Exchanging partial keys and computing identical shared secret K = Bᵃ = Aᵇ mod p.', path: '/visualizer/dh' }
+        ]
+      },
+      {
+        id: 'signature',
+        name: 'Digital Signatures',
+        sub: 'Asymmetric Signing',
+        category: 'keyexchange',
+        categoryLabel: 'Key Exchange & Auth',
+        securityProperty: 'Non-Repudiation',
+        complexity: 'O(Hash + Sign)',
+        path: '/visualizer/signature',
+        icon: '✍️',
+        desc: 'Mathematical scheme proving message authenticity, origin verification, and detecting unauthorized tampering.',
+        subtopics: [
+          { id: 'sig_digest', name: 'Message Digest Hashing', tag: 'One-Way', desc: 'Compressing arbitrary data into a fixed 256-bit cryptographic digest.', path: '/visualizer/signature' },
+          { id: 'sig_sign', name: 'Private Key Signature Generation', tag: 'Signing', desc: 'Signing the message hash using the sender\'s private key.', path: '/visualizer/signature' },
+          { id: 'sig_verify', name: 'Public Key Verification & Tamper Check', tag: 'Verification', desc: 'Validating signature match using public key; alerts immediately on bit tampering.', path: '/visualizer/signature' }
+        ]
+      },
+      {
+        id: 'hash',
+        name: 'SHA-256 Hash Function',
+        sub: 'Cryptographic Hashing',
+        category: 'hashsteg',
+        categoryLabel: 'Hashing & Stego',
+        securityProperty: 'Integrity & Collision Res.',
+        complexity: '64 Rounds · 256-bit',
+        path: '/visualizer/hash',
+        icon: '#',
+        desc: 'One-way cryptographic hash producing 256-bit digests with avalanche guarantees where 1 flipped bit changes ~50% of the hash.',
+        subtopics: [
+          { id: 'sha_padding', name: '512-bit Block Padding', tag: 'Pre-processing', desc: 'Appending 1-bit, zero padding, and 64-bit original message length.', path: '/visualizer/hash' },
+          { id: 'sha_schedule', name: 'Message Schedule Expansion W₀..W₆₃', tag: 'Expansion', desc: 'Expanding 16 input words into 64 words via σ₀ and σ₁ non-linear rotations.', path: '/visualizer/hash' },
+          { id: 'sha_compression', name: '64-Round Compression Loop', tag: 'Ch & Maj', desc: 'Mixing round constants Kₜ with working variables A-H using Ch and Maj functions.', path: '/visualizer/hash' }
+        ]
+      },
+      {
+        id: 'steg',
+        name: 'Image Steganography',
+        sub: 'Covert Channels',
+        category: 'hashsteg',
+        categoryLabel: 'Hashing & Stego',
+        securityProperty: 'Plausible Deniability',
+        complexity: 'O(Pixels)',
+        path: '/visualizer/steg',
+        icon: '🖼️',
+        desc: 'Conceals secret messages inside the Least Significant Bits (LSB) of carrier pixel RGB channels without visible degradation.',
+        subtopics: [
+          { id: 'steg_lsb', name: 'Least Significant Bit (LSB) Embedding', tag: 'Pixel Level', desc: 'Encoding binary message bits into the least significant bit of Red, Green, and Blue bytes.', path: '/visualizer/steg' },
+          { id: 'steg_decode', name: 'Carrier Extraction & Reconstruction', tag: 'Decoding', desc: 'Reading LSB bytes to reconstruct hidden payload without altering perceptual image fidelity.', path: '/visualizer/steg' }
+        ]
+      },
+      {
+        id: 'caesar',
+        name: 'Caesar Cipher',
+        sub: 'Monoalphabetic',
+        category: 'substitution',
+        categoryLabel: 'Substitution Ciphers',
+        securityProperty: 'Rotational Shift',
+        complexity: 'O(N)',
+        path: '/visualizer/caesar',
+        icon: '🏛️',
+        desc: 'Historical shift cipher used by Julius Caesar, shifting each plaintext letter by key offset k mod 26.',
+        subtopics: [
+          { id: 'caesar_shift', name: 'Modular Shift E(x) = (x + k) mod 26', tag: 'Rotational', desc: 'Rotating the alphabet circular ring and applying modular shift transformation.', path: '/visualizer/caesar' },
+          { id: 'caesar_freq', name: 'Frequency Analysis & Decryption', tag: 'Cryptanalysis', desc: 'Examining letter distribution peaks to break ciphertext in 25 trial shifts.', path: '/visualizer/caesar' }
+        ]
+      },
+      {
+        id: 'vigenere',
+        name: 'Vigenère Cipher',
+        sub: 'Polyalphabetic',
+        category: 'substitution',
+        categoryLabel: 'Substitution Ciphers',
+        securityProperty: 'Frequency Smoothing',
+        complexity: 'O(N)',
+        path: '/visualizer/vigenere',
+        icon: '🔤',
+        desc: '"Le Chiffre Indéchiffrable" — Uses repeating keywords and the 26x26 Tabula Recta matrix to defeat single-alphabet frequency analysis.',
+        subtopics: [
+          { id: 'vigenere_tabula', name: 'Tabula Recta Intersect Grid', tag: '26x26 Matrix', desc: 'Intersecting plaintext row and keyword column across shifting Caesar alphabets.', path: '/visualizer/vigenere' },
+          { id: 'vigenere_poly', name: 'Repeating Keyword Polyalphabetic Shift', tag: 'Key Schedule', desc: 'Aligning periodic key characters to cycle shift offsets across the message stream.', path: '/visualizer/vigenere' }
+        ]
+      },
+      {
+        id: 'playfair',
+        name: 'Playfair Cipher',
+        sub: 'Digraph Cipher',
+        category: 'substitution',
+        categoryLabel: 'Substitution Ciphers',
+        securityProperty: 'Pair Obfuscation',
+        complexity: 'O(N)',
+        path: '/visualizer/playfair',
+        icon: '▦',
+        desc: 'First practical digraph cipher using a 5x5 key matrix (I/J combined) to encrypt pairs of letters with geometric rules.',
+        subtopics: [
+          { id: 'playfair_matrix', name: '5x5 Keyword Matrix Construction', tag: 'Digraph Table', desc: 'Generating the 25-letter key matrix omitting duplicate letters and merging I/J.', path: '/visualizer/playfair' },
+          { id: 'playfair_rules', name: 'Geometric Rules (Row, Column, Rectangle)', tag: 'Pair Swap', desc: 'Encrypting letter pairs using same-row right shift, same-column down shift, and opposite corner rectangle swaps.', path: '/visualizer/playfair' }
+        ]
+      },
+      {
+        id: 'railfence',
+        name: 'Rail Fence Cipher',
+        sub: 'Zigzag Transposition',
+        category: 'transposition',
+        categoryLabel: 'Transposition Ciphers',
+        securityProperty: 'Spatial Scrambling',
+        complexity: 'O(N)',
+        path: '/visualizer/railfence',
+        icon: '⚡',
+        desc: 'Geometric transposition cipher that arranges letters in a descending and ascending zigzag pattern across depth rails.',
+        subtopics: [
+          { id: 'rail_zigzag', name: 'Zigzag Rail Traversal Matrix', tag: 'Wave Geometry', desc: 'Bouncing character coordinates across n rails in a triangular wave path.', path: '/visualizer/railfence' },
+          { id: 'rail_read', name: 'Horizontal Rail Concatenation', tag: 'Transposition', desc: 'Reading the resulting scrambled text row-by-row across each horizontal rail.', path: '/visualizer/railfence' }
+        ]
+      },
+      {
+        id: 'columnar',
+        name: 'Columnar Transposition',
+        sub: 'Keyed Matrix Permutation',
+        category: 'transposition',
+        categoryLabel: 'Transposition Ciphers',
+        securityProperty: 'Permutation Diffusion',
+        complexity: 'O(N log K)',
+        path: '/visualizer/columnar',
+        icon: '📊',
+        desc: 'Writes plaintext row-by-row into a grid of width K, then reorders columns based on the alphabetical order of an encryption keyword.',
+        subtopics: [
+          { id: 'col_grid', name: 'Row-by-Row Grid Population', tag: 'Matrix Packing', desc: 'Packing message characters across width K defined by the keyword length.', path: '/visualizer/columnar' },
+          { id: 'col_permute', name: 'Alphabetical Column Sorting & Readout', tag: 'Key Reordering', desc: 'Sorting column headers alphabetically by key letter and extracting vertical columns.', path: '/visualizer/columnar' }
+        ]
+      },
+      {
+        id: 'enigma',
+        name: 'Enigma Machine (WWII)',
+        sub: 'Electro-Mechanical',
+        category: 'historical',
+        categoryLabel: 'Historical & Cryptanalysis',
+        securityProperty: 'Poly-Rotor Complexity',
+        complexity: '3 Rotors · Reflector',
+        path: '/visualizer/enigma',
+        icon: '⚙️',
+        desc: 'Legendary wartime cipher machine featuring a 20-plug Steckerbrett plugboard, three stepping rotors (Walzen), and an Umkehrwalze reflector.',
+        subtopics: [
+          { id: 'enigma_plugboard', name: 'Steckerbrett (Plugboard) Swaps', tag: 'Pre-Scramble', desc: 'Swapping 10 letter pairs before electrical signal enters the rotor stack.', path: '/visualizer/enigma' },
+          { id: 'enigma_rotors', name: 'Stepping Rotors (Fast, Middle, Slow)', tag: 'Mechanical Odometry', desc: 'Internal rotor wiring advancing permutations with every key press (odometer turnover).', path: '/visualizer/enigma' },
+          { id: 'enigma_reflector', name: 'Umkehrwalze (Reflector B/C)', tag: 'Self-Reciprocal', desc: 'Reflecting signal back through rotors along a different path so encryption is self-inverting.', path: '/visualizer/enigma' }
+        ]
+      },
+      {
+        id: 'hacker',
+        name: 'Hacker Mode Cryptanalysis',
+        sub: 'Frequency Attack',
+        category: 'historical',
+        categoryLabel: 'Historical & Cryptanalysis',
+        securityProperty: 'Cryptanalytic Attack',
+        complexity: 'Chi-Squared Scoring',
+        path: '/visualizer/hacker',
+        icon: '🎯',
+        desc: 'Interactive cryptanalysis attack suite: break monoalphabetic ciphers by calculating Chi-Squared statistical distance against English distributions.',
+        subtopics: [
+          { id: 'hacker_hist', name: 'Letter Frequency Histogram (ETAOIN SHRDLU)', tag: 'Distribution', desc: 'Plotting observed ciphertext frequencies against natural English language frequencies.', path: '/visualizer/hacker' },
+          { id: 'hacker_chisq', name: 'Chi-Squared Goodness of Fit Test', tag: 'Automated Cracking', desc: 'Computing χ² sum across all 26 shift candidates to identify the exact encryption key in milliseconds.', path: '/visualizer/hacker' }
+        ]
+      }
+    ],
   },
   {
-    id: 'stack',
-    title: 'Stack',
-    subtitle: 'LIFO principle',
-    path: '/visualizer/stack',
-    badge: null,
-    graphic: <StackCardGraphic />,
-    tags: [
-      { name: 'Push', path: '/visualizer/stack' },
-      { name: 'Pop', path: '/visualizer/stack' },
-      { name: 'Top', path: '/visualizer/stack' },
-      { name: '+1 more', path: '/visualizer/stack' }
-    ]
-  },
-  {
-    id: 'queue',
-    title: 'Queue',
-    subtitle: 'FIFO principle',
-    path: '/visualizer/queue',
-    badge: null,
-    graphic: <QueueCardGraphic />,
-    tags: []
-  },
-  {
-    id: 'linkedlist',
-    title: 'Linked List',
-    subtitle: 'Nodes and pointers',
-    path: '/visualizer/linkedlist',
-    badge: null,
-    graphic: <LinkedListCardGraphic />,
-    tags: [
-      { name: 'Insert', path: '/visualizer/linkedlist/singly_insert' },
-      { name: 'Delete', path: '/visualizer/linkedlist/singly_delete' },
-      { name: 'Reverse', path: '/visualizer/linkedlist/singly_reverse' },
-      { name: '+1 more', path: '/visualizer/linkedlist' }
-    ]
-  },
-  {
-    id: 'tree',
-    title: 'Tree',
-    subtitle: 'Hierarchical nodes',
-    path: '/visualizer/tree',
-    badge: null,
-    graphic: <TreeCardGraphic />,
-    tags: [
-      { name: 'Preorder', path: '/visualizer/tree' },
-      { name: 'Inorder', path: '/visualizer/tree' },
-      { name: 'Postorder', path: '/visualizer/tree' },
-      { name: '+1 more', path: '/visualizer/tree' }
-    ]
-  },
-  {
-    id: 'heap',
-    title: 'Heap',
-    subtitle: 'Priority queues',
-    path: '/visualizer/heap',
-    badge: null,
-    graphic: <HeapCardGraphic />,
-    tags: [
-      { name: 'Insert', path: '/visualizer/heap' },
-      { name: 'Extract', path: '/visualizer/heap' },
-      { name: 'Heapify', path: '/visualizer/heap' },
-      { name: '+1 more', path: '/visualizer/heap' }
-    ]
-  }
-,
-  {
-    id: 'oop',
-    title: 'OOP Suite',
-    subtitle: '4 Core Pillars: Encapsulation, Abstraction, Inheritance, Polymorphism',
-    path: '/visualizer/oop',
-    category: 'oop',
-    badge: '4 Pillars',
-    graphic: <OOPCardGraphic />,
-    tags: [
-      { name: 'Encapsulation', path: '/visualizer/encapsulation' },
-      { name: 'Inheritance', path: '/visualizer/inheritance' },
-      { name: 'Polymorphism', path: '/visualizer/polymorphism' },
-      { name: '+1 more', path: '/visualizer/oop' }
-    ]
-  },
-  {
-    id: 'crypto',
-    title: 'Cryptography Suite',
-    subtitle: '13 Ciphers & Protocols: AES, RSA, SHA-256, Diffie-Hellman, Enigma, Caesar',
-    path: '/visualizer/crypto',
-    category: 'crypto',
-    badge: '13 Ciphers',
-    graphic: <CryptoCardGraphic />,
-    tags: [
-      { name: 'AES-256', path: '/visualizer/aes' },
-      { name: 'RSA', path: '/visualizer/rsa' },
-      { name: 'Diffie-Hellman', path: '/visualizer/dh' },
-      { name: '+10 more', path: '/visualizer/crypto' }
-    ]
+    id: 'sandbox', palette: 'wheat', label: 'CODE STUDIO', headline: 'Interactive\nSandbox',
+    tagline: 'Write · run · debug live',
+    spineColors: ['#C8A820','#E8D060','#A89020','#F0E080','#B8A030','#D8C050','#907810','#EACE40','#C0B040','#F8E898'],
+    icon: '▶',
+    items: [
+      { id:'editor', name:'Code Editor', sub:'Multi-language', path:'/sandbox', icon:'{ }',
+        desc:'Multi-language live execution playground with step execution and memory inspection.',
+        subtopics:[
+          { id:'python_js', name:'Python & JavaScript Sandbox', tag:'Live Runner', desc:'In-browser compilation and execution with stdout terminal.', path:'/sandbox' },
+        ]
+      },
+      { id:'game', name:'3D Game World', sub:'Algorithm quest', path:'/game', icon:'⬡',
+        desc:'3D exploration world where data structures and algorithms unlock mystery gates.',
+        subtopics:[
+          { id:'quest_mode', name:'Algorithm Quest & Host Dashboard', tag:'3D World', desc:'Multiplayer quest-driven algorithm challenges in 3D terrain.', path:'/game' },
+        ]
+      },
+    ],
   },
 ];
 
-/* ========================================================================= */
-/* 4. MAIN DASHBOARD COMPONENT                                              */
-/* ========================================================================= */
-export default function VisualizerDashboard() {
-  const navigate = useNavigate();
-  const { theme, setTheme, user, logout } = useAppStore();
-    const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all'); // 'all' | 'ds' | 'oop' | 'crypto'
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+/* ─────────────────────────────────────────────────────────────
+   SINGLE BOOK — with colorful cover, spine, pages edge
+   ───────────────────────────────────────────────────────────── */
+function Book({ position, width, height, depth, color, coverColor, onClick }) {
+  const groupRef = useRef();
+  const [hov, setHov] = useState(false);
+  const baseY = position[1];
 
-  // Live filter cards based on search input
-  const filteredCards = ALGO_CARDS.filter(card => {
-    const matchesCategory = selectedCategory === 'all' || 
-      (selectedCategory === 'oop' && card.id === 'oop') ||
-      (selectedCategory === 'crypto' && card.id === 'crypto') ||
-      (selectedCategory === 'ds' && card.id !== 'oop' && card.id !== 'crypto');
+  useFrame(() => {
+    if (!groupRef.current) return;
+    groupRef.current.position.y = THREE.MathUtils.lerp(
+      groupRef.current.position.y,
+      hov ? baseY + 0.07 : baseY,
+      0.14
+    );
+  });
 
-    if (!matchesCategory) return false;
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      card.title.toLowerCase().includes(q) ||
-      card.subtitle.toLowerCase().includes(q) ||
-      card.tags.some(t => t.name.toLowerCase().includes(q))
+  const spineCol  = new THREE.Color(color);
+  const coverCol  = new THREE.Color(coverColor || color).multiplyScalar(1.25);
+  const brightCov = coverCol.clone().multiplyScalar(hov ? 1.18 : 1.0);
+  const pagesCol  = new THREE.Color('#F5F0E0');
+
+  const px = position[0], pz = position[2];
+
+  return (
+    <group
+      ref={groupRef}
+      position={[px, baseY, pz]}
+      onPointerEnter={e => { e.stopPropagation(); setHov(true); document.body.style.cursor = 'pointer'; }}
+      onPointerLeave={e => { e.stopPropagation(); setHov(false); document.body.style.cursor = 'default'; }}
+      onClick={e => { e.stopPropagation(); onClick(); }}
+    >
+      {/* Main body — spine color */}
+      <mesh castShadow receiveShadow>
+        <boxGeometry args={[width, height, depth]} />
+        <meshStandardMaterial color={spineCol} roughness={0.80} />
+      </mesh>
+
+      {/* Front cover — bright, colorful face */}
+      <mesh position={[0, 0, depth / 2 + 0.002]}>
+        <planeGeometry args={[width * 0.96, height * 0.96]} />
+        <meshStandardMaterial color={brightCov} roughness={0.55} />
+      </mesh>
+
+      {/* Cover decorative stripe */}
+      <mesh position={[0, height * 0.28, depth / 2 + 0.003]}>
+        <planeGeometry args={[width * 0.9, height * 0.18]} />
+        <meshStandardMaterial color={new THREE.Color(color).multiplyScalar(0.7)} roughness={0.5} />
+      </mesh>
+
+      {/* Pages edge — right side (off-white layered) */}
+      <mesh position={[width / 2 + 0.003, 0, 0]}>
+        <planeGeometry args={[depth * 0.9, height * 0.97]} />
+        <meshStandardMaterial color={pagesCol} roughness={0.92} />
+      </mesh>
+
+      {/* Gold spine ribbon */}
+      <mesh position={[-(width / 2) + 0.004, 0, 0]} rotation={[0, -Math.PI / 2, 0]}>
+        <planeGeometry args={[depth, 0.009]} />
+        <meshStandardMaterial color="#D4AA40" roughness={0.25} metalness={0.8} />
+      </mesh>
+
+      {/* Hover glow top edge */}
+      {hov && (
+        <mesh position={[0, height / 2 + 0.004, 0]}>
+          <boxGeometry args={[width, 0.008, depth]} />
+          <meshStandardMaterial color="#F0D060" emissive="#F0D060" emissiveIntensity={0.9} />
+        </mesh>
+      )}
+    </group>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   OAK BOOKSHELF UNIT
+   ───────────────────────────────────────────────────────────── */
+const OAK = '#B8874A';
+const OAK_DARK = '#8C6030';
+const OAK_MID = '#A07035';
+
+function Bookshelf({ cat, position, rotation = [0, 0, 0], onSelect }) {
+  const groupRef = useRef();
+  const [hov, setHov] = useState(false);
+
+  const W = 3.0, H = 5.4, D = 0.52;
+  const SHELF_Y = [-1.9, -0.65, 0.60, 1.85];
+  const sThick = 0.055;
+
+  // Generate books procedurally per shelf
+  const bookGroups = SHELF_Y.map(sy => {
+    const books = [];
+    let x = -W / 2 + 0.07;
+    const maxX = W / 2 - 0.07;
+    let bi = 0;
+    while (x < maxX) {
+      const bw = 0.115 + Math.sin(bi * 17.3 + sy * 5.1) * 0.035 + 0.02;
+      const bh = 0.32 + Math.abs(Math.sin(bi * 3.7 + sy * 2.3)) * 0.26;
+      const col = cat.spineColors[bi % cat.spineColors.length];
+      if (x + bw > maxX) break;
+      books.push({ x: x + bw / 2, y: sy + sThick / 2 + bh / 2, bw, bh, col });
+      x += bw + 0.005 + Math.abs(Math.sin(bi * 7.1)) * 0.01;
+      bi++;
+    }
+    return books;
+  });
+
+  useFrame(() => {
+    if (!groupRef.current) return;
+    groupRef.current.scale.z = THREE.MathUtils.lerp(
+      groupRef.current.scale.z, hov ? 1.015 : 1.0, 0.1
     );
   });
 
   return (
-    <div className="min-h-screen flex bg-[#FAF7F2] dark:bg-[#331921] text-[#2D1F23] dark:text-[#F4EBC3] font-sans selection:bg-[#AB526B] selection:text-white transition-colors duration-300">
-      
-      {/* =================================================================== */}
-      {/* LEFT SIDEBAR (#AB526B in light, #28141B / #331921 in dark)        */}
-      {/* =================================================================== */}
-      <aside className="w-64 shrink-0 bg-[#AB526B] dark:bg-[#28141B] border-r border-transparent dark:border-[#48232F] flex flex-col justify-between p-6 select-none shadow-lg z-20 min-h-screen sticky top-0 transition-colors duration-300">
-        
-        {/* Top Part: Brand & Navigation Links */}
+    <group
+      ref={groupRef}
+      position={position}
+      rotation={rotation}
+      onPointerEnter={(e) => { e.stopPropagation(); setHov(true); }}
+      onPointerLeave={(e) => { e.stopPropagation(); setHov(false); }}
+      onClick={(e) => { e.stopPropagation(); onSelect(cat); }}
+    >
+      {/* Back panel — oak */}
+      <mesh position={[0, 0, -D / 2 - 0.02]} receiveShadow castShadow>
+        <boxGeometry args={[W, H, 0.04]} />
+        <meshStandardMaterial color={OAK_MID} roughness={0.88} />
+      </mesh>
+
+      {/* Left & Right uprights */}
+      {[-W / 2, W / 2].map((sx, i) => (
+        <mesh key={i} position={[sx, 0, 0]} receiveShadow castShadow>
+          <boxGeometry args={[0.07, H, D]} />
+          <meshStandardMaterial color={OAK_DARK} roughness={0.85} />
+        </mesh>
+      ))}
+
+      {/* Top cap, bottom cap, and 4 shelves */}
+      {[H / 2, -H / 2, ...SHELF_Y].map((sy, i) => (
+        <mesh key={i} position={[0, sy, 0]} receiveShadow castShadow>
+          <boxGeometry args={[W - 0.07, sThick, D]} />
+          <meshStandardMaterial color={i < 2 ? OAK_DARK : OAK} roughness={0.82} />
+        </mesh>
+      ))}
+
+      {/* Crown moulding on top */}
+      <mesh position={[0, H / 2 + 0.10, 0.05]}>
+        <boxGeometry args={[W + 0.12, 0.12, 0.12]} />
+        <meshStandardMaterial color={OAK_DARK} roughness={0.80} />
+      </mesh>
+
+      {/* Books */}
+      {bookGroups.flat().map((bk, i) => (
+        <Book
+          key={i}
+          position={[bk.x, bk.y, D / 2 - 0.03 - bk.bw * 0.1]}
+          width={bk.bw}
+          height={bk.bh}
+          depth={D - 0.12}
+          color={bk.col}
+          onClick={() => onSelect(cat)}
+        />
+      ))}
+
+      {/* === TOP CATEGORY LABEL — large, bold, visible from far === */}
+      {/* Wide gold banner board at top of shelf */}
+      <mesh position={[0, H / 2 + 0.38, D / 2 + 0.01]}>
+        <boxGeometry args={[W - 0.06, 0.44, 0.025]} />
+        <meshStandardMaterial color="#1A0A02" roughness={0.6} />
+      </mesh>
+      {/* Coloured accent stripe using cat spine color */}
+      <mesh position={[0, H / 2 + 0.62, D / 2 + 0.015]}>
+        <boxGeometry args={[W - 0.06, 0.055, 0.025]} />
+        <meshStandardMaterial color={cat.spineColors[0]} roughness={0.4} emissive={cat.spineColors[0]} emissiveIntensity={0.5} />
+      </mesh>
+      {/* Label text */}
+      <Html position={[0, H / 2 + 0.38, D / 2 + 0.06]} center distanceFactor={3} style={{ pointerEvents: 'none' }}>
+        <div style={{
+          fontFamily: '"Georgia", "Times New Roman", serif',
+          fontSize: '16px',
+          fontWeight: '900',
+          letterSpacing: '0.22em',
+          color: cat.spineColors[1] || '#F0D890',
+          textTransform: 'uppercase',
+          whiteSpace: 'nowrap',
+          textShadow: '0 0 8px rgba(0,0,0,0.8), 0 1px 0 #000',
+          lineHeight: '1',
+        }}>
+          {cat.label}
+        </div>
+      </Html>
+
+      {/* Hover tooltip */}
+      {hov && (
+        <Html position={[0, H / 2 + 0.55, 0]} center distanceFactor={5}>
+          <div style={{
+            background: 'rgba(255,248,230,0.95)',
+            border: '1px solid #C8962A',
+            borderRadius: '8px',
+            padding: '6px 16px',
+            color: '#3A2208',
+            fontSize: '11px',
+            fontFamily: 'Georgia, serif',
+            fontWeight: 'bold',
+            whiteSpace: 'nowrap',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+            pointerEvents: 'none',
+          }}>
+            {cat.headline.replace('\n', ' — ')} · Click to explore
+          </div>
+        </Html>
+      )}
+    </group>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   FLOOR LAMP
+   ───────────────────────────────────────────────────────────── */
+function FloorLamp({ position }) {
+  return (
+    <group position={position}>
+      {/* Base disc */}
+      <mesh position={[0, -1.4, 0]} castShadow>
+        <cylinderGeometry args={[0.18, 0.22, 0.06, 16]} />
+        <meshStandardMaterial color="#B8922A" roughness={0.2} metalness={0.9} />
+      </mesh>
+      {/* Pole */}
+      <mesh position={[0, -0.2, 0]} castShadow>
+        <cylinderGeometry args={[0.025, 0.025, 2.4, 10]} />
+        <meshStandardMaterial color="#C8A030" roughness={0.15} metalness={0.95} />
+      </mesh>
+      {/* Arm */}
+      <mesh position={[0.18, 0.95, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+        <cylinderGeometry args={[0.018, 0.018, 0.36, 8]} />
+        <meshStandardMaterial color="#C8A030" roughness={0.15} metalness={0.95} />
+      </mesh>
+      {/* Shade */}
+      <mesh position={[0.36, 0.92, 0]} rotation={[0, 0, 0.3]} castShadow>
+        <coneGeometry args={[0.26, 0.28, 16, 1, true]} />
+        <meshStandardMaterial color="#E8C060" roughness={0.25} metalness={0.7} side={THREE.DoubleSide} />
+      </mesh>
+      {/* Bulb glow */}
+      <pointLight position={[0.36, 0.82, 0]} intensity={12} distance={7} decay={2} color="#FFE080" />
+    </group>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   READING CHAIR
+   ───────────────────────────────────────────────────────────── */
+function Chair({ position, rotation = 0 }) {
+  const leather = '#7A4828';
+  const dark = '#3A2010';
+  return (
+    <group position={position} rotation={[0, rotation, 0]}>
+      {/* Seat */}
+      <mesh position={[0, -0.15, 0]} castShadow receiveShadow>
+        <boxGeometry args={[0.72, 0.14, 0.68]} />
+        <meshStandardMaterial color={leather} roughness={0.85} />
+      </mesh>
+      {/* Back cushion */}
+      <mesh position={[0, 0.40, -0.28]} castShadow receiveShadow>
+        <boxGeometry args={[0.68, 0.90, 0.13]} />
+        <meshStandardMaterial color={leather} roughness={0.85} />
+      </mesh>
+      {/* Seat cushion border */}
+      <mesh position={[0, -0.08, 0]} castShadow>
+        <boxGeometry args={[0.74, 0.04, 0.70]} />
+        <meshStandardMaterial color={dark} roughness={0.9} />
+      </mesh>
+      {/* Left armrest */}
+      <mesh position={[-0.38, 0.12, -0.04]} castShadow>
+        <boxGeometry args={[0.07, 0.08, 0.52]} />
+        <meshStandardMaterial color={dark} roughness={0.9} />
+      </mesh>
+      {/* Right armrest */}
+      <mesh position={[0.38, 0.12, -0.04]} castShadow>
+        <boxGeometry args={[0.07, 0.08, 0.52]} />
+        <meshStandardMaterial color={dark} roughness={0.9} />
+      </mesh>
+      {/* 4 legs */}
+      {[[-0.3, -0.3], [-0.3, 0.3], [0.3, -0.3], [0.3, 0.3]].map(([lx, lz], i) => (
+        <mesh key={i} position={[lx, -0.5, lz]} castShadow>
+          <cylinderGeometry args={[0.025, 0.028, 0.52, 8]} />
+          <meshStandardMaterial color={dark} roughness={0.88} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   FLOWER VASE
+   ───────────────────────────────────────────────────────────── */
+function FlowerVase({ position }) {
+  const stems = [
+    [0, 0.12, 0,     '#E84060', 0.28,  0],
+    [0.06, 0.10,  0.04, '#F0A030', 0.24,  0.3],
+    [-0.05, 0.08, 0.03, '#E060A0', 0.26, -0.4],
+    [0.03, 0.14, -0.05, '#50C060', 0.22,  0.6],
+    [-0.04, 0.09,-0.04, '#6080E0', 0.25, -0.2],
+    [0.07, 0.11,  0.02, '#E8D040', 0.21,  0.8],
+  ];
+  return (
+    <group position={position}>
+      <mesh position={[0, 0, 0]} castShadow>
+        <cylinderGeometry args={[0.065, 0.045, 0.22, 16]} />
+        <meshStandardMaterial color="#F0EDE8" roughness={0.2} metalness={0.05} />
+      </mesh>
+      <mesh position={[0, 0.13, 0]} castShadow>
+        <cylinderGeometry args={[0.035, 0.065, 0.08, 14]} />
+        <meshStandardMaterial color="#F0EDE8" roughness={0.2} metalness={0.05} />
+      </mesh>
+      <mesh position={[0, 0.175, 0]}>
+        <torusGeometry args={[0.038, 0.008, 8, 16]} />
+        <meshStandardMaterial color="#E0DDD8" roughness={0.25} metalness={0.05} />
+      </mesh>
+      <mesh position={[0, 0.04, 0]}>
+        <cylinderGeometry args={[0.068, 0.068, 0.025, 16, 1, true]} />
+        <meshStandardMaterial color="#4A78C8" roughness={0.3} metalness={0.1} side={THREE.DoubleSide} />
+      </mesh>
+      {stems.map(([sx, sy, sz, col, h, lean], i) => (
+        <group key={i} position={[sx, 0.17, sz]}>
+          <mesh position={[lean * 0.06, h * 0.5, 0]} rotation={[0, 0, -lean * 0.18]} castShadow>
+            <cylinderGeometry args={[0.005, 0.005, h, 5]} />
+            <meshStandardMaterial color="#3A6820" roughness={0.9} />
+          </mesh>
+          <mesh position={[lean * 0.11, h, 0]} castShadow>
+            <sphereGeometry args={[0.038 + i * 0.004, 8, 6]} />
+            <meshStandardMaterial color={col} roughness={0.55} emissive={col} emissiveIntensity={0.2} />
+          </mesh>
+          <mesh position={[lean * 0.11, h, 0]}>
+            <sphereGeometry args={[0.014, 6, 4]} />
+            <meshStandardMaterial color="#F8E030" roughness={0.4} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   LONG TABLE
+   ───────────────────────────────────────────────────────────── */
+function LongTable({ position }) {
+  const dark = '#1A1208';
+  const mid  = '#2E1E0C';
+  const stackCols = ['#AB526B','#5B8A6A','#6A78A8','#C8962A','#8A5AA8','#D06040','#50809A'];
+  return (
+    <group position={position}>
+      {/* Marble top */}
+      <mesh castShadow receiveShadow>
+        <boxGeometry args={[7.5, 0.09, 1.6]} />
+        <meshStandardMaterial color="#1C1C1C" roughness={0.18} metalness={0.55} />
+      </mesh>
+      {/* Table top edge bevel */}
+      <mesh position={[0, 0.05, 0]}>
+        <boxGeometry args={[7.52, 0.035, 1.62]} />
+        <meshStandardMaterial color={mid} roughness={0.75} />
+      </mesh>
+      {/* Trestle legs — 3 pairs */}
+      {[-2.8, 0, 2.8].map((lx, i) => (
+        <group key={i} position={[lx, -0.52, 0]}>
+          {/* Cross beam */}
+          <mesh castShadow>
+            <boxGeometry args={[0.06, 0.88, 1.22]} />
+            <meshStandardMaterial color={dark} roughness={0.88} />
+          </mesh>
+          {/* Foot plates */}
+          {[-0.55, 0.55].map((fz, j) => (
+            <mesh key={j} position={[0, -0.45, fz]} castShadow>
+              <boxGeometry args={[0.38, 0.05, 0.06]} />
+              <meshStandardMaterial color={dark} roughness={0.85} />
+            </mesh>
+          ))}
+        </group>
+      ))}
+      {/* Stacked books */}
+      {stackCols.map((col, i) => (
+        <mesh key={i} position={[2.2, 0.06 + i * 0.068, 0.3]} rotation={[0, i * 0.1 - 0.2, 0]} castShadow>
+          <boxGeometry args={[0.44, 0.062, 0.32]} />
+          <meshStandardMaterial color={col} roughness={0.75} />
+        </mesh>
+      ))}
+      {/* Globe */}
+      <mesh position={[-2.0, 0.24, 0]}>
+        <sphereGeometry args={[0.18, 18, 14]} />
+        <meshStandardMaterial color="#3A7AAA" roughness={0.45} metalness={0.1} />
+      </mesh>
+      <mesh position={[-1.82, 0.24, 0.12]} rotation={[0.4, 0.5, 0.2]}>
+        <sphereGeometry args={[0.055, 8, 6]} />
+        <meshStandardMaterial color="#4A8A5A" roughness={0.6} />
+      </mesh>
+      <mesh position={[-2.0, 0.06, 0]}>
+        <cylinderGeometry args={[0.025, 0.055, 0.20, 10]} />
+        <meshStandardMaterial color="#C8A030" roughness={0.2} metalness={0.9} />
+      </mesh>
+      {/* Open book on table */}
+      <mesh position={[0.6, 0.052, -0.2]} rotation={[0, -0.1, 0]} castShadow>
+        <boxGeometry args={[0.58, 0.022, 0.42]} />
+        <meshStandardMaterial color="#F5EDD0" roughness={0.9} />
+      </mesh>
+      <mesh position={[0.605, 0.065, -0.2]} rotation={[0, -0.1, 0]}>
+        <planeGeometry args={[0.55, 0.38]} />
+        <meshStandardMaterial color="#EDE5C4" roughness={0.88} />
+      </mesh>
+      {/* Inkwell */}
+      <mesh position={[1.0, 0.065, 0.35]} castShadow>
+        <cylinderGeometry args={[0.042, 0.035, 0.10, 10]} />
+        <meshStandardMaterial color="#1A0A02" roughness={0.5} metalness={0.4} />
+      </mesh>
+      {/* Laptop / paper stack */}
+      <mesh position={[-0.6, 0.055, -0.4]} rotation={[0, 0.15, 0]} castShadow>
+        <boxGeometry args={[0.50, 0.015, 0.36]} />
+        <meshStandardMaterial color="#F8F2E0" roughness={0.92} />
+      </mesh>
+    </group>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   LIBRARY LADDER
+   ───────────────────────────────────────────────────────────── */
+
+/* ─────────────────────────────────────────────────────────────
+   LIBRARY LADDER
+   ───────────────────────────────────────────────────────────── */
+function LibraryLadder({ position, rotation = [0, 0, 0] }) {
+  const wood = '#3A2510';
+  const rungs = [-1.4, -0.9, -0.4, 0.1, 0.6, 1.1, 1.6, 2.1];
+  const lean = 0.22; // forward lean at top
+  return (
+    <group position={position} rotation={rotation}>
+      {/* Left rail */}
+      <mesh position={[-0.17, 0.38, lean * 0.5]} rotation={[Math.atan2(lean, 4.2), 0, 0]} castShadow>
+        <boxGeometry args={[0.045, 4.35, 0.045]} />
+        <meshStandardMaterial color={wood} roughness={0.9} />
+      </mesh>
+      {/* Right rail */}
+      <mesh position={[0.17, 0.38, lean * 0.5]} rotation={[Math.atan2(lean, 4.2), 0, 0]} castShadow>
+        <boxGeometry args={[0.045, 4.35, 0.045]} />
+        <meshStandardMaterial color={wood} roughness={0.9} />
+      </mesh>
+      {/* Rungs */}
+      {rungs.map((ry, i) => (
+        <mesh key={i} position={[0, ry, lean * ((ry + 1.4) / 3.6)]} castShadow>
+          <boxGeometry args={[0.38, 0.03, 0.03]} />
+          <meshStandardMaterial color={wood} roughness={0.88} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   SECTION DIRECTORY CHART (free-standing sign board)
+   ───────────────────────────────────────────────────────────── */
+
+/* ─────────────────────────────────────────────────────────────
+   SECTION CHART
+   ───────────────────────────────────────────────────────────── */
+function SectionChart({ position }) {
+  const sections = [
+    { label: 'DATA STRUCTURES',  color: '#AB526B', sub: 'Arrays · Graphs · Trees' },
+    { label: 'ALGORITHMS',       color: '#5B8A6A', sub: 'Sorting · Search · DP'   },
+    { label: 'MATH & LOGIC',     color: '#6A78A8', sub: 'Sets · Proof · Logic'    },
+    { label: 'PLAYGROUND',       color: '#C8962A', sub: 'Sandbox · Game · Quiz'  },
+  ];
+  return (
+    <group position={position}>
+      {/* Vertical stand poles */}
+      {[-0.62, 0.62].map((px, i) => (
+        <mesh key={i} position={[px, -0.3, 0]} castShadow>
+          <cylinderGeometry args={[0.025, 0.028, 2.4, 10]} />
+          <meshStandardMaterial color="#B8922A" roughness={0.2} metalness={0.9} />
+        </mesh>
+      ))}
+      {/* Board backing */}
+      <mesh position={[0, 0.3, 0]} castShadow>
+        <boxGeometry args={[1.42, 1.7, 0.04]} />
+        <meshStandardMaterial color="#1A1008" roughness={0.7} />
+      </mesh>
+      {/* Board face */}
+      <mesh position={[0, 0.3, 0.024]}>
+        <boxGeometry args={[1.36, 1.64, 0.01]} />
+        <meshStandardMaterial color="#0E0A04" roughness={0.55} />
+      </mesh>
+      {/* Section color bars + Html labels */}
+      {sections.map((sec, i) => (
+        <group key={i} position={[0, 0.85 - i * 0.38, 0.032]}>
+          {/* Color swatch */}
+          <mesh position={[-0.52, 0, 0]}>
+            <boxGeometry args={[0.06, 0.25, 0.01]} />
+            <meshStandardMaterial color={sec.color} roughness={0.5} emissive={sec.color} emissiveIntensity={0.4} />
+          </mesh>
+          {/* Text overlay */}
+          <Html center distanceFactor={4} style={{ pointerEvents: 'none' }}>
+            <div style={{
+              width: '190px',
+              fontFamily: 'Georgia, serif',
+              textAlign: 'left',
+              paddingLeft: '28px',
+              lineHeight: '1.1',
+            }}>
+              <div style={{ fontSize: '7px', fontWeight: 'bold', letterSpacing: '0.18em', color: sec.color, textTransform: 'uppercase' }}>
+                {sec.label}
+              </div>
+              <div style={{ fontSize: '5.5px', color: '#C0A870', letterSpacing: '0.08em', marginTop: '1px' }}>
+                {sec.sub}
+              </div>
+            </div>
+          </Html>
+        </group>
+      ))}
+      {/* Title bar */}
+      <mesh position={[0, 1.12, 0.025]}>
+        <boxGeometry args={[1.32, 0.16, 0.01]} />
+        <meshStandardMaterial color="#C8962A" roughness={0.3} metalness={0.7} />
+      </mesh>
+      <Html position={[0, 1.12, 0.04]} center distanceFactor={4} style={{ pointerEvents: 'none' }}>
+        <div style={{ fontFamily: 'Georgia, serif', fontSize: '7px', fontWeight: 'bold',
+          letterSpacing: '0.22em', color: '#1A0A02', textTransform: 'uppercase' }}>
+          LIBRARY DIRECTORY
+        </div>
+      </Html>
+      {/* Base feet */}
+      {[-0.62, 0.62].map((px, i) => (
+        <mesh key={i} position={[px, -1.52, 0]} castShadow>
+          <boxGeometry args={[0.32, 0.04, 0.22]} />
+          <meshStandardMaterial color="#B8922A" roughness={0.25} metalness={0.85} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   GLOBE CLUSTER CHANDELIER (like reference image)
+   ───────────────────────────────────────────────────────────── */
+
+/* ─────────────────────────────────────────────────────────────
+   GLOBE CHANDELIER
+   ───────────────────────────────────────────────────────────── */
+function GlobeChandelier({ position }) {
+  const brass = '#C8A030';
+  const arms = [
+    [0, 0, 0, 0.12],
+    [0.55, 0.08, 0.28, 0.10],
+    [-0.48, -0.05, 0.32, 0.11],
+    [0.30, 0.12, -0.40, 0.09],
+    [-0.28, 0.06, -0.36, 0.10],
+    [0.65, -0.10, -0.15, 0.08],
+    [-0.60, 0.04, -0.10, 0.09],
+  ];
+  return (
+    <group position={position}>
+      {/* Ceiling canopy */}
+      <mesh position={[0, 0.22, 0]}>
+        <cylinderGeometry args={[0.18, 0.22, 0.18, 14]} />
+        <meshStandardMaterial color={brass} roughness={0.2} metalness={0.9} />
+      </mesh>
+      {/* Central rod */}
+      <mesh position={[0, -0.05, 0]}>
+        <cylinderGeometry args={[0.025, 0.025, 0.60, 8]} />
+        <meshStandardMaterial color={brass} roughness={0.18} metalness={0.95} />
+      </mesh>
+      {/* Hub ring */}
+      <mesh position={[0, -0.35, 0]}>
+        <torusGeometry args={[0.28, 0.025, 8, 24]} />
+        <meshStandardMaterial color={brass} roughness={0.2} metalness={0.9} />
+      </mesh>
+      {/* Globe bulbs */}
+      {arms.map(([ax, ay, az, r], i) => (
+        <group key={i} position={[ax, ay - 0.35, az]}>
+          {/* Thin wire */}
+          <mesh position={[0, 0.2, 0]}>
+            <cylinderGeometry args={[0.006, 0.006, 0.40, 6]} />
+            <meshStandardMaterial color={brass} roughness={0.2} metalness={0.95} />
+          </mesh>
+          {/* Glass globe shell */}
+          <mesh>
+            <sphereGeometry args={[r + 0.015, 14, 10]} />
+            <meshStandardMaterial color="#E0EEF8" transparent opacity={0.18} roughness={0.0} metalness={0.1} />
+          </mesh>
+          {/* Inner filament glow */}
+          <mesh>
+            <sphereGeometry args={[r, 10, 8]} />
+            <meshStandardMaterial color="#FFF5D0" emissive="#FFE890" emissiveIntensity={4} roughness={0.1} />
+          </mesh>
+          <pointLight intensity={8} distance={6} decay={2} color="#FFF0B0" />
+        </group>
+      ))}
+    </group>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   LIBRARY ROOM — LEFT shelves, RIGHT table, checkerboard floor
+   ───────────────────────────────────────────────────────────── */
+
+/* ─────────────────────────────────────────────────────────────
+   POTTED PLANT
+   ───────────────────────────────────────────────────────────── */
+function Plant({ position }) {
+  return (
+    <group position={position}>
+      {/* Pot */}
+      <mesh castShadow receiveShadow>
+        <cylinderGeometry args={[0.18, 0.14, 0.30, 14]} />
+        <meshStandardMaterial color="#8C4A2A" roughness={0.85} />
+      </mesh>
+      {/* Rim */}
+      <mesh position={[0, 0.16, 0]}>
+        <torusGeometry args={[0.185, 0.018, 8, 20]} />
+        <meshStandardMaterial color="#6A3418" roughness={0.8} />
+      </mesh>
+      {/* Soil */}
+      <mesh position={[0, 0.12, 0]}>
+        <cylinderGeometry args={[0.165, 0.165, 0.04, 14]} />
+        <meshStandardMaterial color="#3A2810" roughness={1} />
+      </mesh>
+      {/* Stems */}
+      {[0, 1, 2, 3, 4].map(i => {
+        const angle = (i / 5) * Math.PI * 2;
+        const lean = 0.22 + i * 0.04;
+        return (
+          <mesh key={i} position={[Math.sin(angle)*lean*0.5, 0.42 + i*0.04, Math.cos(angle)*lean*0.5]}
+            rotation={[Math.sin(angle)*0.5, 0, -Math.cos(angle)*0.4]}>
+            <cylinderGeometry args={[0.008, 0.006, 0.5 + i*0.06, 5]} />
+            <meshStandardMaterial color="#3A6830" roughness={0.9} />
+          </mesh>
+        );
+      })}
+      {/* Leaves */}
+      {[0, 1, 2, 3, 4, 5, 6].map(i => {
+        const angle = (i / 7) * Math.PI * 2;
+        const r = 0.15 + (i % 3) * 0.06;
+        const h = 0.58 + (i % 4) * 0.10;
+        return (
+          <mesh key={i} position={[Math.sin(angle)*r, h, Math.cos(angle)*r]}
+            rotation={[Math.sin(angle)*0.6, angle, -Math.cos(angle)*0.5]}>
+            <sphereGeometry args={[0.09 + (i%2)*0.03, 6, 5]} />
+            <meshStandardMaterial color={i%2===0 ? '#3A7830' : '#4A9040'} roughness={0.88} />
+          </mesh>
+        );
+      })}
+    </group>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   WALL PAINTING (framed artwork)
+   ───────────────────────────────────────────────────────────── */
+function WallPainting({ position, rotation, w, h, bgColor, accentColor, title }) {
+  return (
+    <group position={position} rotation={rotation}>
+      {/* Outer frame */}
+      <mesh castShadow>
+        <boxGeometry args={[w + 0.14, h + 0.14, 0.04]} />
+        <meshStandardMaterial color="#8C6820" roughness={0.3} metalness={0.7} />
+      </mesh>
+      {/* Canvas */}
+      <mesh position={[0, 0, 0.03]}>
+        <boxGeometry args={[w, h, 0.015]} />
+        <meshStandardMaterial color={bgColor} roughness={0.6} />
+      </mesh>
+      {/* Abstract art blocks */}
+      <mesh position={[-w*0.18, h*0.1, 0.038]}>
+        <boxGeometry args={[w*0.28, h*0.38, 0.01]} />
+        <meshStandardMaterial color={accentColor} roughness={0.5} />
+      </mesh>
+      <mesh position={[w*0.20, -h*0.08, 0.038]}>
+        <boxGeometry args={[w*0.32, h*0.28, 0.01]} />
+        <meshStandardMaterial color={new THREE.Color(accentColor).multiplyScalar(0.6).getStyle()} roughness={0.5} />
+      </mesh>
+      <mesh position={[0, h*0.22, 0.039]} rotation={[0, 0, 0.4]}>
+        <boxGeometry args={[w*0.15, h*0.15, 0.01]} />
+        <meshStandardMaterial color={new THREE.Color(bgColor).multiplyScalar(1.5).getStyle()} roughness={0.5} />
+      </mesh>
+      {/* Frame inner shadow line */}
+      <mesh position={[0, 0, 0.02]}>
+        <boxGeometry args={[w + 0.04, h + 0.04, 0.01]} />
+        <meshStandardMaterial color="#5A4010" roughness={0.6} metalness={0.5} />
+      </mesh>
+    </group>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   LIBRARY ROOM — LEFT shelves, RIGHT table, checkerboard floor
+   ───────────────────────────────────────────────────────────── */
+function LibraryRoom() {
+  const WALL = '#1E1810';
+  const CEIL = '#141008';
+  const TILE_S = 1.4; // checkerboard tile size
+  const tilesX = 22, tilesZ = 16;
+
+  return (
+    <group>
+      {/* ── CHECKERBOARD MARBLE FLOOR ── */}
+      {Array.from({ length: tilesX }).map((_, xi) =>
+        Array.from({ length: tilesZ }).map((_, zi) => {
+          const isBlack = (xi + zi) % 2 === 0;
+          return (
+            <mesh key={`${xi}-${zi}`}
+              rotation={[-Math.PI / 2, 0, 0]}
+              position={[
+                -tilesX * TILE_S / 2 + xi * TILE_S + TILE_S / 2,
+                -3.5,
+                -tilesZ * TILE_S / 2 + zi * TILE_S + TILE_S / 2,
+              ]}
+              receiveShadow>
+              <planeGeometry args={[TILE_S - 0.025, TILE_S - 0.025]} />
+              <meshStandardMaterial
+                color={isBlack ? '#0A0A0A' : '#E8E2D8'}
+                roughness={isBlack ? 0.12 : 0.08}
+                metalness={isBlack ? 0.4 : 0.3}
+              />
+            </mesh>
+          );
+        })
+      )}
+
+      {/* ── CEILING ── dark */}
+      <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 5.5, 0]}>
+        <planeGeometry args={[38, 26]} />
+        <meshStandardMaterial color={CEIL} roughness={0.98} />
+      </mesh>
+      <mesh position={[0, 5.30, 0]}>
+        <boxGeometry args={[38, 0.28, 26]} />
+        <meshStandardMaterial color="#2A1E0A" roughness={0.9} />
+      </mesh>
+
+      {/* ── BACK WALL ── */}
+      <mesh position={[0, 1.0, -9.8]} receiveShadow>
+        <planeGeometry args={[38, 20]} />
+        <meshStandardMaterial color={WALL} roughness={0.96} />
+      </mesh>
+
+      {/* ── LEFT WALL ── dark (shelves sit against this) */}
+      <mesh rotation={[0, Math.PI / 2, 0]} position={[-15.5, 1.0, -1]} receiveShadow>
+        <planeGeometry args={[26, 20]} />
+        <meshStandardMaterial color="#120C06" roughness={0.96} />
+      </mesh>
+
+      {/* ── RIGHT WALL with 2 tall windows ── */}
+      <mesh rotation={[0, -Math.PI / 2, 0]} position={[15.5, 1.0, -1]} receiveShadow>
+        <planeGeometry args={[26, 20]} />
+        <meshStandardMaterial color={WALL} roughness={0.96} />
+      </mesh>
+      {[-3.5, 3.5].map((wz, i) => (
+        <group key={i}>
+          <mesh rotation={[0, -Math.PI / 2, 0]} position={[15.42, 0.8, wz]}>
+            <planeGeometry args={[4.5, 9.5]} />
+            <meshStandardMaterial color="#A8D8FF" emissive="#88C4FF"
+              emissiveIntensity={0.9} transparent opacity={0.42} roughness={0} metalness={0.1} />
+          </mesh>
+          {/* Sill */}
+          <mesh rotation={[0, -Math.PI/2, 0]} position={[15.35, -3.9, wz]}>
+            <boxGeometry args={[0.55, 0.08, 4.8]} />
+            <meshStandardMaterial color="#D8C898" roughness={0.6} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* ── CEILING BEAMS ── */}
+      {[-6, 0, 6].map((bz, i) => (
+        <mesh key={i} position={[0, 5.26, bz]} castShadow>
+          <boxGeometry args={[38, 0.26, 0.22]} />
+          <meshStandardMaterial color="#1A1008" roughness={0.88} />
+        </mesh>
+      ))}
+
+      {/* ── LED STRIPS above each shelf ── */}
+      {[-4.5, -1.5, 1.5, 4.5].map((sz, i) => (
+        <pointLight key={i} position={[-10, 2.0, sz]} intensity={14} distance={8} decay={2} color="#FFE8A0" />
+      ))}
+
+      {/* === 2 COPPER PENDANT LIGHTS above tables (like reference image) === */}
+      {[-1.4, 1.8].map((px, i) => (
+        <group key={i} position={[px, 4.5, -1.5]}>
+          {/* Suspension wire */}
+          <mesh position={[0, 0.6, 0]}>
+            <cylinderGeometry args={[0.006, 0.006, 1.2, 6]} />
+            <meshStandardMaterial color="#8A6020" roughness={0.2} metalness={0.9} />
+          </mesh>
+          {/* Brass finial on top */}
+          <mesh position={[0, 1.18, 0]}>
+            <sphereGeometry args={[0.04, 8, 6]} />
+            <meshStandardMaterial color="#C8A030" roughness={0.15} metalness={0.95} />
+          </mesh>
+          {/* Copper cone shade - open bottom */}
+          <mesh position={[0, 0, 0]} rotation={[Math.PI, 0, 0]}>
+            <coneGeometry args={[0.36, 0.50, 18, 1, true]} />
+            <meshStandardMaterial color="#B8622A" roughness={0.18} metalness={0.88} side={THREE.DoubleSide} />
+          </mesh>
+          {/* Inner bright surface */}
+          <mesh position={[0, -0.02, 0]} rotation={[Math.PI, 0, 0]}>
+            <coneGeometry args={[0.34, 0.46, 16, 1, true]} />
+            <meshStandardMaterial color="#D8882A" emissive="#FFD060" emissiveIntensity={0.5} roughness={0.3} metalness={0.6} side={THREE.DoubleSide} />
+          </mesh>
+          {/* Bulb */}
+          <mesh position={[0, -0.04, 0]}>
+            <sphereGeometry args={[0.055, 8, 6]} />
+            <meshStandardMaterial color="#FFF5C0" emissive="#FFE870" emissiveIntensity={5} />
+          </mesh>
+          <pointLight position={[0, -0.1, 0]} intensity={28} distance={9} decay={2} color="#FFD890" castShadow shadow-mapSize={[512,512]} />
+        </group>
+      ))}
+
+      {/* === 2 TABLES PUSHED SIDE-BY-SIDE (like reference image) === */}
+      {/* Table A - left half */}
+      <LongTable position={[-1.6, -2.55, -1.5]} />
+      {/* Table B - right half, touching Table A */}
+      <LongTable position={[6.0, -2.55, -1.5]} />
+
+      {/* Chairs on NEAR SIDE (3 chairs, facing toward camera/entry) */}
+      {[-3.4, -1.5, 0.4].map((cz, i) => (
+        <Chair key={i} position={[-2.6, -2.55, -1.5 + cz]} rotation={-Math.PI / 2} />
+      ))}
+      {/* Chairs on FAR SIDE (3 chairs, facing shelves) */}
+      {[-3.0, -1.1, 0.8].map((cz, i) => (
+        <Chair key={i + 3} position={[-0.6, -2.55, -1.5 + cz]} rotation={Math.PI / 2} />
+      ))}
+      {/* End chair (left end) */}
+      <Chair position={[-1.6, -2.55, -5.0]} rotation={0} />
+      {/* End chair (right end) */}
+      <Chair position={[-1.6, -2.55, 2.2]} rotation={Math.PI} />
+
+      {/* Flower vases at table ends */}
+      <FlowerVase position={[-1.6, -2.47, -5.5]} />
+      <FlowerVase position={[-10.5, -3.2, 3.5]} />
+
+      {/* Library Ladder */}
+      <LibraryLadder position={[-11.5, -3.5, 1.5]} rotation={[0, Math.PI / 2, -0.12]} />
+
+      {/* Section directory chart */}
+      <SectionChart position={[-5.5, -2.0, 6.5]} />
+
+      {/* Plants near entry corners */}
+      <Plant position={[3.5, -3.2, 7.0]} />
+      <Plant position={[-3.0, -3.2, 7.5]} />
+      <Plant position={[12.5, -3.2, -5.0]} />
+
+      {/* Floor lamps flanking the table */}
+      <FloorLamp position={[-3.5, -2.0, 4.8]} />
+      <FloorLamp position={[3.5, -2.0, 4.8]} />
+
+      {/* ── WALL SCONCES on back wall ── */}
+      {[-5, 5].map((sx, i) => (
+        <group key={i} position={[sx, 0.8, -9.7]}>
+          <mesh>
+            <boxGeometry args={[0.16, 0.34, 0.06]} />
+            <meshStandardMaterial color="#A87828" roughness={0.3} metalness={0.8} />
+          </mesh>
+          <mesh position={[0, 0.05, 0.20]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.011, 0.011, 0.30, 8]} />
+            <meshStandardMaterial color="#C89830" roughness={0.2} metalness={0.9} />
+          </mesh>
+          <mesh position={[0, 0.14, 0.32]}>
+            <coneGeometry args={[0.09, 0.15, 12, 1, true]} />
+            <meshStandardMaterial color="#D8B040" roughness={0.25} metalness={0.7} side={THREE.DoubleSide} />
+          </mesh>
+          <mesh position={[0, 0.10, 0.32]}>
+            <sphereGeometry args={[0.030, 6, 6]} />
+            <meshStandardMaterial color="#FFEE80" emissive="#FFEE80" emissiveIntensity={4} />
+          </mesh>
+          <pointLight position={[0, 0.10, 0.38]} intensity={6} distance={5} decay={2} color="#FFE898" />
+        </group>
+      ))}
+
+      {/* ── PAINTINGS on back wall ── */}
+      <WallPainting position={[-5, 1.2, -9.6]} rotation={[0, 0, 0]} w={2.0} h={1.6}
+        bgColor="#1A3A5A" accentColor="#E8A030" />
+      <WallPainting position={[5, 1.2, -9.6]} rotation={[0, 0, 0]} w={2.0} h={1.6}
+        bgColor="#2A1A4A" accentColor="#60C0A0" />
+
+      {/* ── LIGHTING ── */}
+      {/* Bright daylight from right windows */}
+      <directionalLight position={[14, 5, 2]} intensity={2.8} color="#C8E4FF" castShadow
+        shadow-mapSize={[1024, 1024]}
+        shadow-camera-left={-20} shadow-camera-right={20}
+        shadow-camera-top={14} shadow-camera-bottom={-10} />
+      {/* Warm fill toward shelves on left */}
+      <directionalLight position={[-10, 4, 0]} intensity={0.7} color="#FFD8A0" />
+      {/* Dark moody base ambient */}
+      <ambientLight intensity={0.65} color="#3A2E1A" />
+
+      {/* Dust motes */}
+      <Sparkles count={100} scale={[30, 10, 22]} position={[0, 0.5, -1]}
+        size={0.5} speed={0.015} color="#FFE090" opacity={0.08} />
+    </group>
+  );
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   CAMERA RIG — smooth lerp
+   ───────────────────────────────────────────────────────────── */
+function CameraRig({ target }) {
+  const { camera } = useThree();
+
+  useFrame(() => {
+    camera.position.lerp(target.pos, 0.045);
+    const dir = new THREE.Vector3();
+    camera.getWorldDirection(dir);
+    const want = new THREE.Vector3().copy(target.look).sub(camera.position).normalize();
+    dir.lerp(want, 0.05);
+    camera.lookAt(camera.position.clone().add(dir));
+  });
+
+  return null;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   3D SCENE
+   ───────────────────────────────────────────────────────────── */
+// Left-wall shelf config — 4 shelves touching, rotated to face room (+X direction)
+const SHELF_Z_POSITIONS = [4.59, -1.53, 1.53, -4.59];
+const SHELF_X_POS = -12.0;
+const SHELF_ROT = [0, Math.PI / 2, 0]; // face +X (into room)
+const HOME_CAM = {
+  pos:  new THREE.Vector3(5.5, 2.2, 11.5),
+  look: new THREE.Vector3(-4.0, -0.8, -2.0),
+};
+
+function LibraryScene({ onSelectCat }) {
+  const [cam, setCam] = useState({ ...HOME_CAM, pos: HOME_CAM.pos.clone(), look: HOME_CAM.look.clone() });
+
+  const handleSelect = useCallback((cat, idx) => {
+    const sz = SHELF_Z_POSITIONS[idx];
+    setCam({
+      pos:  new THREE.Vector3(-7.0, 1.0, sz),
+      look: new THREE.Vector3(SHELF_X_POS, 0.5, sz),
+    });
+    setTimeout(() => onSelectCat(cat), 950);
+  }, [onSelectCat]);
+
+  return (
+    <>
+      <CameraRig target={cam} />
+      <LibraryRoom />
+      {CATEGORIES.map((cat, i) => (
+        <Bookshelf
+          key={cat.id}
+          cat={cat}
+          position={[SHELF_X_POS, 0, SHELF_Z_POSITIONS[i]]}
+          rotation={SHELF_ROT}
+          onSelect={(c) => handleSelect(c, i)}
+        />
+      ))}
+    </>
+  );
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   INNER VIEW (Category Modal / Detail)
+   ───────────────────────────────────────────────────────────── */
+function InnerView({ cat, onClose }) {
+  if (cat?.id === 'dsa') {
+    return <AppleDataStructuresView cat={cat} onClose={onClose} />;
+  }
+  if (cat?.id === 'crypto') {
+    return <AppleCryptoView cat={cat} onClose={onClose} />;
+  }
+
+  const navigate = useNavigate();
+  const pal = PALETTE[cat.palette] || PALETTE.red;
+  const accent = pal.light;
+  const [activeItem, setActiveItem] = useState(null);
+  const [search, setSearch] = useState('');
+
+  const filtered = activeItem
+    ? activeItem.subtopics.filter(s => !search || s.name.toLowerCase().includes(search.toLowerCase()))
+    : [];
+
+  return (
+    <motion.div
+      key="inner"
+      initial={{ opacity: 0, y: 80 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 100 }}
+      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 500,
+        background: 'linear-gradient(160deg, #FAF5EC 0%, #F0E8D0 50%, #EAE0C8 100%)',
+        display: 'flex', flexDirection: 'column',
+        fontFamily: 'Georgia, serif',
+        overflowY: 'auto',
+      }}
+    >
+      {/* Header bar */}
+      <div style={{
+        padding: '22px 48px 18px',
+        borderBottom: '1px solid rgba(140,96,48,0.18)',
+        display: 'flex', alignItems: 'center', gap: '20px',
+        background: 'rgba(255,250,240,0.88)',
+        backdropFilter: 'blur(16px)',
+        position: 'sticky', top: 0, zIndex: 10,
+        boxShadow: '0 2px 12px rgba(140,96,48,0.08)',
+      }}>
+        <button
+          onClick={() => { setActiveItem(null); onClose(); }}
+          style={{
+            width: '40px', height: '40px', borderRadius: '50%',
+            border: '1px solid rgba(140,96,48,0.3)',
+            background: 'rgba(140,96,48,0.06)',
+            color: '#5A3A10', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(140,96,48,0.14)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(140,96,48,0.06)'; }}
+        >
+          <ArrowLeft size={16} />
+        </button>
+
         <div>
-          {/* Brand */}
-          <Link to="/visualizer" className="flex items-center gap-3 mb-8 group">
-            <div className="w-9 h-9 rounded-xl bg-white/20 dark:bg-[#AB526B] flex items-center justify-center text-white font-mono font-bold text-base shadow-xs group-hover:bg-white/30 dark:group-hover:bg-[#8E3B53] transition-all">
-              &lt;/&gt;
-            </div>
-            <span className="text-xl font-bold tracking-tight text-white group-hover:opacity-95 transition-opacity">
-              Code Nova
-            </span>
-          </Link>
-
-          {/* Navigation Menu */}
-          <nav className="flex flex-col gap-2">
-            {/* Visualizers (Active Pill) */}
-            <Link
-              to="/visualizer"
-              className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white/20 dark:bg-[#AB526B] text-white font-medium shadow-xs transition-all"
-            >
-              <LayoutGrid size={18} />
-              <span className="text-sm">Visualizers</span>
-            </Link>
-
-            {/* Sandbox */}
-            <Link
-              to="/sandbox"
-              className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-white/75 hover:text-white hover:bg-white/10 dark:hover:bg-[#423834] font-medium transition-all"
-            >
-              <Code2 size={18} />
-              <span className="text-sm">Sandbox</span>
-            </Link>
-
-            {/* 3D Game */}
-            <Link
-              to="/game"
-              className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-white/75 hover:text-white hover:bg-white/10 dark:hover:bg-[#423834] font-medium transition-all"
-            >
-              <Gamepad2 size={18} />
-              <span className="text-sm">3D Game</span>
-            </Link>
-
-            {/* Direct Section Quick Jump */}
-            <div className="pt-2 flex flex-col gap-1">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-white/50 px-4">
-                Categories
-              </span>
-              <Link
-                to="/visualizer/oop"
-                className="flex items-center justify-between px-4 py-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/10 text-xs font-semibold transition-all"
-              >
-                <span>OOP Pillars</span>
-                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-white/20">4</span>
-              </Link>
-              <Link
-                to="/visualizer/crypto"
-                className="flex items-center justify-between px-4 py-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/10 text-xs font-semibold transition-all"
-              >
-                <span>Cryptography</span>
-                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-white/20">13</span>
-              </Link>
-            </div>
-          </nav>
-        </div>
-
-        {/* Divider line */}
-        <div className="my-auto pt-6 pb-6">
-          <div className="w-full h-px bg-white/15 dark:bg-[#48232F]" />
-        </div>
-
-        {/* Bottom Card: Better Algorithms Bigger Dreams with wavy background */}
-        <div className="relative overflow-hidden rounded-2xl bg-white/10 dark:bg-[#423834]/60 border border-white/15 dark:border-[#5C4E49] p-4 shadow-sm backdrop-blur-xs">
-          {/* Decorative Wavy Lines Background */}
-          <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-20" viewBox="0 0 200 120" preserveAspectRatio="none" fill="none">
-            <path d="M-20 90 C 40 70, 100 110, 220 80" stroke="#FFF" strokeWidth="1.5" />
-            <path d="M-20 100 C 50 80, 110 120, 220 90" stroke="#FFF" strokeWidth="1.5" />
-            <path d="M-20 110 C 60 90, 120 130, 220 100" stroke="#FFF" strokeWidth="1.5" />
-          </svg>
-
-          {/* Sparkle Icon */}
-          <div className="w-8 h-8 rounded-lg bg-white/20 dark:bg-[#AB526B] flex items-center justify-center text-white mb-3 shadow-xs">
-            <Sparkles size={16} />
-          </div>
-
-          {/* Headline */}
-          <h4 className="text-sm font-bold text-white leading-tight">
-            Better Algorithms<br />Bigger Dreams
-          </h4>
-
-          {/* Subtitle */}
-          <p className="text-[11px] text-white/60 dark:text-[#F0E2A4] mt-1 font-medium tracking-wide">
-            Visualize • Practice • Build
+          <p style={{ color: accent, fontSize: '10px', fontFamily: 'monospace', letterSpacing: '0.2em', marginBottom: '4px' }}>
+            {cat.label}
           </p>
+          <h1 style={{ color: '#2A1608', fontSize: 'clamp(20px,3.2vw,38px)', fontWeight: 'bold', lineHeight: 1.15, margin: 0, whiteSpace: 'pre-line' }}>
+            {cat.headline}
+          </h1>
         </div>
 
-      </aside>
-
-      {/* =================================================================== */}
-      {/* MAIN CONTENT AREA                                                   */}
-      {/* =================================================================== */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-
-        {/* ----------------------------------------------------------------- */}
-        {/* Top Header Bar: Search, 3-mode theme toggle, Profile Badge        */}
-        {/* ----------------------------------------------------------------- */}
-        <header className="px-8 py-5 flex items-center justify-between gap-6 border-b border-[#EBE0D3]/60 dark:border-[#48232F] bg-[#FAF7F2]/80 dark:bg-[#331921]/80 backdrop-blur-md sticky top-0 z-10">
-          
-          {/* Search Bar: #423834 in dark mode */}
-          <div className="relative w-full max-w-md">
-            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-[#BCA297]" />
-            <input 
-              type="text"
-              placeholder="Search algorithms..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-full text-xs md:text-sm bg-white/80 dark:bg-[#423834] border border-[#EBE0D3] dark:border-[#5C4E49] placeholder-gray-400 dark:placeholder-[#BCA297] text-[#2D1F23] dark:text-[#F4EBC3] focus:outline-none focus:ring-2 focus:ring-[#AB526B]/50 transition-all shadow-2xs"
-            />
-          </div>
-
-          {/* Right Controls: 3-mode theme switcher + Profile pill */}
-          <div className="flex items-center gap-4 shrink-0">
-            
-            {/* 3-Mode Theme Switcher: Sun, Warm Sepia circle, Moon */}
-            <div className="flex items-center gap-1 bg-white/80 dark:bg-[#423834] border border-[#EBE0D3] dark:border-[#5C4E49] p-1 rounded-full shadow-2xs">
-              <button
-                onClick={() => setTheme('light')}
-                title="Light mode"
-                className={`p-1.5 rounded-full transition-all ${
-                  theme === 'light'
-                    ? 'bg-[#AB526B] text-white shadow-xs'
-                    : 'text-[#2D1F23]/60 dark:text-[#F4EBC3]/60 hover:text-[#AB526B]'
-                }`}
-              >
-                <Sun size={15} />
-              </button>
-              <button
-                onClick={() => setTheme('warm')}
-                title="Warm Sepia mode"
-                className={`p-1.5 rounded-full transition-all ${
-                  theme === 'warm'
-                    ? 'bg-[#AB526B] text-[#F0E2A4] shadow-xs'
-                    : 'text-[#2D1F23]/60 dark:text-[#F4EBC3]/60 hover:text-[#AB526B]'
-                }`}
-              >
-                <Circle size={15} className="fill-[#F0E2A4] stroke-[#BCA297]" />
-              </button>
-              <button
-                onClick={() => setTheme('dark')}
-                title="Warm Dark mode"
-                className={`p-1.5 rounded-full transition-all ${
-                  theme === 'dark'
-                    ? 'bg-[#AB526B] text-white shadow-xs'
-                    : 'text-[#2D1F23]/60 dark:text-[#F4EBC3]/60 hover:text-[#AB526B]'
-                }`}
-              >
-                <Moon size={15} />
-              </button>
-            </div>
-
-            {/* Profile Dropdown */}
-            <div className="relative">
-              <button 
-                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="flex items-center gap-2 bg-white/80 dark:bg-[#423834] border border-[#EBE0D3] dark:border-[#5C4E49] pl-1.5 pr-3 py-1.5 rounded-full shadow-2xs hover:border-[#AB526B] transition-all"
-              >
-                <div className="w-7 h-7 rounded-full bg-[#AB526B] text-white font-bold text-xs flex items-center justify-center">
-                  {user?.username ? user.username.charAt(0).toUpperCase() : 'D'}
-                </div>
-                <span className="text-xs font-semibold text-[#2D1F23] dark:text-[#F4EBC3]">
-                  {user?.username || 'DemoExplorer'}
-                </span>
-                <ChevronDown size={14} className="text-gray-400 dark:text-[#BCA297]" />
-              </button>
-
-              {/* Profile dropdown menu */}
-              {isUserMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#423834] border border-[#EBE0D3] dark:border-[#5C4E49] rounded-xl shadow-lg p-2 z-50">
-                  <div className="px-3 py-2 border-b border-gray-100 dark:border-[#5C4E49] mb-1">
-                    <p className="text-xs font-bold text-[#2D1F23] dark:text-[#F4EBC3] truncate">{user?.username || 'DemoExplorer'}</p>
-                    <p className="text-[10px] text-gray-400 dark:text-[#BCA297] truncate">{user?.email || 'explorer@codenova.dev'}</p>
-                  </div>
-                  {user ? (
-                    <button
-                      onClick={() => {
-                        logout();
-                        setIsUserMenuOpen(false);
-                      }}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-[#48232F] rounded-lg transition-colors"
-                    >
-                      <LogOut size={13} />
-                      <span>Log Out</span>
-                    </button>
-                  ) : (
-                    <Link
-                      to="/auth"
-                      onClick={() => setIsUserMenuOpen(false)}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-[#AB526B] hover:bg-[#AB526B]/10 rounded-lg transition-colors"
-                    >
-                      <LogIn size={13} />
-                      <span>Sign In</span>
-                    </Link>
-                  )}
-                </div>
-              )}
-            </div>
-
-          </div>
-
-        </header>
-
-        {/* ----------------------------------------------------------------- */}
-        {/* Main Content: Hero Banner + Algorithm Visualizers Grid            */}
-        {/* ----------------------------------------------------------------- */}
-        <main className="p-8 max-w-7xl w-full mx-auto flex flex-col gap-8">
-          
-          {/* =============================================================== */}
-          {/* HERO BANNER (#423834 in dark mode)                              */}
-          {/* =============================================================== */}
-          <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#423834] border border-[#EBE0D3] dark:border-[#5C4E49] p-8 md:p-10 shadow-xs flex flex-col md:flex-row items-center justify-between min-h-[220px]">
-            
-            {/* Left Content */}
-            <div className="z-10 max-w-xl">
-              {/* Badge */}
-              <div className="inline-flex items-center px-3 py-1 rounded-full bg-[#AB526B]/10 dark:bg-[#AB526B]/25 text-[#AB526B] dark:text-[#F0E2A4] text-xs font-semibold mb-3">
-                Welcome to Code Nova
-              </div>
-
-              {/* Main Headline */}
-              <h1 className="text-2xl md:text-3xl font-extrabold text-[#2D1F23] dark:text-[#F4EBC3] tracking-tight leading-tight">
-                Visualize Algorithms
-              </h1>
-              <h2 className="text-2xl md:text-3xl font-extrabold text-[#AB526B] dark:text-[#F0E2A4] tracking-tight leading-tight mb-3">
-                Build Stronger Logic
-              </h2>
-
-              {/* Subtitle */}
-              <p className="text-xs md:text-sm text-[#2D1F23]/70 dark:text-[#BCA297] leading-relaxed max-w-md">
-                Explore interactive visualizations for popular algorithms and data structures. Understand, experiment, and master.
-              </p>
-            </div>
-
-            {/* Right 3D Isometric Illustration */}
-            <div className="w-full md:w-[480px] h-[190px] md:h-[210px] shrink-0 mt-4 md:mt-0">
-              <HeroIllustration />
-            </div>
-
-          </div>
-
-          {/* =============================================================== */}
-          {/* SECTION HEADER: | Algorithm Visualizers       [ 16 Algorithms ] */}
-          {/* =============================================================== */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-2.5">
-              <div className="w-1.5 h-6 bg-[#AB526B] rounded-full" />
-              <div>
-                <h3 className="text-lg md:text-xl font-bold text-[#2D1F23] dark:text-[#F4EBC3]">
-                  Interactive Visualizer Catalog
-                </h3>
-                <p className="text-[11px] text-gray-500 dark:text-[#BCA297]">
-                  Data Structures • Object-Oriented Programming • Cryptography
-                </p>
-              </div>
-            </div>
-
-            {/* Category Filter Tabs */}
-            <div className="flex flex-wrap items-center gap-1.5 bg-white/80 dark:bg-[#423834] p-1.5 rounded-2xl border border-[#EBE0D3] dark:border-[#5C4E49] shadow-xs">
-              {[
-                { id: 'all', label: 'All (10 Suites)' },
-                { id: 'ds', label: 'Data Structures (8)' },
-                { id: 'oop', label: 'OOP Concepts (4)' },
-                { id: 'crypto', label: 'Cryptography (13)' }
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setSelectedCategory(tab.id)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    selectedCategory === tab.id
-                      ? 'bg-[#AB526B] text-white shadow-xs'
-                      : 'text-[#2D1F23]/70 dark:text-[#F4EBC3]/70 hover:text-[#AB526B] dark:hover:text-[#F0E2A4]'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* =============================================================== */}
-          {/* 8 ALGORITHM CARDS GRID (#423834 in dark mode)                   */}
-          {/* =============================================================== */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 pb-12">
-            {filteredCards.map((card) => (
-              <div
-                key={card.id}
-                className="bg-white dark:bg-[#423834] rounded-2xl p-5 border border-[#EBE0D3] dark:border-[#5C4E49] shadow-2xs hover:shadow-md hover:border-[#AB526B]/50 dark:hover:border-[#AB526B]/70 transition-all duration-300 flex flex-col group"
-              >
-                {/* Graphic Header with Top Right Badge */}
-                <div className="relative w-full h-24 mb-4 rounded-xl overflow-hidden flex items-center justify-center">
-                  {card.graphic}
-
-                  {card.badge && (
-                    <span className="absolute top-2 right-2 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/90 dark:bg-[#331921] text-[#AB526B] dark:text-[#F0E2A4] border border-[#EBE0D3] dark:border-[#5C4E49] shadow-2xs">
-                      {card.badge}
-                    </span>
-                  )}
-                </div>
-
-                {/* Title & Subtitle */}
-                <Link to={card.path} className="block group-hover:text-[#AB526B] transition-colors">
-                  <h4 className="text-base font-bold text-[#2D1F23] dark:text-[#F4EBC3] mb-1">
-                    {card.title}
-                  </h4>
-                  <p className="text-xs text-[#2D1F23]/60 dark:text-[#BCA297] mb-4 line-clamp-2 min-h-[32px]">
-                    {card.subtitle}
-                  </p>
-                </Link>
-
-                {/* Tags and Action Arrow Footer */}
-                <div className="mt-auto pt-2 flex items-center justify-between gap-2">
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-1.5 items-center">
-                    {card.tags.map((tag, idx) => (
-                      <Link
-                        key={idx}
-                        to={tag.path}
-                        className="px-2.5 py-1 rounded-lg text-[10px] font-medium bg-[#FAF7F2] dark:bg-[#331921] text-[#2D1F23]/70 dark:text-[#F4EBC3] border border-[#EBE0D3]/80 dark:border-[#5C4E49] hover:border-[#AB526B] hover:text-[#AB526B] transition-colors"
-                      >
-                        {tag.name}
-                      </Link>
-                    ))}
-                  </div>
-
-                  {/* Arrow Action Button */}
-                  <Link
-                    to={card.path}
-                    className="w-8 h-8 rounded-full border border-[#EBE0D3] dark:border-[#5C4E49] bg-white dark:bg-[#331921] flex items-center justify-center text-[#2D1F23]/70 dark:text-[#F4EBC3] group-hover:bg-[#AB526B] group-hover:text-white group-hover:border-[#AB526B] transition-all shadow-2xs shrink-0"
-                  >
-                    <ArrowRight size={14} />
-                  </Link>
-                </div>
-
-              </div>
-            ))}
-          </div>
-
-        </main>
-
+        <div style={{ marginLeft: 'auto' }}>
+          <span style={{
+            padding: '6px 16px', borderRadius: '999px', fontSize: '11px',
+            fontFamily: 'monospace', color: accent,
+            background: `${accent}18`, border: `1px solid ${accent}35`,
+          }}>
+            {cat.items.length} Modules
+          </span>
+        </div>
       </div>
 
+      <div style={{ padding: '32px 48px', flex: 1 }}>
+        {/* Module grid */}
+        {!activeItem && (
+          <>
+            <p style={{ color: 'rgba(42,22,8,0.45)', fontSize: '12px', fontFamily: 'monospace', marginBottom: '24px', letterSpacing: '0.06em' }}>
+              Select a module to explore its algorithms and visualizers
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(256px, 1fr))', gap: '16px' }}>
+              {cat.items.map((item, i) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05, duration: 0.4 }}
+                  onClick={() => {
+                    if (item.path) navigate(item.path);
+                    else setActiveItem(item);
+                  }}
+                  style={{
+                    background: 'rgba(255,255,255,0.6)',
+                    border: `1px solid rgba(140,96,48,0.14)`,
+                    borderRadius: '14px',
+                    padding: '22px',
+                    cursor: 'pointer',
+                    backdropFilter: 'blur(8px)',
+                  }}
+                  whileHover={{
+                    background: 'rgba(255,255,255,0.88)',
+                    borderColor: `${accent}55`,
+                    y: -3,
+                    boxShadow: `0 8px 28px rgba(140,96,48,0.14)`,
+                    transition: { duration: 0.18 },
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                    <span style={{ fontSize: '22px' }}>{item.icon}</span>
+                    <span style={{
+                      fontSize: '10px', fontFamily: 'monospace',
+                      padding: '2px 8px', borderRadius: '4px', color: accent,
+                      background: `${accent}18`, border: `1px solid ${accent}30`,
+                    }}>{item.sub}</span>
+                  </div>
+                  <h3 style={{ color: '#2A1608', fontSize: '16px', fontWeight: 'bold', marginBottom: '8px' }}>{item.name}</h3>
+                  <p style={{ color: 'rgba(42,22,8,0.55)', fontSize: '12px', lineHeight: 1.65, fontFamily: 'sans-serif' }}>{item.desc}</p>
+                  <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '5px', color: accent, fontSize: '11px', fontFamily: 'monospace' }}>
+                    {item.subtopics.length} subtopics <ArrowRight size={11} />
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Subtopic panel */}
+        {activeItem && (
+          <motion.div
+            key={activeItem.id}
+            initial={{ opacity: 0, x: 28 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.35 }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '22px' }}>
+              <button
+                onClick={() => { setActiveItem(null); setSearch(''); }}
+                style={{
+                  background: 'none', border: 'none', color: accent,
+                  cursor: 'pointer', display: 'flex', alignItems: 'center',
+                  gap: '5px', fontSize: '12px', fontFamily: 'monospace',
+                  letterSpacing: '0.06em',
+                }}
+              >
+                <ChevronLeft size={13} /> All Modules
+              </button>
+              <span style={{ color: 'rgba(42,22,8,0.3)' }}>/</span>
+              <span style={{ color: '#2A1608', fontSize: '14px', fontWeight: 'bold' }}>{activeItem.name}</span>
+            </div>
+
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '10px',
+              background: 'rgba(255,255,255,0.6)', border: '1px solid rgba(140,96,48,0.15)',
+              borderRadius: '10px', padding: '10px 16px',
+              marginBottom: '22px', maxWidth: '380px',
+              backdropFilter: 'blur(6px)',
+            }}>
+              <span style={{ color: 'rgba(42,22,8,0.4)' }}>âŒ•</span>
+              <input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search subtopicsâ€¦"
+                style={{
+                  background: 'none', border: 'none', outline: 'none',
+                  color: '#2A1608', fontSize: '13px', fontFamily: 'Georgia, serif', width: '100%',
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(270px, 1fr))', gap: '13px' }}>
+              {filtered.map((sub, i) => (
+                <motion.div
+                  key={sub.id}
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.04, duration: 0.32 }}
+                  onClick={() => navigate(sub.path)}
+                  style={{
+                    background: 'rgba(255,255,255,0.55)',
+                    border: `1px solid rgba(140,96,48,0.12)`,
+                    borderRadius: '12px',
+                    padding: '18px 20px',
+                    cursor: 'pointer',
+                    backdropFilter: 'blur(8px)',
+                  }}
+                  whileHover={{
+                    background: 'rgba(255,255,255,0.90)',
+                    borderColor: `${accent}40`,
+                    y: -2,
+                    boxShadow: `0 6px 20px rgba(140,96,48,0.12)`,
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '9px' }}>
+                    <span style={{
+                      fontSize: '10px', fontFamily: 'monospace', padding: '2px 8px',
+                      borderRadius: '4px', color: accent,
+                      background: `${accent}18`, border: `1px solid ${accent}28`,
+                    }}>{sub.tag}</span>
+                    <ArrowRight size={12} style={{ color: 'rgba(140,96,48,0.4)' }} />
+                  </div>
+                  <h4 style={{ color: '#2A1608', fontSize: '14px', fontWeight: 'bold', marginBottom: '6px' }}>{sub.name}</h4>
+                  <p style={{ color: 'rgba(42,22,8,0.50)', fontSize: '11.5px', lineHeight: 1.65, fontFamily: 'sans-serif' }}>{sub.desc}</p>
+                  <p style={{ marginTop: '13px', fontSize: '10.5px', fontFamily: 'monospace', color: accent }}>
+                    Launch Visualizer â†’
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   TOP NAV
+   ───────────────────────────────────────────────────────────── */
+function TopNav({ user, logout, theme, setTheme }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  return (
+    <header style={{
+      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 300,
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding: '13px 40px',
+      background: 'rgba(250,245,236,0.82)',
+      backdropFilter: 'blur(18px)',
+      WebkitBackdropFilter: 'blur(18px)',
+      borderBottom: '1px solid rgba(140,96,48,0.14)',
+      boxShadow: '0 1px 12px rgba(140,96,48,0.08)',
+    }}>
+      <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
+        <div style={{
+          width: '34px', height: '34px', borderRadius: '8px',
+          background: '#AB526B', color: '#FAF7F2',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontFamily: 'monospace', fontWeight: 900, fontSize: '13px',
+        }}>
+          {'</>'}
+        </div>
+        <span style={{ fontFamily: 'Georgia, serif', fontWeight: 'bold', fontSize: '15px', color: '#2A1608', letterSpacing: '0.03em' }}>
+          Code Nova
+        </span>
+      </Link>
+
+      {/* Center title */}
+      <div style={{ textAlign: 'center' }}>
+        <p style={{ color: '#8C6030', fontSize: '10px', fontFamily: 'monospace', letterSpacing: '0.22em', margin: 0, textTransform: 'uppercase' }}>
+          Algoverse Library
+        </p>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '2px',
+          padding: '4px', borderRadius: '999px',
+          border: '1px solid rgba(140,96,48,0.18)',
+          background: 'rgba(140,96,48,0.04)',
+        }}>
+          {[{ key: 'light', Icon: Sun }, { key: 'warm', Icon: Circle }, { key: 'dark', Icon: Moon }].map(({ key, Icon }) => (
+            <button key={key} onClick={() => setTheme(key)}
+              style={{
+                padding: '5px', borderRadius: '999px', border: 'none',
+                background: theme === key ? '#AB526B' : 'transparent',
+                color: theme === key ? '#FAF7F2' : 'rgba(42,22,8,0.5)',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              <Icon size={13} />
+            </button>
+          ))}
+        </div>
+
+        <div style={{ position: 'relative' }}>
+          <button
+            onClick={() => setMenuOpen(o => !o)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              padding: '6px 14px', borderRadius: '999px',
+              border: '1px solid rgba(140,96,48,0.2)',
+              background: 'rgba(140,96,48,0.05)', color: '#2A1608',
+              fontSize: '12px', fontFamily: 'Georgia, serif', cursor: 'pointer',
+            }}
+          >
+            <div style={{
+              width: '22px', height: '22px', borderRadius: '50%',
+              background: '#AB526B', color: '#FAF7F2',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '10px', fontWeight: 900,
+            }}>
+              {user?.username ? user.username[0].toUpperCase() : 'G'}
+            </div>
+            {user?.username || 'Guest'}
+            <ChevronDown size={11} style={{ opacity: 0.5 }} />
+          </button>
+
+          {menuOpen && (
+            <div style={{
+              position: 'absolute', right: 0, top: '110%',
+              background: '#FFFAF0', border: '1px solid rgba(140,96,48,0.18)',
+              borderRadius: '12px', padding: '8px', width: '180px',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.12)', zIndex: 400,
+            }}>
+              <p style={{ padding: '6px 10px', fontSize: '10px', color: 'rgba(42,22,8,0.4)', fontFamily: 'monospace' }}>
+                {user?.email || 'guest@codenova.dev'}
+              </p>
+              <div style={{ height: '1px', background: 'rgba(140,96,48,0.12)', margin: '4px 0' }} />
+              {user ? (
+                <button onClick={() => { logout(); setMenuOpen(false); }}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', background: 'none', border: 'none', color: '#AB526B', fontSize: '12px', cursor: 'pointer', borderRadius: '6px', fontFamily: 'Georgia, serif' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(171,82,107,0.08)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                >
+                  <LogOut size={12} /> Log Out
+                </button>
+              ) : (
+                <Link to="/auth" onClick={() => setMenuOpen(false)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', color: '#AB526B', fontSize: '12px', textDecoration: 'none', borderRadius: '6px', fontFamily: 'Georgia, serif' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(171,82,107,0.08)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                >
+                  <LogIn size={12} /> Sign In
+                </Link>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   MAIN EXPORT
+   ───────────────────────────────────────────────────────────── */
+export default function VisualizerDashboard() {
+  const { theme, setTheme, user, logout } = useAppStore();
+  const [selectedCat, setSelectedCat] = useState(null);
+
+  useEffect(() => {
+    const r = document.documentElement;
+    r.classList.remove('dark', 'warm');
+    if (theme === 'dark') r.classList.add('dark');
+    else if (theme === 'warm') r.classList.add('warm');
+  }, [theme]);
+
+  const handleSelectCat = useCallback((cat) => setSelectedCat(cat), []);
+  const handleClose = useCallback(() => setSelectedCat(null), []);
+
+  return (
+    <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', background: '#D4B880' }}>
+      <TopNav user={user} logout={logout} theme={theme} setTheme={setTheme} />
+
+      {/* 3D Canvas — fills full viewport immediately, no welcome gate */}
+      <Canvas
+        shadows
+        gl={{
+          antialias: true,
+          toneMapping: THREE.ACESFilmicToneMapping,
+          toneMappingExposure: 1.15,
+        }}
+        style={{ width: '100%', height: '100%' }}
+      >
+        <PerspectiveCamera makeDefault fov={52} position={[0, 0.8, 9.5]} near={0.1} far={60} />
+        <fog attach="fog" args={['#E8D8B0', 20, 45]} />
+        <SoftShadows size={12} focus={0.5} samples={16} />
+        <Suspense fallback={null}>
+          <LibraryScene onSelectCat={handleSelectCat} />
+        </Suspense>
+      </Canvas>
+
+      {/* Bottom HUD */}
+      {!selectedCat && (
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+          style={{
+            position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)',
+            zIndex: 100, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px'
+          }}
+        >
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '8px',
+            background: 'rgba(255,255,255,0.92)',
+            padding: '6px 10px', borderRadius: '980px',
+            border: '1px solid #E5E5EA',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+          }}>
+            {CATEGORIES.map(c => {
+              const isDsa = c.id === 'dsa';
+              const isCrypto = c.id === 'crypto';
+              const bg = isDsa ? '#0071E3' : isCrypto ? '#AB526B' : '#FFFFFF';
+              const border = isDsa ? '1.5px solid #0071E3' : isCrypto ? '1.5px solid #AB526B' : '1px solid #E5E5EA';
+              const color = isDsa || isCrypto ? '#FFFFFF' : '#1D1D1F';
+              const shadow = isDsa ? '0 2px 8px rgba(0,113,227,0.25)' : isCrypto ? '0 2px 8px rgba(171,82,107,0.25)' : 'none';
+
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => handleSelectCat(c)}
+                  style={{
+                    padding: '7px 16px', borderRadius: '980px',
+                    border, background: bg, color,
+                    fontSize: '12px', fontWeight: 600, cursor: 'pointer',
+                    boxShadow: shadow,
+                    transition: 'all 0.15s ease',
+                    display: 'flex', alignItems: 'center', gap: '6px',
+                  }}
+                >
+                  {isCrypto && <span style={{ fontSize: '12px' }}>🔒</span>}
+                  <span>{c.label}</span>
+                  {isCrypto && (
+                    <span style={{
+                      fontSize: '9.5px',
+                      background: 'rgba(255,255,255,0.25)',
+                      padding: '1px 6px',
+                      borderRadius: '999px',
+                      fontWeight: 700,
+                      fontFamily: 'monospace',
+                    }}>
+                      13
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          <div style={{
+            color: '#8C6030',
+            fontSize: '11px',
+            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif',
+            letterSpacing: '0.04em',
+            fontWeight: 500,
+          }}>
+            Click bookshelf in 3D or choose a category above
+          </div>
+        </motion.div>
+      )}
+
+      {/* Category panel */}
+      <AnimatePresence>
+        {selectedCat && <InnerView cat={selectedCat} onClose={handleClose} />}
+      </AnimatePresence>
     </div>
   );
 }

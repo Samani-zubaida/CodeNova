@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Lock, RotateCcw, ArrowRight, Zap } from 'lucide-react';
+import { Lock, RotateCcw, ArrowRight, Zap, Ban, CheckCircle2 } from 'lucide-react';
 import useAppStore from '../../store/useAppStore';
 import { ENCAPSULATION_PHASES } from './data/encapsulationData';
 

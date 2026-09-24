@@ -21,13 +21,13 @@ const useAppStore = create((set) => ({
   totalXP: 0,
   unlockedLevels: { ds: 1, algo: 1, oop: 1 },
   completedLevels: [],
-  
+
   login: (user, token) => {
     localStorage.setItem('nova_user', JSON.stringify(user));
     localStorage.setItem('nova_token', token);
     set({ user, token });
   },
-  
+
   logout: () => {
     localStorage.removeItem('nova_user');
     localStorage.removeItem('nova_token');
@@ -38,7 +38,7 @@ const useAppStore = create((set) => ({
     localStorage.setItem('nova_user', JSON.stringify(user));
     set({ user });
   },
-  
+
   setTheme: (newTheme) => {
     localStorage.setItem('nova_theme', newTheme);
     if (typeof document !== 'undefined') {

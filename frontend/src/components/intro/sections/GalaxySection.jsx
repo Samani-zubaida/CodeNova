@@ -102,7 +102,7 @@ export default function GalaxySection({ scrollYProgress }) {
               className="text-xs sm:text-sm md:text-base font-normal text-white/60 mb-6 sm:mb-7 leading-relaxed tracking-normal"
               style={{ opacity: paraOpacity, y: paraY }}
             >
-              Step into an explorable 2D RPG village with real-time portals, test your mastery across 6-tier Arena challenges, compete in 1v1 coding duels, and host live algorithmic competitions.
+              Explore interactive 3D simulations, master Object-Oriented Programming, dive into Cryptography protocols, compete in 1v1 coding duels, and host live algorithmic competitions.
             </motion.p>
 
             {/* Dual CTA Pills */}
@@ -112,10 +112,10 @@ export default function GalaxySection({ scrollYProgress }) {
             >
               {/* Solid CTA Pill */}
               <Link
-                to="/"
+                to="/visualizer"
                 className="inline-flex items-center justify-center gap-2.5 px-6 sm:px-7 py-3 rounded-full bg-[#FF380F] text-white font-medium text-xs sm:text-sm tracking-wide shadow-lg shadow-[#FF380F]/25 hover:bg-[#ff4e29] hover:scale-[1.02] active:scale-[0.98] transition-all"
               >
-                <span>Enter the Village</span>
+                <span>Launch Visualizers</span>
                 <ArrowRight size={14} />
               </Link>
 

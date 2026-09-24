@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, Suspense, lazy } from 'react';
-import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useSearchParams, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, Lock, Unlock, Key, Hash, Shield, Columns, Network, 
@@ -201,12 +201,13 @@ export const CRYPTO_CATEGORIES = [
 ];
 
 export default function CryptoHub({ defaultAlgo }) {
+  const { algoId } = useParams();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Determine initial algorithm from prop, URL query (?algo=...), or location state
+  // Determine initial algorithm from prop, URL param (/visualizer/crypto/:algoId), query (?algo=...), or location state
   const queryAlgo = searchParams.get('algo');
-  const initialAlgo = defaultAlgo || queryAlgo || location.state?.algo || 'caesar';
+  const initialAlgo = defaultAlgo || algoId || queryAlgo || location.state?.algo || 'caesar';
 
   // Find initial category for initial algorithm
   const initialCat = useMemo(() => {
@@ -223,9 +224,9 @@ export default function CryptoHub({ defaultAlgo }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  // Sync state if prop, URL query param or navigation state changes
+  // Sync state if prop, URL query param, route param or navigation state changes
   useEffect(() => {
-    const target = defaultAlgo || searchParams.get('algo') || location.state?.algo;
+    const target = defaultAlgo || algoId || searchParams.get('algo') || location.state?.algo;
     if (target && target !== activeAlgo) {
       setActiveAlgo(target);
       setViewMode('studio');
@@ -234,7 +235,7 @@ export default function CryptoHub({ defaultAlgo }) {
         setOpenCategories(prev => [...prev, foundCat]);
       }
     }
-  }, [defaultAlgo, searchParams, location.state]);
+  }, [defaultAlgo, algoId, searchParams, location.state]);
 
   // Handle switching algorithm
   const handleSelectAlgo = (algoId) => {

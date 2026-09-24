@@ -10,8 +10,10 @@ export default function VisualizerPlaybackBar({
   isPlaying = false,
   onPlay,
   onPause,
+  onPlayPause,
   onStepForward,
   onStepBackward,
+  onStepBack,
   onReset,
   speed = 1,
   onSpeedChange,
@@ -23,6 +25,17 @@ export default function VisualizerPlaybackBar({
   onToggleVoice = null,
   className = ''
 }) {
+  const handlePlayToggle = () => {
+    if (onPlayPause) return onPlayPause();
+    if (isPlaying) {
+      if (onPause) onPause();
+    } else {
+      if (onPlay) onPlay();
+    }
+  };
+
+  const handleStepBackAction = onStepBackward || onStepBack;
+
   // Slower speed options down to 0.25x for relaxed dry-run analysis
   const speedOptions = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2];
 
@@ -117,7 +130,7 @@ export default function VisualizerPlaybackBar({
         <div className="flex items-center gap-2 bg-gray-100/80 dark:bg-[#423834] p-1 rounded-2xl border border-gray-200/80 dark:border-[#5C4E49]">
           {/* Step Backward */}
           <button
-            onClick={onStepBackward}
+            onClick={handleStepBackAction}
             disabled={disabled || currentStep <= 0 || isPlaying}
             title="Step Backward"
             className="p-2 rounded-xl text-gray-700 dark:text-[#F0E2A4] hover:bg-white dark:hover:bg-[#5C4E49] transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-xs"
@@ -127,7 +140,7 @@ export default function VisualizerPlaybackBar({
 
           {/* Primary Play / Pause Button */}
           <button
-            onClick={isPlaying ? onPause : onPlay}
+            onClick={handlePlayToggle}
             disabled={disabled}
             title={isPlaying ? 'Pause' : 'Play Simulation'}
             className="px-5 py-2 rounded-xl font-bold text-white bg-[#AB526B] hover:bg-[#8E3B53] active:scale-95 transition-all shadow-md flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"

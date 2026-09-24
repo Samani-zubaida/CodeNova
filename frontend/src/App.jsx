@@ -5,7 +5,6 @@ import VisualizerDashboard from './pages/VisualizerDashboard';
 import Sandbox from './pages/Sandbox';
 import GameWorld from './game/GameWorld';
 import HostDashboard from './game/HostDashboard';
-import Home from './pages/Home';
 import Intro from './pages/Intro';
 import Auth from './pages/Auth';
 import VerifyEmail from './pages/VerifyEmail';
@@ -16,6 +15,7 @@ import ArrayHub from './visualizers/ds/ArrayHub';
 import Array3DVisualizer from './visualizers/ds/Array3DVisualizer';
 import StringHub from './visualizers/ds/StringHub';
 import StringVisualizer from './visualizers/ds/StringVisualizer';
+import StackHub from './visualizers/ds/StackHub';
 import StackVisualizer from './visualizers/ds/StackVisualizer';
 import QueueHub from './visualizers/ds/QueueHub';
 import QueueVisualizer from './visualizers/ds/QueueVisualizer';
@@ -100,11 +100,10 @@ const LegacyInheritanceRedirect = () => {
 function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
-  const isHome = location.pathname === '/';
-  const isIntro = location.pathname === '/intro';
+  const isIntro = location.pathname === '/' || location.pathname === '/intro' || location.pathname === '/home';
   const isAuth = location.pathname === '/auth';
   const isVerifyEmail = location.pathname === '/verify-email';
-  const isFullscreen = isHome || isIntro || isAuth || isVerifyEmail;
+  const isFullscreen = isIntro || isAuth || isVerifyEmail;
   const isAppStudio = location.pathname === '/sandbox' || location.pathname === '/game' || location.pathname === '/host';
 
   const isOopLanding = ['/oop', '/oop/', '/oops', '/oops/'].includes(location.pathname);
@@ -158,11 +157,14 @@ function AppContent() {
       
       <main className={mainClass}>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Intro />} />
+          <Route path="/home" element={<Intro />} />
           <Route path="/intro" element={<Intro />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/visualizer" element={<VisualizerDashboard />} />
+          <Route path="/visualization" element={<VisualizerDashboard />} />
+          <Route path="/visualizations" element={<VisualizerDashboard />} />
           
           {/* DS Routes */}
           <Route path="/visualizer/array" element={<ArrayHub />} />
@@ -175,9 +177,10 @@ function AppContent() {
           <Route path="/visualizer/string/:algoId" element={<StringVisualizer />} />
           <Route path="/visualizer/tree" element={<TreeHub />} />
           <Route path="/visualizer/tree/:algoId" element={<TreeGraphVisualizer />} />
-          <Route path="/visualizer/stack" element={<StackVisualizer />} />
+          <Route path="/visualizer/stack" element={<StackHub />} />
+          <Route path="/visualizer/stack/:algoId" element={<StackVisualizer />} />
           <Route path="/visualizer/queue" element={<QueueHub />} />
-          <Route path="/visualizer/queue/:algoId" element={<QueueHub />} />
+          <Route path="/visualizer/queue/:algoId" element={<QueueVisualizer />} />
           <Route path="/visualizer/heap" element={<HeapVisualizer />} />
           <Route path="/visualizer/map" element={<MapVisualizer />} />
 
@@ -232,6 +235,7 @@ function AppContent() {
 
           {/* Crypto Routes */}
           <Route path="/visualizer/crypto" element={<CryptoHub />} />
+          <Route path="/visualizer/crypto/:algoId" element={<CryptoHub />} />
           <Route path="/visualizer/cryptography" element={<CryptoHub />} />
           <Route path="/visualizer/caesar" element={<CryptoHub defaultAlgo="caesar" />} />
           <Route path="/visualizer/vigenere" element={<CryptoHub defaultAlgo="vigenere" />} />

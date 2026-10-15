@@ -1,10 +1,12 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { Moon, Sun, Circle, Sparkles, LogOut, LogIn, ChevronDown } from 'lucide-react';
 import useAppStore from '../../store/useAppStore';
 
 export default function Navbar() {
   const { theme, setTheme, user, logout } = useAppStore();
+  const location = useLocation();
+  const isOopRoute = location.pathname.includes('oop');
 
   const navLinkClass = ({ isActive }) =>
     `flex items-center gap-2 px-5 py-2 rounded-full text-xs md:text-sm font-semibold transition-all ${
@@ -13,8 +15,16 @@ export default function Navbar() {
         : 'text-[#2D1F23]/70 dark:text-[#F4EBC3]/70 hover:text-[#AB526B] dark:hover:text-[#F0E2A4] hover:bg-black/5 dark:hover:bg-white/5'
     }`;
 
+  const navBgClass = isOopRoute
+    ? 'bg-white/80 dark:bg-[#0B0F17]/85 border-slate-200/80 dark:border-white/10'
+    : 'bg-[#FAF7F2]/90 dark:bg-[#331921]/90 border-[#EBE0D3] dark:border-[#5C4E49]';
+
+  const pillContainerClass = isOopRoute
+    ? 'bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200/80 dark:border-white/10'
+    : 'bg-white/70 dark:bg-[#423834]/70 border border-[#EBE0D3] dark:border-[#5C4E49]';
+
   return (
-    <nav className="sticky top-0 z-50 w-full bg-[#FAF7F2]/90 dark:bg-[#331921]/90 backdrop-blur-md border-b border-[#EBE0D3] dark:border-[#5C4E49] transition-colors duration-300">
+    <nav className={`sticky top-0 z-50 w-full ${navBgClass} backdrop-blur-md border-b transition-colors duration-300`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
         <div className="flex justify-between items-center">
           
@@ -29,11 +39,11 @@ export default function Navbar() {
           </NavLink>
 
           {/* Navigation Links */}
-          <div className="hidden md:flex items-center bg-white/70 dark:bg-[#423834]/70 border border-[#EBE0D3] dark:border-[#5C4E49] rounded-full p-1 shadow-xs transition-colors duration-300">
+          <div className={`hidden md:flex items-center ${pillContainerClass} rounded-full p-1 shadow-xs transition-colors duration-300`}>
             <NavLink to="/visualizer" className={navLinkClass}>
               <span>Visualizers</span>
             </NavLink>
-            <NavLink to="/visualizer/oop" className={navLinkClass}>
+            <NavLink to="/oop" className={({ isActive }) => navLinkClass({ isActive: isActive || isOopRoute })}>
               <span>OOP</span>
             </NavLink>
             <NavLink to="/visualizer/crypto" className={navLinkClass}>

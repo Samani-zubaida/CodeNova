@@ -1,343 +1,575 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Play, Pause, RotateCcw, Lock, Unlock, ShieldAlert, ShieldCheck, Flame, Zap, Sparkles, Activity, Gauge, Ban, CheckCircle2, Sliders, Volume2, ArrowRight
-} from 'lucide-react';
-import VisualizerNav from '../../components/layout/VisualizerNav';
+import { Lock, RotateCcw, ArrowRight, Zap } from 'lucide-react';
+import useAppStore from '../../store/useAppStore';
+import { ENCAPSULATION_PHASES } from './data/encapsulationData';
 
-export default function EncapsulationVisualizer({ isEmbedded = false }) {
-  const [isEngineOn, setIsEngineOn] = useState(false);
-  const [gasPedal, setGasPedal] = useState(30); // 0 to 100
-  const [speed, setSpeed] = useState(0);
-  const [rpm, setRpm] = useState(0);
-  const [gear, setGear] = useState(1);
-  const [viewMode, setViewMode] = useState('cockpit'); // 'cockpit' | 'xray' | 'shield'
-  const [hackAttempt, setHackAttempt] = useState(false);
-  const [logMessage, setLogMessage] = useState("Encapsulation Studio Ready. Turn key to start engine.");
+export default function EncapsulationVisualizer({ isEmbedded = false, onNext, onReturnToCatalog }) {
+  const { theme } = useAppStore();
+  const isDark = theme === 'dark' || !theme;
+  const isWarm = theme === 'warm';
 
-  // Engine Physics & Telemetry Engine Loop
+  // Animation Phases: 'exposed' -> 'bundling' -> 'sealed' -> 'requesting' -> 'responding' -> 'completed'
+  const [phase, setPhase] = useState('exposed');
+  const [requestCount, setRequestCount] = useState(0);
+  const [isManualRequestRunning, setIsManualRequestRunning] = useState(false);
+  const timeoutsRef = useRef([]);
+
+  const clearAllTimeouts = () => {
+    timeoutsRef.current.forEach(t => clearTimeout(t));
+    timeoutsRef.current = [];
+  };
+
+  // Run the full cinematic timeline sequence
+  const startCinematicTimeline = () => {
+    clearAllTimeouts();
+    setPhase('exposed');
+    setIsManualRequestRunning(false);
+
+    // 0.0s - 4.2s: Phase 1: Exposed floating state outside the capsule
+    // 4.2s - 7.5s: Phase 2: Capsule begins wrapping around the two objects
+    const t1 = setTimeout(() => {
+      setPhase('bundling');
+    }, 4200);
+
+    // 7.5s - 10.0s: Phase 3: Shells seal shut completely, lock engages
+    const t2 = setTimeout(() => {
+      setPhase('sealed');
+    }, 7500);
+
+    // 10.0s - 12.5s: Phase 4: External request signal approaches the capsule
+    const t3 = setTimeout(() => {
+      setPhase('requesting');
+    }, 10000);
+
+    // 12.5s - 15.0s: Phase 5: Controlled response emitted via public getData()
+    const t4 = setTimeout(() => {
+      setPhase('responding');
+    }, 12500);
+
+    // 15.0s+: Phase 6: Completion and educational summary reveal
+    const t5 = setTimeout(() => {
+      setPhase('completed');
+    }, 15000);
+
+    timeoutsRef.current = [t1, t2, t3, t4, t5];
+  };
+
   useEffect(() => {
-    let timer;
-    if (isEngineOn) {
-      timer = setInterval(() => {
-        const targetRpm = 1000 + Math.round(gasPedal * 50);
-        setRpm(prev => Math.round(prev + (targetRpm - prev) * 0.25));
+    startCinematicTimeline();
+    return () => clearAllTimeouts();
+  }, [requestCount]);
 
-        const targetSpeed = Math.round(gasPedal * 1.2);
-        setSpeed(prev => Math.round(Math.max(0, prev + (targetSpeed - prev) * 0.2)));
-
-        // Automatic Gear Shifting based on speed
-        if (targetSpeed < 15) setGear(1);
-        else if (targetSpeed < 35) setGear(2);
-        else if (targetSpeed < 65) setGear(3);
-        else if (targetSpeed < 90) setGear(4);
-        else setGear(5);
-      }, 50);
-    } else {
-      setRpm(0);
-      setSpeed(0);
-      setGear(1);
-    }
-    return () => clearInterval(timer);
-  }, [isEngineOn, gasPedal]);
-
-  // Handle Direct Access Hack Attempt (account.#engineRpm = 9999)
-  const handleIllegalHack = async () => {
-    if (hackAttempt) return;
-    setHackAttempt(true);
-    setLogMessage("⛔ DIRECT HACK ATTEMPT: Executing car.#engineRpm = 9999...");
-
-    await new Promise(r => setTimeout(r, 600));
-    setLogMessage("🛡️ ENCAPSULATION DEFENSE TRIGGERED! Error: Cannot write private property #engineRpm");
+  // Handle manual interactive request
+  const handleTriggerManualRequest = async () => {
+    if (isManualRequestRunning) return;
+    setIsManualRequestRunning(true);
+    setPhase('requesting');
 
     await new Promise(r => setTimeout(r, 1800));
-    setHackAttempt(false);
-    setLogMessage("System safe. Encapsulation protected private engine variables.");
+    setPhase('responding');
+
+    await new Promise(r => setTimeout(r, 2200));
+    setPhase('completed');
+    setIsManualRequestRunning(false);
   };
 
-  // Toggle Ignition
-  const handleToggleIgnition = () => {
-    const nextState = !isEngineOn;
-    setIsEngineOn(nextState);
-    if (nextState) {
-      setLogMessage("🔑 PUBLIC METHOD CALL: car.start() -> Engine started smoothly!");
-    } else {
-      setLogMessage("🔑 PUBLIC METHOD CALL: car.stop() -> Engine shut down.");
-    }
+  const handleReplay = () => {
+    setRequestCount(prev => prev + 1);
   };
+
+  // Status banner information from centralized configuration
+  const status = ENCAPSULATION_PHASES[phase] || ENCAPSULATION_PHASES.completed;
+
+  const containerBgClass = isDark
+    ? 'bg-[#080C16] text-[#FAF7F2]'
+    : isWarm
+    ? 'bg-[#FDFBF7] text-[#2D1F23]'
+    : 'bg-[#F8FAFC] text-slate-900';
+
+  const cardBgClass = isDark
+    ? 'bg-slate-900/70 border-white/10 text-slate-300 shadow-[0_20px_45px_rgba(0,0,0,0.6)]'
+    : isWarm
+    ? 'bg-[#FAF7F2]/95 border-[#EBE0D3] text-[#2D1F23] shadow-lg'
+    : 'bg-white/95 border-slate-200 text-slate-800 shadow-xl';
 
   return (
-    <div className="w-full flex-1 flex flex-col items-center justify-between text-[#FAF7F2] font-sans select-none space-y-3">
-      {!isEmbedded && <VisualizerNav title="Encapsulation: Interactive Driving Laboratory" />}
+    <div className={`relative w-full h-full flex-1 flex flex-col items-center justify-between select-none overflow-hidden ${containerBgClass} font-sans transition-colors duration-300`}>
+      
+      {/* ── 1. ATMOSPHERIC COSMIC NEBULA BACKGROUND ── */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        {/* Deep Multi-Hued Atmospheric Auroras */}
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[650px] bg-gradient-to-tr from-cyan-600/10 via-purple-600/15 to-transparent rounded-full blur-[160px] opacity-75" />
+        <div className="absolute -bottom-32 -left-28 w-[500px] h-[500px] bg-purple-700/10 rounded-full blur-[140px]" />
+        <div className="absolute -bottom-32 -right-28 w-[500px] h-[500px] bg-cyan-600/10 rounded-full blur-[140px]" />
 
-      {/* TOP CONTROL HUB BANNER */}
-      <div className="w-full max-w-5xl bg-[#331921]/90 backdrop-blur-xl border-2 border-[#F0E2A4] rounded-2xl p-4 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-3 rounded-2xl bg-[#F0E2A4] text-[#331921] font-extrabold shadow-lg">
-            <Gauge size={24} />
-          </div>
-          <div>
-            <h3 className="text-sm font-mono font-extrabold text-[#F0E2A4] uppercase tracking-wider">
-              INTERACTIVE ENCAPSULATION CAR LABORATORY
-            </h3>
-            <p className="text-xs text-[#BCA297]">
-              Drive the car using public methods (<span className="text-[#C5CEAE] font-bold">start(), accelerate()</span>). Switch to X-Ray mode or test illegal direct hacks!
-            </p>
-          </div>
-        </div>
+        {/* Minimal Futuristic Coordinate Grid */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#38bdf806_1px,transparent_1px),linear-gradient(to_bottom,#38bdf806_1px,transparent_1px)] bg-[size:44px_44px] opacity-50" />
 
-        {/* View Selector Buttons */}
-        <div className="flex items-center gap-2 font-mono text-xs">
+        {/* Subtle Stardust Floating Particles */}
+        <div className="absolute inset-0">
           {[
-            { id: 'cockpit', label: '🚗 Driver Cockpit' },
-            { id: 'xray', label: '🔍 Under-The-Hood X-Ray' },
-            { id: 'shield', label: '🛡️ Vault Protection' }
-          ].map(v => (
-            <button
-              key={v.id}
-              onClick={() => setViewMode(v.id)}
-              className={`px-3 py-2 rounded-xl font-bold transition-all ${
-                viewMode === v.id 
-                  ? 'bg-[#F0E2A4] text-[#331921] shadow-lg scale-105 ring-2 ring-white' 
-                  : 'bg-[#423834] text-[#BCA297] hover:bg-[#5C4E49]'
-              }`}
-            >
-              {v.label}
-            </button>
+            { top: '16%', left: '20%', size: '3px', delay: '0s', dur: '6s', col: '#C084FC' },
+            { top: '38%', left: '80%', size: '2px', delay: '1s', dur: '8s', col: '#38BDF8' },
+            { top: '68%', left: '16%', size: '3px', delay: '2s', dur: '7s', col: '#818CF8' },
+            { top: '80%', left: '84%', size: '2px', delay: '3s', dur: '9s', col: '#22D3EE' },
+            { top: '24%', left: '86%', size: '3.5px', delay: '1.5s', dur: '6.5s', col: '#E879F9' },
+            { top: '55%', left: '10%', size: '2.5px', delay: '0.5s', dur: '7.5s', col: '#38BDF8' },
+          ].map((pt, i) => (
+            <motion.div
+              key={i}
+              animate={{ 
+                y: [0, -28, 0], 
+                opacity: [0.2, 0.8, 0.2] 
+              }}
+              transition={{ repeat: Infinity, duration: parseFloat(pt.dur), delay: parseFloat(pt.delay), ease: "easeInOut" }}
+              style={{
+                position: 'absolute',
+                top: pt.top,
+                left: pt.left,
+                width: pt.size,
+                height: pt.size,
+                backgroundColor: pt.col,
+                borderRadius: '50%',
+                boxShadow: `0 0 12px ${pt.col}`
+              }}
+            />
           ))}
         </div>
       </div>
 
-      {/* DYNAMIC TELEMETRY LOG BAR */}
-      <div className="w-full max-w-5xl py-2.5 px-6 rounded-2xl bg-[#423834] border border-[#5C4E49] text-center font-mono text-xs md:text-sm font-bold shadow-lg text-[#F0E2A4] flex items-center justify-center gap-2">
-        <Activity size={16} className={hackAttempt ? 'text-[#AB526B] animate-bounce' : 'text-[#C5CEAE]'} />
-        <span className={hackAttempt ? 'text-[#AB526B]' : 'text-[#F0E2A4]'}>{logMessage}</span>
-      </div>
-
-      {/* MAIN VISUAL DRIVE ARENA */}
-      <div className="w-full max-w-5xl bg-gradient-to-b from-[#140D0F] via-[#1E1417] to-[#2B1B21] border-2 border-[#5C4E49] rounded-3xl p-6 md:p-8 shadow-[0_0_90px_rgba(0,0,0,0.9)] relative overflow-hidden flex-1 flex flex-col justify-between min-h-[460px]">
-        
-        {/* Animated Highway Background Lines */}
-        <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden">
-          <motion.div 
-            animate={{ x: isEngineOn && speed > 0 ? [-200, 0] : 0 }}
-            transition={{ repeat: Infinity, duration: Math.max(0.2, 1.5 - speed / 80), ease: 'linear' }}
-            className="absolute bottom-12 left-0 w-[200%] h-12 border-t-2 border-b-2 border-dashed border-[#F0E2A4]/40 flex items-center justify-around"
-          >
-            <div className="w-24 h-1 bg-[#F0E2A4]" />
-            <div className="w-24 h-1 bg-[#F0E2A4]" />
-            <div className="w-24 h-1 bg-[#F0E2A4]" />
-            <div className="w-24 h-1 bg-[#F0E2A4]" />
-          </motion.div>
+      {/* ── 2. TOP-LEFT FLOATING GLASSMORPHIC EXPLANATION PANEL ── */}
+      <motion.div
+        initial={{ opacity: 0, x: -25 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+        className={`relative sm:absolute top-3 sm:top-5 left-auto sm:left-6 z-30 w-full max-w-[340px] sm:max-w-xs mx-auto sm:mx-0 p-3.5 sm:p-4 rounded-2xl border backdrop-blur-2xl transition-colors ${cardBgClass}`}
+      >
+        <div className="flex items-center gap-2 mb-1.5">
+          <div className="w-6 h-6 rounded-lg bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400 shadow-sm">
+            <Lock size={13} />
+          </div>
+          <span className={`font-mono text-xs font-black tracking-widest uppercase ${isDark ? 'text-white' : 'text-slate-900'}`}>
+            ENCAPSULATION
+          </span>
         </div>
+        <p className={`text-[11px] sm:text-xs leading-relaxed font-sans ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+          Encapsulation bundles data and the methods that operate on it into a single unit while controlling direct access to the internal data.
+        </p>
 
-        {/* ========================================================================= */}
-        {/* VIEW 1: DRIVER COCKPIT & DASHBOARD INSTRUMENTS */}
-        {/* ========================================================================= */}
-        {viewMode === 'cockpit' && (
-          <div className="my-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-center z-10 w-full">
-            
-            {/* Animated Car Visual */}
-            <div className="flex flex-col items-center justify-center">
-              <motion.div 
-                animate={{ y: isEngineOn ? [0, -3, 0] : 0 }}
-                transition={{ repeat: Infinity, duration: Math.max(0.1, 0.5 - rpm / 10000) }}
-                className="relative w-80 md:w-[380px] h-44 bg-gradient-to-r from-[#AB526B] to-[#9E455E] rounded-3xl border-4 border-white/90 shadow-[0_0_60px_rgba(171,82,107,0.7)] flex items-center justify-between px-6"
-              >
-                {/* Driver Cockpit Windshield */}
-                <div className="w-48 h-24 bg-[#FAF7F2]/20 border-2 border-white/70 rounded-t-full rounded-br-2xl flex items-center justify-center backdrop-blur-sm relative">
-                  <span className="text-4xl">😎</span>
-                  <div className="ml-2 font-mono text-xs text-[#F0E2A4] font-bold">
-                    {isEngineOn ? `GEAR ${gear}` : "PARKED"}
+        {/* Live Step Badge */}
+        <div className={`mt-2.5 pt-2 border-t flex items-center justify-between text-[10px] font-mono ${isDark ? 'border-white/5' : 'border-slate-200'}`}>
+          <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>{status.step}:</span>
+          <span className={`px-2 py-0.5 rounded-full font-bold border ${status.badgeBg}`}>
+            {status.tag}
+          </span>
+        </div>
+      </motion.div>
+
+      {/* ── 3. TOP-RIGHT LIVE TELEMETRY STATUS BADGE ── */}
+      <motion.div
+        initial={{ opacity: 0, x: 25 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.6, delay: 0.3 }}
+        className={`hidden md:flex absolute top-5 right-6 z-30 items-center gap-2.5 px-3.5 py-2 rounded-xl border backdrop-blur-2xl font-mono text-xs ${cardBgClass}`}
+      >
+        <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+        <span className={`font-bold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{status.title}</span>
+      </motion.div>
+
+      {/* ── 4. MAIN CENTRAL ANIMATION STAGE (UNBOXED FULL VIEWPORT CANVAS) ── */}
+      <div className="relative z-10 w-full flex-1 flex flex-col items-center justify-center px-4 my-auto">
+        
+        {/* Interactive Scene Stage Container */}
+        <div className="relative w-full max-w-4xl h-[420px] sm:h-[480px] flex items-center justify-center">
+
+          {/* ==============================================================
+              A. EXTERNAL CALLER NODE & REQUEST FLIGHT (PHASE 4 & 5)
+              ============================================================== */}
+          <div className="absolute -top-6 sm:-top-8 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center pointer-events-none">
+            {/* External Caller Station */}
+            <motion.div
+              animate={{
+                opacity: phase === 'requesting' || phase === 'responding' || phase === 'completed' ? 1 : 0.3,
+                scale: phase === 'requesting' ? 1.05 : 1
+              }}
+              className="px-4 py-1.5 rounded-xl bg-slate-900/85 border border-slate-700/70 shadow-lg backdrop-blur-md flex items-center gap-2 font-mono text-xs text-slate-300"
+            >
+              <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+              <span className="font-extrabold text-white">External Caller / Client</span>
+            </motion.div>
+
+            {/* Glowing Request Packet Flight (Descends toward Capsule) */}
+            <AnimatePresence>
+              {phase === 'requesting' && (
+                <motion.div
+                  initial={{ opacity: 0, y: 0 }}
+                  animate={{ 
+                    opacity: [0, 1, 1],
+                    y: [10, 50, 75]
+                  }}
+                  transition={{ duration: 1.8, ease: "easeInOut" }}
+                  className="absolute top-10 flex flex-col items-center"
+                >
+                  <div className="px-3 py-1 rounded-xl bg-amber-500 text-slate-950 font-mono text-[10px] font-black shadow-[0_0_20px_#F59E0B] flex items-center gap-1.5 whitespace-nowrap">
+                    <Zap size={12} className="text-slate-950 animate-bounce" />
+                    <span>REQUEST: #data</span>
                   </div>
-                </div>
-
-                {/* Headlight */}
-                <div className={`w-5 h-12 rounded-r-xl shadow-2xl transition-all ${
-                  isEngineOn ? 'bg-[#F0E2A4] shadow-[0_0_35px_#F0E2A4] animate-pulse' : 'bg-[#423834]'
-                }`} />
-
-                {/* Spinning Alloy Wheels */}
-                <motion.div 
-                  animate={{ rotate: isEngineOn ? 360 : 0 }}
-                  transition={{ repeat: Infinity, duration: Math.max(0.1, 1 - speed / 60), ease: 'linear' }}
-                  className="absolute -bottom-6 left-8 w-16 h-16 rounded-full bg-[#140D0F] border-4 border-[#F0E2A4] flex items-center justify-center shadow-2xl"
-                >
-                  <div className="w-6 h-6 rounded-full border-2 border-dashed border-white bg-[#423834]" />
+                  <div className="w-0.5 h-6 bg-gradient-to-b from-amber-500 to-transparent mt-1" />
                 </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Glowing Return Token Flight (Ascends from Capsule getData()) */}
+            <AnimatePresence>
+              {phase === 'responding' && (
+                <motion.div
+                  initial={{ opacity: 0, y: 75 }}
+                  animate={{ 
+                    opacity: [0, 1, 1],
+                    y: [75, 40, 10]
+                  }}
+                  transition={{ duration: 1.8, ease: "easeOut" }}
+                  className="absolute top-10 flex flex-col items-center"
+                >
+                  <div className="px-3 py-1 rounded-xl bg-emerald-500 text-slate-950 font-mono text-[10px] font-black shadow-[0_0_20px_#10B981] flex items-center gap-1.5 whitespace-nowrap">
+                    <CheckCircle2 size={12} className="text-slate-950" />
+                    <span>RETURN: data "safe_value"</span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* ==============================================================
+              B. THE LARGE FUTURISTIC CAPSULE (THE PROTECTIVE SHELL)
+              ============================================================== */}
+          <div className="relative w-[320px] sm:w-[440px] h-[220px] sm:h-[260px] flex items-center justify-center scale-90 sm:scale-100 transition-transform">
+
+            {/* 1. Direct Access Deflection Shield Notice (Flashes during request) */}
+            <AnimatePresence>
+              {phase === 'requesting' && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ delay: 0.8 }}
+                  className="absolute -top-14 left-1/2 -translate-x-1/2 z-40 px-3 py-1 rounded-full bg-rose-500/20 border border-rose-500/60 backdrop-blur-md shadow-[0_0_20px_rgba(244,63,94,0.5)] flex items-center gap-1.5 text-[10px] font-mono font-bold text-rose-300 whitespace-nowrap pointer-events-none"
+                >
+                  <Ban size={12} className="text-rose-400" />
+                  <span>DIRECT ACCESS DEFLECTED &bull; Route via public getData()</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* 2. Outer Protective Energy Boundary (Activates after sealed) */}
+            <motion.div
+              animate={{
+                opacity: phase === 'exposed' ? 0 : [0.4, 0.8, 0.4],
+                scale: phase === 'exposed' ? 0.94 : [1, 1.02, 1],
+                borderColor: phase === 'responding' ? '#10B981' : phase === 'requesting' ? '#38BDF8' : '#818CF8'
+              }}
+              transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+              className="absolute inset-[-14px] rounded-[75px] border-2 border-dashed pointer-events-none z-10"
+              style={{
+                boxShadow: phase !== 'exposed' ? '0 0 50px rgba(56, 189, 248, 0.25)' : 'none'
+              }}
+            />
+
+            {/* 3. LEFT CAPSULE SHELL */}
+            <motion.div
+              initial={{ x: -140, opacity: 0.15 }}
+              animate={{
+                x: phase === 'exposed' ? -140 : 0,
+                opacity: phase === 'exposed' ? 0.15 : 0.95,
+                borderColor: phase !== 'exposed' ? 'rgba(168, 85, 247, 0.65)' : 'rgba(255, 255, 255, 0.1)'
+              }}
+              transition={{ type: "spring", stiffness: 60, damping: 14 }}
+              className="absolute left-0 top-0 bottom-0 w-1/2 rounded-l-[70px] border-l-2 border-t-2 border-b-2 bg-gradient-to-br from-slate-900/90 via-purple-950/40 to-slate-900/90 backdrop-blur-xl shadow-2xl z-20 overflow-hidden flex flex-col justify-between p-4 pointer-events-none"
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-transparent via-white/[0.04] to-transparent" />
+              <div className="font-mono text-[9px] text-purple-400/80 tracking-wider font-bold">
+                SHELL_LEFT &bull; BOUNDARY
+              </div>
+              <div className="flex items-center gap-1.5 opacity-40">
+                <div className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+                <div className="h-0.5 w-14 bg-purple-400/40" />
+              </div>
+            </motion.div>
+
+            {/* 4. RIGHT CAPSULE SHELL */}
+            <motion.div
+              initial={{ x: 140, opacity: 0.15 }}
+              animate={{
+                x: phase === 'exposed' ? 140 : 0,
+                opacity: phase === 'exposed' ? 0.15 : 0.95,
+                borderColor: phase !== 'exposed' ? 'rgba(56, 189, 248, 0.65)' : 'rgba(255, 255, 255, 0.1)'
+              }}
+              transition={{ type: "spring", stiffness: 60, damping: 14 }}
+              className="absolute right-0 top-0 bottom-0 w-1/2 rounded-r-[70px] border-r-2 border-t-2 border-b-2 bg-gradient-to-bl from-slate-900/90 via-cyan-950/40 to-slate-900/90 backdrop-blur-xl shadow-2xl z-20 overflow-hidden flex flex-col justify-between p-4 items-end pointer-events-none"
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-transparent via-white/[0.04] to-transparent" />
+              <div className="font-mono text-[9px] text-cyan-400/80 tracking-wider font-bold">
+                SHELL_RIGHT &bull; BOUNDARY
+              </div>
+              <div className="flex items-center gap-1.5 opacity-40">
+                <div className="h-0.5 w-14 bg-cyan-400/40" />
+                <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+              </div>
+            </motion.div>
+
+            {/* 5. CENTRAL LOCKING SEAM & CLASP (Illuminates when sealed) */}
+            <AnimatePresence>
+              {phase !== 'exposed' && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.5 }}
+                  transition={{ delay: 0.2, type: "spring" }}
+                  className="absolute z-30 flex flex-col items-center justify-center pointer-events-none"
+                >
+                  {/* Seam Energy Beam */}
+                  <motion.div 
+                    animate={{ opacity: [0.6, 1, 0.6] }}
+                    transition={{ repeat: Infinity, duration: 2 }}
+                    className="w-0.5 h-48 bg-gradient-to-b from-transparent via-cyan-400 to-transparent shadow-[0_0_12px_#38BDF8]" 
+                  />
+
+                  {/* Central Lock Clasp */}
+                  <div className="absolute p-3 rounded-2xl bg-slate-950 border-2 border-cyan-400/80 shadow-[0_0_25px_rgba(56,189,248,0.5)] flex items-center justify-center">
+                    <motion.div
+                      animate={{ rotate: phase === 'requesting' ? [0, -8, 8, 0] : 0 }}
+                      transition={{ duration: 0.4 }}
+                    >
+                      <Lock size={18} className="text-cyan-300" />
+                    </motion.div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* 6. CONTROLLED PUBLIC METHOD PORT: getData() */}
+            <motion.div
+              initial={{ opacity: 0.2, y: 12 }}
+              animate={{
+                opacity: phase === 'exposed' ? 0.2 : 1,
+                y: phase === 'exposed' ? 12 : 0,
+                scale: phase === 'requesting' || phase === 'responding' ? 1.08 : 1,
+                borderColor: phase === 'responding' ? '#10B981' : phase === 'requesting' ? '#38BDF8' : 'rgba(255,255,255,0.2)'
+              }}
+              className="absolute -top-7 right-8 sm:right-14 z-30 px-3.5 py-1.5 rounded-xl bg-slate-900 border backdrop-blur-xl shadow-lg flex items-center gap-2 font-mono text-[11px]"
+            >
+              <span className={`w-2 h-2 rounded-full ${phase === 'requesting' || phase === 'responding' ? 'bg-cyan-400 animate-ping' : 'bg-slate-500'}`} />
+              <span className="font-extrabold text-cyan-300">public getData()</span>
+              <span className="text-[9px] text-slate-400 uppercase tracking-wider hidden sm:inline">&bull; Port</span>
+            </motion.div>
+
+            {/* ==============================================================
+                C. THE TWO OBJECTS (DATA & METHODS)
+                - Phase 1: Separated outside the capsule
+                - Phase 2+: Wrapped and bundled together inside
+                ============================================================== */}
+
+            {/* 1. DATA OBJECT (VIOLET/PURPLE BALL) */}
+            <motion.div
+              initial={{ x: -210, y: -45, scale: 1.15 }}
+              animate={{
+                x: phase === 'exposed' ? -210 : -65,
+                y: phase === 'exposed' ? [ -40, -55, -40 ] : [ -6, 6, -6 ],
+                scale: phase === 'exposed' ? 1.15 : 1,
+              }}
+              transition={{
+                x: { type: "spring", stiffness: 55, damping: 14 },
+                y: { repeat: Infinity, duration: phase === 'exposed' ? 4 : 3, ease: "easeInOut" },
+                scale: { duration: 0.5 }
+              }}
+              className="absolute z-30 flex flex-col items-center justify-center cursor-default"
+            >
+              {/* 3D Radiant Violet Sphere */}
+              <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center shadow-[0_0_45px_rgba(168,85,247,0.7)]">
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#E9D5FF] via-[#A855F7] to-[#581C87] border-2 border-white/60 shadow-inner" />
+                <div className="absolute top-2 left-3 w-6 h-4 bg-white/50 rounded-full blur-[2px] -rotate-45" />
 
                 <motion.div 
-                  animate={{ rotate: isEngineOn ? 360 : 0 }}
-                  transition={{ repeat: Infinity, duration: Math.max(0.1, 1 - speed / 60), ease: 'linear' }}
-                  className="absolute -bottom-6 right-12 w-16 h-16 rounded-full bg-[#140D0F] border-4 border-[#F0E2A4] flex items-center justify-center shadow-2xl"
+                  animate={{ scale: [0.88, 1.04, 0.88] }}
+                  transition={{ repeat: Infinity, duration: 2.2 }}
+                  className="relative z-10 flex flex-col items-center justify-center text-center font-mono"
                 >
-                  <div className="w-6 h-6 rounded-full border-2 border-dashed border-white bg-[#423834]" />
+                  <span className="text-xs sm:text-sm font-black text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] tracking-wide">
+                    data
+                  </span>
+                  <span className="text-[8px] text-purple-200 font-bold opacity-90">
+                    #private
+                  </span>
                 </motion.div>
-              </motion.div>
-            </div>
-
-            {/* Dashboard Telemetry Gauges */}
-            <div className="bg-[#331921] p-6 rounded-3xl border-2 border-[#C5CEAE] shadow-2xl flex flex-col space-y-4">
-              <div className="flex items-center justify-between border-b border-white/20 pb-2 font-mono text-xs">
-                <span className="text-[#C5CEAE] font-extrabold uppercase">Public Telemetry Dashboard</span>
-                <span className="text-[#F0E2A4] font-bold">Public Methods Only</span>
               </div>
 
-              {/* Speedometer & RPM Gauges */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-[#423834] p-4 rounded-2xl border border-[#5C4E49] text-center font-mono">
-                  <span className="text-[10px] text-[#BCA297] uppercase block font-bold">Speedometer</span>
-                  <span className="text-3xl font-extrabold text-[#F0E2A4]">{speed}</span>
-                  <span className="text-[10px] text-[#C5CEAE] block">MPH</span>
-                </div>
+              {/* Data Attached Label */}
+              <div className="mt-2 px-2.5 py-0.5 rounded-full bg-purple-950/80 border border-purple-500/40 text-[10px] font-mono text-purple-300 font-bold shadow-md whitespace-nowrap">
+                ● private data
+              </div>
+            </motion.div>
 
-                <div className="bg-[#423834] p-4 rounded-2xl border border-[#5C4E49] text-center font-mono">
-                  <span className="text-[10px] text-[#BCA297] uppercase block font-bold">Tachometer</span>
-                  <span className="text-3xl font-extrabold text-[#AB526B]">{rpm}</span>
-                  <span className="text-[10px] text-[#AB526B] block">RPM</span>
-                </div>
+            {/* 2. METHODS OBJECT (CYAN/BLUE BALL) */}
+            <motion.div
+              initial={{ x: 210, y: 45, scale: 1.15 }}
+              animate={{
+                x: phase === 'exposed' ? 210 : 65,
+                y: phase === 'exposed' ? [ 40, 55, 40 ] : [ 6, -6, 6 ],
+                scale: phase === 'exposed' ? 1.15 : 1,
+              }}
+              transition={{
+                x: { type: "spring", stiffness: 55, damping: 14 },
+                y: { repeat: Infinity, duration: phase === 'exposed' ? 4.5 : 3.2, ease: "easeInOut" },
+                scale: { duration: 0.5 }
+              }}
+              className="absolute z-30 flex flex-col items-center justify-center cursor-default"
+            >
+              {/* 3D Radiant Cyan Sphere */}
+              <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center shadow-[0_0_45px_rgba(6,182,212,0.7)]">
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#CFFAFE] via-[#06B6D4] to-[#0E7490] border-2 border-white/60 shadow-inner" />
+                <div className="absolute top-2 left-3 w-6 h-4 bg-white/50 rounded-full blur-[2px] -rotate-45" />
+
+                <motion.div 
+                  animate={{ scale: [0.88, 1.04, 0.88] }}
+                  transition={{ repeat: Infinity, duration: 2.2, delay: 0.4 }}
+                  className="relative z-10 flex flex-col items-center justify-center text-center font-mono"
+                >
+                  <span className="text-xs sm:text-sm font-black text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] tracking-wide">
+                    methods
+                  </span>
+                  <span className="text-[8px] text-cyan-100 font-bold opacity-90">
+                    public API
+                  </span>
+                </motion.div>
               </div>
 
-              {/* Gas Pedal Controls */}
-              <div className="bg-[#423834] p-4 rounded-2xl border border-[#5C4E49] flex flex-col space-y-2 font-mono">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-[#BCA297]">Gas Pedal (Public Method):</span>
-                  <span className="text-[#F0E2A4] font-extrabold">car.accelerate({gasPedal}%)</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  disabled={!isEngineOn}
-                  value={gasPedal}
-                  onChange={e => setGasPedal(Number(e.target.value))}
-                  className="w-full accent-[#C5CEAE] cursor-pointer disabled:opacity-30"
+              {/* Methods Attached Label */}
+              <div className="mt-2 px-2.5 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-500/40 text-[10px] font-mono text-cyan-300 font-bold shadow-md whitespace-nowrap">
+                ● public methods
+              </div>
+            </motion.div>
+
+            {/* BINDING CONDUIT LINE (Connecting data & methods together inside) */}
+            <AnimatePresence>
+              {phase !== 'exposed' && (
+                <motion.div
+                  initial={{ opacity: 0, scaleX: 0 }}
+                  animate={{ opacity: 1, scaleX: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="absolute w-36 h-1 bg-gradient-to-r from-purple-400 via-white to-cyan-400 z-20 pointer-events-none rounded-full shadow-[0_0_12px_#FFFFFF]"
                 />
-              </div>
-            </div>
+              )}
+            </AnimatePresence>
 
           </div>
-        )}
 
-        {/* ========================================================================= */}
-        {/* VIEW 2: UNDER THE HOOD X-RAY ENGINE MECHANICAL DETAILS */}
-        {/* ========================================================================= */}
-        {viewMode === 'xray' && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="my-auto bg-[#331921] p-6 md:p-8 rounded-3xl border-4 border-[#AB526B] shadow-[0_0_80px_rgba(171,82,107,0.7)] flex flex-col items-center space-y-6 z-10 w-full max-w-2xl"
-          >
-            <div className="w-full flex items-center justify-between border-b border-white/20 pb-3 font-mono text-xs">
-              <span className="text-[#AB526B] font-extrabold flex items-center gap-2 text-sm">
-                <Flame size={20} /> Internal Implementation (#private variables)
-              </span>
-              <span className="text-[#F0E2A4] font-extrabold">{rpm} RPM</span>
-            </div>
+        </div>
 
-            {/* 4 Piston Cylinders */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
-              {[1, 2, 3, 4].map(p => (
-                <motion.div
-                  key={p}
-                  animate={{ y: isEngineOn ? [0, -18, 0] : 0 }}
-                  transition={{ repeat: Infinity, duration: Math.max(0.15, 0.6 - rpm / 8000), delay: p * 0.08 }}
-                  className="p-4 rounded-2xl bg-[#423834] border-2 border-[#AB526B] flex flex-col items-center text-center shadow-xl font-mono"
-                >
-                  <Flame size={22} className={isEngineOn ? "text-[#AB526B] animate-bounce" : "text-[#5C4E49]"} />
-                  <span className="text-[10px] font-bold text-[#F0E2A4] mt-2">#piston{p}</span>
-                  <span className="text-[9px] text-[#BCA297]">{isEngineOn ? `${rpm} RPM` : 'STOPPED'}</span>
-                </motion.div>
-              ))}
-            </div>
-
-            <div className="w-full p-3 rounded-2xl bg-[#423834] border border-[#AB526B] font-mono text-xs text-[#F0E2A4] text-center font-bold">
-              🔒 Internal engine complexity is encapsulated. Outside code cannot see or tamper with #piston fields directly!
-            </div>
-          </motion.div>
-        )}
-
-        {/* ========================================================================= */}
-        {/* VIEW 3: ENCAPSULATION VAULT PROTECTION & HACK DEFENSE */}
-        {/* ========================================================================= */}
-        {viewMode === 'shield' && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="my-auto bg-[#331921] p-6 md:p-8 rounded-3xl border-4 border-[#C5CEAE] shadow-[0_0_80px_rgba(197,206,174,0.6)] flex flex-col items-center space-y-6 z-10 w-full max-w-2xl text-center"
-          >
-            <div className="w-full flex items-center justify-between border-b border-white/20 pb-3 font-mono text-xs">
-              <span className="text-[#C5CEAE] font-extrabold flex items-center gap-2 text-sm">
-                <ShieldCheck size={20} /> Encapsulation Vault Protection
-              </span>
-              <span className="text-[#C5CEAE] font-bold">ACCESS CONTROL</span>
-            </div>
-
-            <motion.div 
-              animate={{ 
-                scale: hackAttempt ? [1, 1.1, 1] : 1,
-                borderColor: hackAttempt ? '#AB526B' : '#C5CEAE'
-              }}
-              className={`w-full py-8 px-6 rounded-3xl border-4 bg-[#423834] flex flex-col items-center space-y-3 transition-all ${
-                hackAttempt ? 'bg-[#AB526B]/20 shadow-[0_0_50px_#AB526B]' : 'shadow-2xl'
-              }`}
+        {/* ── 5. FINAL EDUCATIONAL SUMMARY MESSAGE ── */}
+        <AnimatePresence>
+          {phase === 'completed' && (
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="mt-3 text-center max-w-xl px-4 z-30"
             >
-              {hackAttempt ? (
-                <ShieldAlert size={48} className="text-[#AB526B] animate-bounce" />
-              ) : (
-                <Lock size={48} className="text-[#C5CEAE] animate-pulse" />
-              )}
-
-              <h4 className="text-base font-mono font-extrabold text-[#F0E2A4] uppercase">
-                {hackAttempt ? "⚠️ DEFENSE DEFLECTED DIRECT WRITE!" : "Protected Private Boundary"}
-              </h4>
-
-              <p className="text-xs text-[#BCA297] max-w-md leading-relaxed">
-                Direct access to <code className="text-[#AB526B]">car.#engineRpm</code> from outside the class is strictly forbidden by the language compiler!
+              <h2 className="text-base sm:text-lg font-mono font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-white to-cyan-400 tracking-wider">
+                ENCAPSULATION PRINCIPLE
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-300 mt-1 font-sans leading-relaxed">
+                <span className="text-purple-300 font-bold">Bundle</span> data and methods together &bull;{' '}
+                <span className="text-rose-300 font-bold">Protect</span> internal data &bull;{' '}
+                <span className="text-cyan-300 font-bold">Allow controlled access</span> via public methods.
               </p>
             </motion.div>
-          </motion.div>
-        )}
-
-        {/* BOTTOM INTERACTIVE ACTION BAR */}
-        <div className="w-full mt-auto pt-4 border-t border-white/10 flex flex-wrap items-center justify-between gap-3 font-mono text-xs z-10">
-          
-          {/* Public Methods Buttons */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleToggleIgnition}
-              className={`px-4 py-2.5 rounded-2xl font-extrabold shadow-xl transition-all flex items-center gap-2 ${
-                isEngineOn 
-                  ? 'bg-[#AB526B] text-white hover:bg-[#8F3E54]' 
-                  : 'bg-[#C5CEAE] text-[#331921] hover:bg-[#A8B48D]'
-              }`}
-            >
-              <Zap size={16} />
-              <span>{isEngineOn ? "car.stop()" : "car.start()"}</span>
-            </button>
-
-            <button
-              onClick={handleIllegalHack}
-              disabled={hackAttempt}
-              className="px-4 py-2.5 rounded-2xl bg-[#AB526B]/20 hover:bg-[#AB526B] border border-[#AB526B] text-[#AB526B] hover:text-white font-extrabold shadow-xl transition-all flex items-center gap-1.5 disabled:opacity-40"
-            >
-              <Ban size={15} />
-              <span>Test Direct Hack (Illegal)</span>
-            </button>
-          </div>
-
-          {/* Reset Button */}
-          <button
-            onClick={() => { setIsEngineOn(false); setGasPedal(30); setViewMode('cockpit'); setLogMessage("Laboratory reset."); }}
-            className="p-2.5 rounded-xl bg-[#331921] hover:bg-[#5C4E49] text-[#BCA297] hover:text-white border border-white/10"
-            title="Reset Lab"
-          >
-            <RotateCcw size={16} />
-          </button>
-
-        </div>
+          )}
+        </AnimatePresence>
 
       </div>
+
+      {/* ── 6. MINIMAL, NON-INTRUSIVE BOTTOM CONTROLS DOCK ── */}
+      <footer className={`relative z-30 w-full px-4 sm:px-8 py-3.5 flex flex-wrap items-center justify-between gap-3 border-t backdrop-blur-xl shrink-0 transition-colors duration-300 ${
+        isDark 
+          ? 'border-white/10 bg-[#080C16]/90 text-white' 
+          : isWarm 
+          ? 'border-[#EBE0D3] bg-[#FDFBF7]/95 text-[#2D1F23]' 
+          : 'border-slate-200 bg-white/95 text-slate-800 shadow-xl'
+      }`}>
+        
+        {/* Left: Replay & Interactive Trigger */}
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={handleReplay}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-mono font-bold border transition-all hover:scale-105 active:scale-95 shadow-md cursor-pointer ${
+              isDark 
+                ? 'bg-white/5 hover:bg-white/10 text-slate-200 border-white/10' 
+                : isWarm 
+                ? 'bg-[#EBE0D3]/50 hover:bg-[#EBE0D3] text-[#2D1F23] border-[#D9CAB9]' 
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-200'
+            }`}
+          >
+            <RotateCcw size={13} className="text-cyan-400" />
+            <span>Replay Animation</span>
+          </button>
+
+          <button
+            onClick={handleTriggerManualRequest}
+            disabled={isManualRequestRunning || phase === 'exposed'}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-mono font-bold bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:pointer-events-none shadow-md cursor-pointer"
+          >
+            <Zap size={13} className="text-cyan-400" />
+            <span>Send getData() Request</span>
+          </button>
+        </div>
+
+        {/* Center: Live Timeline Step Pills */}
+        <div className="hidden lg:flex items-center gap-1 font-mono text-[10px]">
+          {[
+            { id: 'exposed', label: '1. Exposed' },
+            { id: 'bundling', label: '2. Bundle' },
+            { id: 'sealed', label: '3. Protected' },
+            { id: 'requesting', label: '4. Controlled Access' },
+            { id: 'completed', label: '5. Complete' },
+          ].map(st => {
+            const isActive = phase === st.id || (st.id === 'requesting' && phase === 'responding');
+            return (
+              <button
+                key={st.id}
+                onClick={() => {
+                  clearAllTimeouts();
+                  setPhase(st.id);
+                }}
+                className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                  isActive 
+                    ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40 shadow-sm' 
+                    : isDark 
+                    ? 'text-slate-400 opacity-60 hover:opacity-100 hover:bg-white/5' 
+                    : 'text-slate-500 opacity-60 hover:opacity-100 hover:bg-black/5'
+                }`}
+              >
+                {st.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Right: Next OOP Concept Navigation */}
+        <div className="flex items-center gap-3">
+          {onNext && (
+            <button
+              onClick={onNext}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-mono font-bold bg-rose-500 hover:bg-rose-600 text-white shadow-lg shadow-rose-500/25 transition-all hover:scale-105 active:scale-95"
+            >
+              <span>Next: Abstraction</span>
+              <ArrowRight size={13} />
+            </button>
+          )}
+        </div>
+      </footer>
+
     </div>
   );
 }

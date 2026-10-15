@@ -18,7 +18,7 @@ const seedDatabase = async () => {
         {
           title: 'Global Code-Off 2024',
           dateString: 'May 15-16',
-          prizePool: ',000',
+          prizePool: '$10,000',
           registrations: '1,200/5,000',
           status: 'Active',
           type: 'Global'

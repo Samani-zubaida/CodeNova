@@ -265,33 +265,9 @@ export default function MapVisualizer() {
     addLog(`> Switched collision strategy to ${MAP_STRATEGIES.find(s => s.id === strategy)?.name}.`);
 
     if (strategy === 'chaining') {
-      const count = chainTable.reduce((acc, b) => acc + b.length, 0);
-      setActiveVariables({
-        strategy: 'Separate Chaining',
-        tableSize,
-        itemCount: count,
-        loadFactor: (count / tableSize).toFixed(2),
-        collisionResolution: 'Linked Buckets'
-      });
-      setExplanation({
-        action: "Separate Chaining Collision Resolution",
-        intuition: "Colliding keys share the same slot by chaining as a linked list.",
-        next: "Put a key that collides to see chain link extension."
-      });
+      buildChainingDemo();
     } else if (['linear', 'quadratic', 'doubleHashing'].includes(strategy)) {
-      const count = openTable.filter(item => item && item.status === 'occupied').length;
-      setActiveVariables({
-        strategy: MAP_STRATEGIES.find(s => s.id === strategy)?.name,
-        tableSize,
-        itemCount: count,
-        loadFactor: (count / tableSize).toFixed(2),
-        collisionResolution: 'Open Addressing'
-      });
-      setExplanation({
-        action: `${MAP_STRATEGIES.find(s => s.id === strategy)?.name} Active`,
-        intuition: "Open addressing stores all items directly in the table. Collisions probe subsequent slots.",
-        next: "Put a key to watch jump probing sequence."
-      });
+      buildOpenAddressingDemo(strategy);
     } else if (strategy === 'rehash') {
       buildRehashDemo();
     }
@@ -496,6 +472,147 @@ export default function MapVisualizer() {
   };
 
   // =========================================================================
+  // DEMO 1: SEPARATE CHAINING DEMO
+  // =========================================================================
+  const buildChainingDemo = () => {
+    const recorded = [];
+    const t = [[], [], [], [], [], [], []];
+    recorded.push({
+      action: "Separate Chaining Hash Table Initialized",
+      intuition: "Bucket array of size 7. Each slot holds the head of a singly linked list for collision storage.",
+      next: "Insert 'apple' (hash = 1).",
+      chainTable: t.map(b => [...b]),
+      highlight: null,
+      variables: { strategy: 'Separate Chaining', tableSize: 7, itemCount: 0, loadFactor: '0.00' },
+      line: 1
+    });
+
+    t[1].push({ key: 'apple', value: '45' });
+    recorded.push({
+      action: "INSERT 'apple': hash('apple') % 7 = slot [1]",
+      intuition: "Slot [1] was empty. 'apple' becomes the head node of bucket [1]. O(1) time.",
+      next: "Insert 'banana' (hash = 3).",
+      chainTable: t.map(b => [...b]),
+      highlight: 1,
+      variables: { key: 'apple', slot: 1, itemCount: 1, loadFactor: (1/7).toFixed(2) },
+      line: 4
+    });
+
+    t[3].push({ key: 'banana', value: '88' });
+    recorded.push({
+      action: "INSERT 'banana': hash('banana') % 7 = slot [3]",
+      intuition: "Direct bucket placement without collision into slot [3].",
+      next: "Insert 'avocado' which also hashes to slot [1]!",
+      chainTable: t.map(b => [...b]),
+      highlight: 3,
+      variables: { key: 'banana', slot: 3, itemCount: 2, loadFactor: (2/7).toFixed(2) },
+      line: 4
+    });
+
+    t[1].push({ key: 'avocado', value: '99' });
+    recorded.push({
+      action: "⚡ COLLISION in slot [1]: 'avocado' chains behind 'apple'!",
+      intuition: "Separate chaining solves collisions gracefully by appending to the bucket's linked chain. No other slots displaced.",
+      next: "Insert 'cherry' which also hashes to slot [1]!",
+      chainTable: t.map(b => [...b]),
+      highlight: 1,
+      variables: { key: 'avocado', slot: 1, chainLength: 2, collision: true, itemCount: 3 },
+      line: 9
+    });
+
+    t[1].push({ key: 'cherry', value: '12' });
+    recorded.push({
+      action: "⚡ Second Collision in slot [1]: 'cherry' extends chain to 3 nodes!",
+      intuition: "Bucket [1] chain: apple → avocado → cherry. Lookups within slot [1] traverse this small chain in O(L).",
+      next: "Demonstrate O(1) average lookup for 'avocado'.",
+      chainTable: t.map(b => [...b]),
+      highlight: 1,
+      variables: { key: 'cherry', slot: 1, chainLength: 3, collision: true, itemCount: 4 },
+      line: 9
+    });
+
+    recorded.push({
+      action: "LOOKUP 'avocado': Hashes to slot [1], traverses chain, FOUND value 99!",
+      intuition: "Search computes hash(key) in O(1), jumps directly to bucket [1], and finds node in 2 pointer hops.",
+      next: "Chaining demo complete. Use manual Put/Lookup anytime.",
+      chainTable: t.map(b => [...b]),
+      highlight: 1,
+      variables: { lookupKey: 'avocado', status: 'FOUND', value: '99' },
+      line: 12
+    });
+
+    setSteps(recorded);
+    setCurrentStepIdx(0);
+    applyRehashStep(recorded[0]);
+  };
+
+  // =========================================================================
+  // DEMO 2: OPEN ADDRESSING (LINEAR / QUADRATIC / DOUBLE HASHING) DEMO
+  // =========================================================================
+  const buildOpenAddressingDemo = (strategyType) => {
+    const recorded = [];
+    const t = new Array(7).fill(null);
+    const stratName = MAP_STRATEGIES.find(s => s.id === strategyType)?.name || strategyType;
+
+    recorded.push({
+      action: `${stratName} Open Addressing Initialized`,
+      intuition: "All elements live directly in the contiguous table. Collisions trigger probe sequences.",
+      next: "Insert 'k1' (hash = 2).",
+      table: [...t],
+      capacity: 7,
+      highlight: null,
+      probeTrail: [],
+      variables: { strategy: stratName, tableSize: 7, itemCount: 0, loadFactor: '0.00' },
+      line: 1
+    });
+
+    t[2] = { key: 'k1', value: '10', status: 'occupied' };
+    recorded.push({
+      action: "INSERT 'k1': hash('k1') % 7 = slot [2]. Direct hit!",
+      intuition: "Slot [2] is empty. 'k1' occupies slot [2].",
+      next: "Insert 'k2' which ALSO hashes to slot [2] to trigger collision probing!",
+      table: [...t],
+      capacity: 7,
+      highlight: 2,
+      probeTrail: [2],
+      variables: { key: 'k1', slot: 2, itemCount: 1 },
+      line: 5
+    });
+
+    let probeNext = strategyType === 'linear' ? 3 : strategyType === 'quadratic' ? (2 + 1) % 7 : (2 + 3) % 7;
+    t[probeNext] = { key: 'k2', value: '20', status: 'occupied' };
+    recorded.push({
+      action: `⚡ COLLISION at slot [2]! Probing jump to slot [${probeNext}]`,
+      intuition: `${stratName} computes probe sequence. Slot [${probeNext}] is vacant, so 'k2' settles here.`,
+      next: "Insert 'k3' which also collides at slot [2]!",
+      table: [...t],
+      capacity: 7,
+      highlight: probeNext,
+      probeTrail: [2, probeNext],
+      variables: { key: 'k2', originalSlot: 2, placedSlot: probeNext, itemCount: 2 },
+      line: 8
+    });
+
+    let probe3 = strategyType === 'linear' ? 4 : strategyType === 'quadratic' ? (2 + 4) % 7 : (2 + 6) % 7;
+    t[probe3] = { key: 'k3', value: '30', status: 'occupied' };
+    recorded.push({
+      action: `⚡ Second Collision! Probed [2] (busy) -> [${probeNext}] (busy) -> landed at [${probe3}]!`,
+      intuition: `Open addressing resolves collisions systematically along probe trail: 2 -> ${probeNext} -> ${probe3}.`,
+      next: "Probe demonstration complete. Ready for manual queries.",
+      table: [...t],
+      capacity: 7,
+      highlight: probe3,
+      probeTrail: [2, probeNext, probe3],
+      variables: { key: 'k3', probeSequence: `[2, ${probeNext}, ${probe3}]`, itemCount: 3 },
+      line: 8
+    });
+
+    setSteps(recorded);
+    setCurrentStepIdx(0);
+    applyRehashStep(recorded[0]);
+  };
+
+  // =========================================================================
   // DEMO 3: DYNAMIC REHASHING ANIMATION
   // =========================================================================
   const buildRehashDemo = () => {
@@ -575,11 +692,13 @@ export default function MapVisualizer() {
 
   const applyRehashStep = (step) => {
     if (!step) return;
-    setTableSize(step.capacity);
-    setOpenTable(step.table);
+    if (step.capacity) setTableSize(step.capacity);
+    if (step.table) setOpenTable(step.table);
+    if (step.chainTable) setChainTable(step.chainTable);
+    if (step.probeTrail !== undefined) setProbeTrail(step.probeTrail);
     setHighlightSlot(step.highlight);
-    setActiveVariables(step.variables);
-    setActiveLine(step.line);
+    if (step.variables) setActiveVariables(step.variables);
+    if (step.line) setActiveLine(step.line);
     setExplanation({
       action: step.action,
       intuition: step.intuition,
@@ -588,7 +707,13 @@ export default function MapVisualizer() {
   };
 
   const handlePlayPause = () => {
-    if (steps.length === 0) return;
+    if (steps.length === 0) {
+      if (strategy === 'chaining') buildChainingDemo();
+      else if (strategy === 'rehash') buildRehashDemo();
+      else buildOpenAddressingDemo(strategy);
+      setIsPlaying(true);
+      return;
+    }
     if (currentStepIdx >= steps.length - 1) {
       setCurrentStepIdx(0);
       applyRehashStep(steps[0]);
@@ -806,21 +931,20 @@ export default function MapVisualizer() {
       category="ds"
       controls={renderControls}
       playback={
-        strategy === 'rehash' ? (
-          <VisualizerPlaybackBar
-            isPlaying={isPlaying}
-            onPlayPause={handlePlayPause}
-            onStepForward={handleStepForward}
-            onStepBack={handleStepBackward}
-            onReset={handleReset}
-            speed={playbackSpeed}
-            onSpeedChange={setPlaybackSpeed}
-            currentStep={currentStepIdx}
-            totalSteps={steps.length}
-            isVoiceEnabled={isVoiceEnabled}
-            onToggleVoice={() => setIsVoiceEnabled(v => !v)}
-          />
-        ) : null
+        <VisualizerPlaybackBar
+          isPlaying={isPlaying}
+          onPlayPause={handlePlayPause}
+          onStepForward={handleStepForward}
+          onStepBack={handleStepBackward}
+          onReset={handleReset}
+          speed={playbackSpeed}
+          onSpeedChange={setPlaybackSpeed}
+          currentStep={currentStepIdx}
+          totalSteps={Math.max(steps.length, 1)}
+          stepDescription={explanation.action || 'Hash map simulation ready'}
+          isVoiceEnabled={isVoiceEnabled}
+          onToggleVoice={() => setIsVoiceEnabled(v => !v)}
+        />
       }
       rightPanel={renderRightPanel}
       consoleOutput={logs}

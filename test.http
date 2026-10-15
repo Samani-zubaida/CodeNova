@@ -1,0 +1,15 @@
+POST http://localhost:5000/api/sandbox/execute
+Content-Type: application/json
+
+{
+  "language": "java",
+  "code": "public class Main {\n\n    static int[] stack = new int[5];\n    static int top = -1;\n\n    static void push(int value) {\n        stack[++top] = value;\n    }\n\n    static void display() {\n        for (int i = top; i >= 0; i--) {\n            System.out.println(stack[i]);\n        }\n    }\n\n    public static void main(String[] args) {\n        push(10);\n        push(20);\n        push(30);\n        display();\n    }\n}"
+}
+
+POST http://localhost:5000/api/sandbox/visualize
+Content-Type: application/json
+
+{
+  "language": "java",
+  "code": "public class Main {\n\n    static int[] stack = new int[5];\n    static int top = -1;\n\n    static void push(int value) {\n        stack[++top] = value;\n    }\n\n    static void display() {\n        for (int i = top; i >= 0; i--) {\n            System.out.println(stack[i]);\n        }\n    }\n\n    public static void main(String[] args) {\n        push(10);\n        push(20);\n        push(30);\n        display();\n    }\n}"
+}

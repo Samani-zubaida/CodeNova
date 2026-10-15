@@ -588,7 +588,7 @@ export default function AppleCryptoView({ onClose }) {
         {/* Right Action: Direct Jump into Visualizer Studio */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Link
-            to="/visualizer/crypto"
+            to="/visualizer/caesar"
             style={{
               display: 'flex',
               alignItems: 'center',

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect, Suspense } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import {
   PerspectiveCamera,
@@ -1426,7 +1426,31 @@ function InnerView({ cat, onClose }) {
           </h1>
         </div>
 
-        <div style={{ marginLeft: 'auto' }}>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {cat.id === 'oop' && (
+            <Link
+              to="/oop"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 16px',
+                borderRadius: '999px',
+                background: accent,
+                color: '#FAF7F2',
+                fontSize: '11px',
+                fontFamily: 'monospace',
+                fontWeight: 700,
+                textDecoration: 'none',
+                boxShadow: `0 2px 10px ${accent}40`,
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.03)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+            >
+              <span>Open OOP Studio ↗</span>
+            </Link>
+          )}
           <span style={{
             padding: '6px 16px', borderRadius: '999px', fontSize: '11px',
             fontFamily: 'monospace', color: accent,
@@ -1580,129 +1604,25 @@ function InnerView({ cat, onClose }) {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   TOP NAV
-   ───────────────────────────────────────────────────────────── */
-function TopNav({ user, logout, theme, setTheme }) {
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  return (
-    <header style={{
-      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 300,
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '13px 40px',
-      background: 'rgba(250,245,236,0.82)',
-      backdropFilter: 'blur(18px)',
-      WebkitBackdropFilter: 'blur(18px)',
-      borderBottom: '1px solid rgba(140,96,48,0.14)',
-      boxShadow: '0 1px 12px rgba(140,96,48,0.08)',
-    }}>
-      <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-        <div style={{
-          width: '34px', height: '34px', borderRadius: '8px',
-          background: '#AB526B', color: '#FAF7F2',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontFamily: 'monospace', fontWeight: 900, fontSize: '13px',
-        }}>
-          {'</>'}
-        </div>
-        <span style={{ fontFamily: 'Georgia, serif', fontWeight: 'bold', fontSize: '15px', color: '#2A1608', letterSpacing: '0.03em' }}>
-          Code Nova
-        </span>
-      </Link>
-
-      {/* Center title */}
-      <div style={{ textAlign: 'center' }}>
-        <p style={{ color: '#8C6030', fontSize: '10px', fontFamily: 'monospace', letterSpacing: '0.22em', margin: 0, textTransform: 'uppercase' }}>
-          Algoverse Library
-        </p>
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '2px',
-          padding: '4px', borderRadius: '999px',
-          border: '1px solid rgba(140,96,48,0.18)',
-          background: 'rgba(140,96,48,0.04)',
-        }}>
-          {[{ key: 'light', Icon: Sun }, { key: 'warm', Icon: Circle }, { key: 'dark', Icon: Moon }].map(({ key, Icon }) => (
-            <button key={key} onClick={() => setTheme(key)}
-              style={{
-                padding: '5px', borderRadius: '999px', border: 'none',
-                background: theme === key ? '#AB526B' : 'transparent',
-                color: theme === key ? '#FAF7F2' : 'rgba(42,22,8,0.5)',
-                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}
-            >
-              <Icon size={13} />
-            </button>
-          ))}
-        </div>
-
-        <div style={{ position: 'relative' }}>
-          <button
-            onClick={() => setMenuOpen(o => !o)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: '8px',
-              padding: '6px 14px', borderRadius: '999px',
-              border: '1px solid rgba(140,96,48,0.2)',
-              background: 'rgba(140,96,48,0.05)', color: '#2A1608',
-              fontSize: '12px', fontFamily: 'Georgia, serif', cursor: 'pointer',
-            }}
-          >
-            <div style={{
-              width: '22px', height: '22px', borderRadius: '50%',
-              background: '#AB526B', color: '#FAF7F2',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '10px', fontWeight: 900,
-            }}>
-              {user?.username ? user.username[0].toUpperCase() : 'G'}
-            </div>
-            {user?.username || 'Guest'}
-            <ChevronDown size={11} style={{ opacity: 0.5 }} />
-          </button>
-
-          {menuOpen && (
-            <div style={{
-              position: 'absolute', right: 0, top: '110%',
-              background: '#FFFAF0', border: '1px solid rgba(140,96,48,0.18)',
-              borderRadius: '12px', padding: '8px', width: '180px',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.12)', zIndex: 400,
-            }}>
-              <p style={{ padding: '6px 10px', fontSize: '10px', color: 'rgba(42,22,8,0.4)', fontFamily: 'monospace' }}>
-                {user?.email || 'guest@codenova.dev'}
-              </p>
-              <div style={{ height: '1px', background: 'rgba(140,96,48,0.12)', margin: '4px 0' }} />
-              {user ? (
-                <button onClick={() => { logout(); setMenuOpen(false); }}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', background: 'none', border: 'none', color: '#AB526B', fontSize: '12px', cursor: 'pointer', borderRadius: '6px', fontFamily: 'Georgia, serif' }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(171,82,107,0.08)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'none'}
-                >
-                  <LogOut size={12} /> Log Out
-                </button>
-              ) : (
-                <Link to="/auth" onClick={() => setMenuOpen(false)}
-                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', color: '#AB526B', fontSize: '12px', textDecoration: 'none', borderRadius: '6px', fontFamily: 'Georgia, serif' }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(171,82,107,0.08)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'none'}
-                >
-                  <LogIn size={12} /> Sign In
-                </Link>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-    </header>
-  );
-}
-
-/* ─────────────────────────────────────────────────────────────
    MAIN EXPORT
    ───────────────────────────────────────────────────────────── */
 export default function VisualizerDashboard() {
-  const { theme, setTheme, user, logout } = useAppStore();
-  const [selectedCat, setSelectedCat] = useState(null);
+  const { theme } = useAppStore();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const catParam = searchParams.get('cat') || searchParams.get('category');
+
+  const [selectedCat, setSelectedCat] = useState(() => {
+    if (!catParam) return null;
+    const norm = catParam.toLowerCase();
+    return CATEGORIES.find(c => 
+      c.id === norm ||
+      (norm === 'visualizers' && c.id === 'dsa') ||
+      (norm === 'ds' && c.id === 'dsa') ||
+      (norm === 'datastructures' && c.id === 'dsa') ||
+      (norm === 'cryptography' && c.id === 'crypto') ||
+      (norm === 'oops' && c.id === 'oop')
+    ) || null;
+  });
 
   useEffect(() => {
     const r = document.documentElement;
@@ -1711,12 +1631,40 @@ export default function VisualizerDashboard() {
     else if (theme === 'warm') r.classList.add('warm');
   }, [theme]);
 
-  const handleSelectCat = useCallback((cat) => setSelectedCat(cat), []);
-  const handleClose = useCallback(() => setSelectedCat(null), []);
+  // Synchronize category selection with URL search parameters (?cat=dsa, ?cat=oop, ?cat=crypto)
+  useEffect(() => {
+    if (!catParam) {
+      setSelectedCat(null);
+      return;
+    }
+    const norm = catParam.toLowerCase();
+    const matched = CATEGORIES.find(c => 
+      c.id === norm ||
+      (norm === 'visualizers' && c.id === 'dsa') ||
+      (norm === 'ds' && c.id === 'dsa') ||
+      (norm === 'datastructures' && c.id === 'dsa') ||
+      (norm === 'cryptography' && c.id === 'crypto') ||
+      (norm === 'oops' && c.id === 'oop')
+    );
+    if (matched) {
+      setSelectedCat(matched);
+    } else {
+      setSelectedCat(null);
+    }
+  }, [catParam]);
+
+  const handleSelectCat = useCallback((cat) => {
+    setSelectedCat(cat);
+    setSearchParams({ cat: cat.id });
+  }, [setSearchParams]);
+
+  const handleClose = useCallback(() => {
+    setSelectedCat(null);
+    setSearchParams({});
+  }, [setSearchParams]);
 
   return (
-    <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', background: '#D4B880' }}>
-      <TopNav user={user} logout={logout} theme={theme} setTheme={setTheme} />
+    <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', background: '#D4B880' }}>
 
       {/* 3D Canvas — fills full viewport immediately, no welcome gate */}
       <Canvas

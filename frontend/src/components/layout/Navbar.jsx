@@ -6,20 +6,53 @@ import useAppStore from '../../store/useAppStore';
 export default function Navbar() {
   const { theme, setTheme, user, logout } = useAppStore();
   const location = useLocation();
-  const isOopRoute = location.pathname.includes('oop');
+  const searchParams = new URLSearchParams(location.search);
+  const currentCat = searchParams.get('cat') || searchParams.get('category');
 
-  const navLinkClass = ({ isActive }) =>
+  const isDsaActive = 
+    (location.pathname === '/visualizer' && (currentCat === 'dsa' || (!currentCat && !['crypto', 'cryptography', 'oop', 'oops'].includes(currentCat)))) ||
+    location.pathname.startsWith('/visualizer/array') ||
+    location.pathname.startsWith('/visualizer/graph') ||
+    location.pathname.startsWith('/visualizer/linkedlist') ||
+    location.pathname.startsWith('/visualizer/string') ||
+    location.pathname.startsWith('/visualizer/tree') ||
+    location.pathname.startsWith('/visualizer/stack') ||
+    location.pathname.startsWith('/visualizer/queue') ||
+    location.pathname.startsWith('/visualizer/heap') ||
+    location.pathname.startsWith('/visualizer/map');
+
+  const isOopActive = 
+    (location.pathname === '/visualizer' && (currentCat === 'oop' || currentCat === 'oops')) ||
+    location.pathname.startsWith('/oop') ||
+    location.pathname.startsWith('/visualizer/encapsulation') ||
+    location.pathname.startsWith('/visualizer/abstraction') ||
+    location.pathname.startsWith('/visualizer/inheritance') ||
+    location.pathname.startsWith('/visualizer/polymorphism');
+
+  const isCryptoActive = 
+    (location.pathname === '/visualizer' && (currentCat === 'crypto' || currentCat === 'cryptography')) ||
+    location.pathname.startsWith('/visualizer/crypto') ||
+    location.pathname.startsWith('/visualizer/cryptography') ||
+    ['/visualizer/aes', '/visualizer/rsa', '/visualizer/dh', '/visualizer/signature',
+     '/visualizer/hash', '/visualizer/steg', '/visualizer/caesar', '/visualizer/vigenere',
+     '/visualizer/playfair', '/visualizer/railfence', '/visualizer/columnar',
+     '/visualizer/enigma', '/visualizer/hacker'].some(p => location.pathname.startsWith(p));
+
+  const isSandboxActive = location.pathname.startsWith('/sandbox');
+  const isGameActive = location.pathname.startsWith('/game');
+
+  const getPillClass = (isActive) =>
     `flex items-center gap-2 px-5 py-2 rounded-full text-xs md:text-sm font-semibold transition-all ${
       isActive
         ? 'bg-[#AB526B] text-white shadow-xs'
         : 'text-[#2D1F23]/70 dark:text-[#F4EBC3]/70 hover:text-[#AB526B] dark:hover:text-[#F0E2A4] hover:bg-black/5 dark:hover:bg-white/5'
     }`;
 
-  const navBgClass = isOopRoute
+  const navBgClass = isOopActive
     ? 'bg-white/80 dark:bg-[#0B0F17]/85 border-slate-200/80 dark:border-white/10'
     : 'bg-[#FAF7F2]/90 dark:bg-[#331921]/90 border-[#EBE0D3] dark:border-[#5C4E49]';
 
-  const pillContainerClass = isOopRoute
+  const pillContainerClass = isOopActive
     ? 'bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200/80 dark:border-white/10'
     : 'bg-white/70 dark:bg-[#423834]/70 border border-[#EBE0D3] dark:border-[#5C4E49]';
 
@@ -40,20 +73,20 @@ export default function Navbar() {
 
           {/* Navigation Links */}
           <div className={`hidden md:flex items-center ${pillContainerClass} rounded-full p-1 shadow-xs transition-colors duration-300`}>
-            <NavLink to="/visualizer" className={navLinkClass}>
+            <NavLink to="/visualizer?cat=dsa" className={getPillClass(isDsaActive)}>
               <span>Visualizers</span>
             </NavLink>
-            <NavLink to="/oop" className={({ isActive }) => navLinkClass({ isActive: isActive || isOopRoute })}>
+            <NavLink to="/visualizer?cat=oop" className={getPillClass(isOopActive)}>
               <span>OOP</span>
             </NavLink>
-            <NavLink to="/visualizer/crypto" className={navLinkClass}>
+            <NavLink to="/visualizer?cat=crypto" className={getPillClass(isCryptoActive)}>
               <span>Cryptography</span>
             </NavLink>
-            <NavLink to="/sandbox" className={navLinkClass}>
+            <NavLink to="/sandbox" className={getPillClass(isSandboxActive)}>
               <span>Sandbox</span>
             </NavLink>
             <div className="w-px h-5 bg-[#EBE0D3] dark:bg-[#54323E] mx-1"></div>
-            <NavLink to="/game" className={navLinkClass}>
+            <NavLink to="/game" className={getPillClass(isGameActive)}>
               <span>3D Game</span>
             </NavLink>
           </div>

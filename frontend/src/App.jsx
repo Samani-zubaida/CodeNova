@@ -101,11 +101,11 @@ function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
   const isIntro = location.pathname === '/' || location.pathname === '/intro' || location.pathname === '/home';
-  const isVisualizerHub = location.pathname === '/visualizer';
+  const isVisualizerHub = location.pathname === '/visualizer' || location.pathname === '/visualization' || location.pathname === '/visualizations';
   const isAuth = location.pathname === '/auth';
   const isVerifyEmail = location.pathname === '/verify-email';
   const isFullscreen = isIntro || isAuth || isVerifyEmail;
-  const isAppStudio = location.pathname === '/sandbox' || location.pathname === '/game' || location.pathname === '/host';
+  const isAppStudio = isVisualizerHub || location.pathname === '/sandbox' || location.pathname === '/game' || location.pathname === '/host';
 
   const isOopLanding = ['/oop', '/oop/', '/oops', '/oops/'].includes(location.pathname);
   const isOopConcept = !isOopLanding && (
@@ -226,8 +226,9 @@ function AppContent() {
           {/* Legacy / Backward-Compatible OOP Redirects */}
           <Route path="/oops" element={<Navigate to="/oop" replace />} />
           <Route path="/oops/*" element={<Navigate to="/oop" replace />} />
-          <Route path="/visualizer/oop" element={<Navigate to="/oop" replace />} />
-          <Route path="/visualizer/oops" element={<Navigate to="/oop" replace />} />
+          <Route path="/visualizer/oop" element={<Navigate to="/visualizer?cat=oop" replace />} />
+          <Route path="/visualizer/oops" element={<Navigate to="/visualizer?cat=oop" replace />} />
+          <Route path="/visualizer/dsa" element={<Navigate to="/visualizer?cat=dsa" replace />} />
           <Route path="/visualizer/encapsulation" element={<Navigate to="/oop/encapsulation" replace />} />
           <Route path="/visualizer/abstraction" element={<Navigate to="/oop/abstraction" replace />} />
           <Route path="/visualizer/inheritance" element={<Navigate to="/oop/inheritance/hierarchical" replace />} />
@@ -236,9 +237,11 @@ function AppContent() {
           <Route path="/visualizer/polymorphism" element={<Navigate to="/oop/polymorphism" replace />} />
 
           {/* Crypto Routes */}
-          <Route path="/visualizer/crypto" element={<CryptoHub />} />
+          <Route path="/visualizer/crypto" element={<Navigate to="/visualizer?cat=crypto" replace />} />
+          <Route path="/visualizer/cryptography" element={<Navigate to="/visualizer?cat=crypto" replace />} />
+          <Route path="/visualizer/crypto/studio" element={<CryptoHub />} />
+          <Route path="/visualizer/crypto/studio/:algoId" element={<CryptoHub />} />
           <Route path="/visualizer/crypto/:algoId" element={<CryptoHub />} />
-          <Route path="/visualizer/cryptography" element={<CryptoHub />} />
           <Route path="/visualizer/caesar" element={<CryptoHub defaultAlgo="caesar" />} />
           <Route path="/visualizer/vigenere" element={<CryptoHub defaultAlgo="vigenere" />} />
           <Route path="/visualizer/playfair" element={<CryptoHub defaultAlgo="playfair" />} />

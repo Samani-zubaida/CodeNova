@@ -43,8 +43,8 @@ const PrivateRoute = ({ children }) => {
 
 function AppContent() {
   const location = useLocation();
-  const isHome = location.pathname === '/';
-  const isIntro = location.pathname === '/intro';
+  const isHome = location.pathname === '/home';
+  const isIntro = location.pathname === '/' || location.pathname === '/intro';
   const isVisualizerHub = location.pathname === '/visualizer';
   const isAuth = location.pathname === '/auth';
   const isVerifyEmail = location.pathname === '/verify-email';
@@ -85,8 +85,10 @@ function AppContent() {
       
       <main className={isFullscreen ? '' : isAppStudio ? 'h-[calc(100vh-64px)] overflow-hidden' : isOopRoute ? 'min-h-[calc(100vh-64px)] flex flex-col' : 'min-h-[calc(100vh-64px)] pb-16'}>
         <Routes>
-          <Route path="/" element={<Home />} />
+          {/* Root opens directly into Intro */}
+          <Route path="/" element={<Intro />} />
           <Route path="/intro" element={<Intro />} />
+          <Route path="/home" element={<Home />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/visualizer" element={<VisualizerDashboard />} />
@@ -143,6 +145,9 @@ function AppContent() {
 
           {/* Sandbox */}
           <Route path="/sandbox" element={<Sandbox />} />
+
+          {/* Fallback to Intro */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
     </div>

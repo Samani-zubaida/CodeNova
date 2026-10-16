@@ -144,27 +144,33 @@ export const TIMELINE_STEPS = [
     stepNumber: 1,
     title: 'Base Parent: Vehicle',
     tag: 'PARENT DEFINITION',
-    desc: 'Vehicle acts as the parent blueprint, defining foundational attributes (color, speed) and actions (start, stop).',
+    desc: 'Vehicle acts as the foundational parent blueprint, defining universal properties (color, speed) and methods (start, stop).',
     activeHighlight: 'vehicle',
     activeLine: 1,
+    accentColor: '#0EA5E9',
+    principleInsight: 'Single inheritance begins with one generalized base class establishing core reusable properties.'
   },
   {
     id: 'car_enters',
     stepNumber: 2,
     title: 'Child Class: Car Enters',
     tag: 'EXTENDS VEHICLE',
-    desc: 'Car is declared as "class Car extends Vehicle", establishing a single parent-to-child inheritance bond.',
+    desc: 'Car is declared as "class Car extends Vehicle", establishing a direct single-parent inheritance derivation.',
     activeHighlight: 'car_extends',
     activeLine: 14,
+    accentColor: '#38BDF8',
+    principleInsight: 'The extends keyword creates an explicit subtype bond without requiring copy-pasting code.'
   },
   {
     id: 'conduit_active',
     stepNumber: 3,
     title: 'Inheritance Circuit Active',
     tag: 'SINGLE PATHWAY',
-    desc: 'A single dedicated inheritance stream connects Vehicle to Car. Exactly ONE parent serves ONE child.',
+    desc: 'A single dedicated inheritance stream connects Vehicle to Car. Exactly ONE parent serves ONE child directly.',
     activeHighlight: 'conduit',
     activeLine: 14,
+    accentColor: '#06B6D4',
+    principleInsight: 'Single inheritance avoids multi-parent diamond ambiguities, ensuring predictable linear resolution.'
   },
   {
     id: 'transfer_traits',
@@ -174,24 +180,30 @@ export const TIMELINE_STEPS = [
     desc: 'Properties (color, speed) and methods (start, stop) flow from Vehicle into Car without code duplication.',
     activeHighlight: 'transfer',
     activeLine: null,
+    accentColor: '#10B981',
+    principleInsight: 'Child instances can invoke inherited methods directly, reducing boilerplate throughout the system.'
   },
   {
     id: 'own_specialization',
     stepNumber: 5,
     title: "Car's Own Specialization",
     tag: 'OWN MEMBERS',
-    desc: 'Car defines its own unique features (numberOfDoors, openTrunk) alongside all inherited vehicle traits.',
+    desc: 'Car defines its own unique features (numberOfDoors, openTrunk) alongside all inherited vehicle capabilities.',
     activeHighlight: 'own_members',
     activeLine: 15,
+    accentColor: '#A855F7',
+    principleInsight: 'Subclasses add specialized state and methods to tailor generic parent logic to concrete domains.'
   },
   {
     id: 'completed',
     stepNumber: 6,
     title: 'Single Inheritance Verified',
     tag: 'CIRCUIT COMPLETE',
-    desc: 'One child class (Car) completely inherits from one parent class (Vehicle). Clean, modular, reusable code.',
+    desc: 'One child class (Car) completely inherits from one parent class (Vehicle). Reusable, modular architecture verified.',
     activeHighlight: 'complete',
     activeLine: null,
+    accentColor: '#EC4899',
+    principleInsight: 'Single inheritance produces clean, maintainable code trees that are easy to test and extend.'
   },
 ];
 

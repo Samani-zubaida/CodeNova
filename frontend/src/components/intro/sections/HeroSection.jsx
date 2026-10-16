@@ -97,19 +97,19 @@ export default function HeroSection({ scrollYProgress }) {
         <div className="flex flex-row items-center justify-center gap-4 flex-wrap">
           {/* Solid white pill button */}
           <Link
-            to="/visualizer"
+            to="/oop"
             className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-white text-black font-semibold text-xs uppercase tracking-wider shadow-lg shadow-white/10 hover:bg-white/90 hover:scale-[1.02] active:scale-[0.98] transition-all"
           >
-            <span>Explore Visualizers</span>
+            <span>Explore OOP & Visualizers</span>
             <ArrowRight size={13} />
           </Link>
 
           {/* Outlined pill button */}
           <Link
-            to="/oop"
+            to="/sandbox"
             className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full border border-white/25 bg-transparent text-white/80 hover:text-white hover:border-white/50 hover:bg-white/[0.04] font-medium text-xs uppercase tracking-wider transition-all"
           >
-            <span>OOP Studio</span>
+            <span>Code Sandbox</span>
           </Link>
         </div>
       </div>

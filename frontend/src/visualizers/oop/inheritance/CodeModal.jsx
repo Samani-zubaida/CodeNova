@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Copy, Check, Terminal, Code2, BookOpen, Sparkles } from 'lucide-react';
 
-const JAVA_CODE_FILES = {
+export const JAVA_CODE_FILES = {
   Person: {
     filename: 'Person.java',
     desc: 'Base class declaring core genetic attributes, default constructor, and common behaviors.',

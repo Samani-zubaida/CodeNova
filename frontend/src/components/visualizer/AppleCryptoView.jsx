@@ -525,7 +525,7 @@ export default function AppleCryptoView({ onClose }) {
               if (onClose) {
                 onClose();
               } else {
-                navigate('/visualizer');
+                navigate('/oop');
               }
             }}
             style={{

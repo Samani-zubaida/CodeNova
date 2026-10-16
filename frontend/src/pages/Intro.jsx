@@ -124,11 +124,11 @@ export default function Intro() {
       {/* ── TOP CORNER NAVIGATION ── */}
       <div className="fixed top-6 left-6 z-20">
         <Link
-          to="/visualizer"
+          to="/oop"
           className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-white/50 hover:text-white transition-colors py-2 px-3 rounded-full bg-[#050508]/40 backdrop-blur-md border border-white/[0.06]"
         >
           <span className="text-[#FF6B35]">→</span>
-          <span>Visualizers</span>
+          <span>OOP Studio</span>
         </Link>
       </div>
 

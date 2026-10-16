@@ -327,11 +327,11 @@ export default function CryptoHub({ defaultAlgo }) {
         {/* Left: Back Link & Suite Identity */}
         <div className="flex items-center gap-3 md:gap-5">
           <Link 
-            to="/visualizer" 
+            to="/oop" 
             className="flex items-center gap-1.5 text-xs md:text-sm font-semibold text-[#8C7A70] dark:text-[#BCA297] hover:text-[#AB526B] dark:hover:text-[#F0E2A4] transition-colors px-2.5 py-1.5 rounded-lg hover:bg-[#BCA297]/15 dark:hover:bg-white/5"
           >
             <ArrowLeft size={16} />
-            <span className="hidden sm:inline">Visualizers</span>
+            <span className="hidden sm:inline">OOP & Visualizers</span>
           </Link>
           
           <div className="h-4 w-px bg-[#BCA297]/30 dark:bg-[#5C4E49]" />

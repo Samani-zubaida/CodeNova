@@ -30,8 +30,8 @@ export default function OopLayout() {
   const containerBg = isDark
     ? 'bg-[#0B0F17] text-slate-100'
     : isWarm
-    ? 'bg-[#FDFBF7] text-[#2D1F23]'
-    : 'bg-[#F8FAFC] text-slate-900';
+      ? 'bg-[#FDFBF7] text-[#2D1F23]'
+      : 'bg-[#F8FAFC] text-slate-900';
 
   return (
     <div className={`w-full flex-1 flex flex-col ${containerBg} font-sans transition-colors duration-300 overflow-hidden`}>
@@ -39,7 +39,7 @@ export default function OopLayout() {
       {!isOopOverview && <OopSubNavbar />}
 
       {/* Child Route Viewport Canvas */}
-      <div className="w-full flex-1 relative overflow-y-auto overflow-x-hidden flex flex-col [scrollbar-width:thin] [scrollbar-color:rgba(56,189,248,0.35)_transparent]">
+      <div className="w-full flex-1 min-h-0 relative overflow-y-auto overflow-x-hidden flex flex-col [scrollbar-width:thin] [scrollbar-color:rgba(56,189,248,0.35)_transparent]">
         <Suspense fallback={<OopLoadingFallback />}>
           <Outlet />
         </Suspense>

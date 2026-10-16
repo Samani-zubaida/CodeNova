@@ -14,10 +14,10 @@ const ALL_MODULES = [
   { path: '/visualizer/heap', name: 'Heap', tab: 'ds' },
   { path: '/visualizer/map', name: 'Hash Map', tab: 'ds' },
   // OOP
-  { path: '/visualizer/encapsulation', name: 'Encapsulation', tab: 'oop' },
-  { path: '/visualizer/abstraction', name: 'Abstraction', tab: 'oop' },
-  { path: '/visualizer/inheritance', name: 'Inheritance', tab: 'oop' },
-  { path: '/visualizer/polymorphism', name: 'Polymorphism', tab: 'oop' },
+  { path: '/oop/encapsulation', name: 'Encapsulation', tab: 'oop' },
+  { path: '/oop/abstraction', name: 'Abstraction', tab: 'oop' },
+  { path: '/oop/inheritance/hierarchical', name: 'Inheritance', tab: 'oop' },
+  { path: '/oop/polymorphism', name: 'Polymorphism', tab: 'oop' },
   // Crypto
   { path: '/visualizer/caesar', name: 'Caesar Cipher', tab: 'crypto' },
   { path: '/visualizer/railfence', name: 'Rail Fence', tab: 'crypto' },
@@ -45,7 +45,7 @@ export default function VisualizerNav({ currentPath }) {
       </button>
 
       <Link 
-        to="/visualizer" 
+        to="/oop" 
         state={{ activeTab: currentModule.tab }}
         className="flex-1 text-center text-gray-500 hover:text-[var(--color-nova-brown)] transition-colors flex items-center justify-center gap-2 font-semibold bg-black/5 dark:bg-white/5 px-3 py-1.5 rounded-full text-sm border border-gray-200 dark:border-white/10"
       >

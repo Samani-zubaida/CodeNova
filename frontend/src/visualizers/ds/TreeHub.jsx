@@ -323,7 +323,7 @@ export default function TreeHub() {
         {/* Top Navigation */}
         <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#5C4E49]/20 pb-4">
           <Link
-            to="/visualizer"
+            to="/oop"
             className="inline-flex items-center gap-2 text-xs font-bold font-mono text-gray-600 dark:text-[#BCA297] hover:text-[#AB526B] transition-colors"
           >
             <ArrowLeft size={16} />

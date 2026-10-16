@@ -243,7 +243,7 @@ export default function QueueHub() {
 
           {/* Return to Dashboard Button */}
           <Link
-            to="/visualizer"
+            to="/oop"
             className="px-4 py-2.5 rounded-xl bg-[#423834] text-[#FAF7F2] hover:bg-[#5C4E49] text-xs font-mono font-bold transition-all flex items-center gap-2 self-start md:self-auto shadow-md"
           >
             <ArrowLeft size={16} />

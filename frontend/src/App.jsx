@@ -1,7 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
-import VisualizerDashboard from './pages/VisualizerDashboard';
 import Sandbox from './pages/Sandbox';
 import GameWorld from './game/GameWorld';
 import HostDashboard from './game/HostDashboard';
@@ -57,7 +56,7 @@ const OopInheritanceDispatcher = () => {
 
   if (type === 'single') {
     return (
-      <SingleInheritanceVisualizer 
+      <SingleInheritanceVisualizer
         isEmbedded={true}
         onNext={() => navigate('/oop/inheritance/multilevel')}
       />
@@ -66,7 +65,7 @@ const OopInheritanceDispatcher = () => {
 
   if (type === 'multilevel') {
     return (
-      <MultilevelInheritanceVisualizer 
+      <MultilevelInheritanceVisualizer
         isEmbedded={true}
         onNext={() => navigate('/oop/polymorphism')}
       />
@@ -75,7 +74,7 @@ const OopInheritanceDispatcher = () => {
 
   if (type === 'hierarchical') {
     return (
-      <InheritanceVisualizer 
+      <InheritanceVisualizer
         isEmbedded={true}
         onNext={() => navigate('/oop/polymorphism')}
       />
@@ -83,8 +82,8 @@ const OopInheritanceDispatcher = () => {
   }
 
   return (
-    <InheritanceInPrepView 
-      type={type} 
+    <InheritanceInPrepView
+      type={type}
       onSwitchType={(t) => navigate(`/oop/inheritance/${t}`)}
       onSwitchToHierarchical={() => navigate('/oop/inheritance/hierarchical')}
     />
@@ -109,8 +108,8 @@ function AppContent() {
 
   const isOopLanding = ['/oop', '/oop/', '/oops', '/oops/'].includes(location.pathname);
   const isOopConcept = !isOopLanding && (
-    location.pathname.startsWith('/oop') || 
-    location.pathname.startsWith('/oops') || 
+    location.pathname.startsWith('/oop') ||
+    location.pathname.startsWith('/oops') ||
     location.pathname.startsWith('/visualizer/oop') ||
     location.pathname.startsWith('/visualizer/encapsulation') ||
     location.pathname.startsWith('/visualizer/abstraction') ||
@@ -136,26 +135,26 @@ function AppContent() {
     }
   }, [theme]);
 
-  const themeClass = theme === 'dark' 
-    ? (isOopRoute ? 'dark bg-[#0B0F17] text-[#FAF7F2]' : 'dark bg-[#331921] text-[#F4EBC3]') 
-    : theme === 'warm' 
-    ? (isOopRoute ? 'warm bg-[#FDFBF7] text-[#2D1F23]' : 'warm bg-[#F4EBC3] text-[#2D1F23]') 
-    : (isOopRoute ? 'bg-[#F8FAFC] text-slate-900' : 'bg-[#FAF7F2] text-[#2D1F23]');
+  const themeClass = theme === 'dark'
+    ? (isOopRoute ? 'dark bg-[#0B0F17] text-[#FAF7F2]' : 'dark bg-[#331921] text-[#F4EBC3]')
+    : theme === 'warm'
+      ? (isOopRoute ? 'warm bg-[#FDFBF7] text-[#2D1F23]' : 'warm bg-[#F4EBC3] text-[#2D1F23]')
+      : (isOopRoute ? 'bg-[#F8FAFC] text-slate-900' : 'bg-[#FAF7F2] text-[#2D1F23]');
 
-  const mainClass = isFullscreen 
-    ? '' 
-    : isAppStudio 
-    ? 'h-[calc(100vh-64px)] overflow-hidden' 
-    : isOopConcept
-    ? 'h-screen w-screen overflow-hidden flex flex-col'
-    : isOopRoute 
-    ? 'h-[calc(100vh-64px)] overflow-hidden flex flex-col' 
-    : 'min-h-[calc(100vh-64px)] pb-16';
+  const mainClass = isFullscreen
+    ? ''
+    : isAppStudio
+      ? 'h-[calc(100vh-64px)] overflow-hidden'
+      : isOopConcept
+        ? 'h-screen w-screen overflow-hidden flex flex-col'
+        : isOopRoute
+          ? 'h-[calc(100vh-64px)] overflow-hidden flex flex-col'
+          : 'min-h-[calc(100vh-64px)] pb-16';
 
   return (
     <div className={isFullscreen ? '' : isOopConcept ? `h-screen w-screen overflow-hidden ${themeClass} font-sans transition-colors duration-300` : `min-h-screen ${themeClass} font-sans transition-colors duration-300`}>
       {!hideNavbar && <Navbar />}
-      
+
       <main className={mainClass}>
         <Routes>
           {/* Root and Intro routes */}
@@ -164,10 +163,11 @@ function AppContent() {
           <Route path="/home" element={<Intro />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
-          <Route path="/visualizer" element={<VisualizerDashboard />} />
-          <Route path="/visualization" element={<VisualizerDashboard />} />
-          <Route path="/visualizations" element={<VisualizerDashboard />} />
-          
+          {/* Legacy /visualizer Routes -> Redirected to /oop */}
+          <Route path="/visualizer" element={<Navigate to="/oop" replace />} />
+          <Route path="/visualization" element={<Navigate to="/oop" replace />} />
+          <Route path="/visualizations" element={<Navigate to="/oop" replace />} />
+
           {/* DS Routes */}
           <Route path="/visualizer/array" element={<ArrayHub />} />
           <Route path="/visualizer/array/:algoId" element={<Array3DVisualizer />} />
@@ -189,37 +189,37 @@ function AppContent() {
           {/* OOP Nested Architecture */}
           <Route path="/oop" element={<OopLayout />}>
             <Route index element={<OopOverview />} />
-            <Route 
-              path="abstraction" 
-              element={<AbstractionVisualizer isEmbedded={true} onNext={() => navigate('/oop/inheritance/single')} />} 
+            <Route
+              path="abstraction"
+              element={<AbstractionVisualizer isEmbedded={true} onNext={() => navigate('/oop/inheritance/single')} />}
             />
-            <Route 
-              path="encapsulation" 
-              element={<EncapsulationVisualizer isEmbedded={true} onNext={() => navigate('/oop/abstraction')} />} 
+            <Route
+              path="encapsulation"
+              element={<EncapsulationVisualizer isEmbedded={true} onNext={() => navigate('/oop/abstraction')} />}
             />
-            <Route 
-              path="inheritance" 
-              element={<Navigate to="/oop/inheritance/hierarchical" replace />} 
+            <Route
+              path="inheritance"
+              element={<Navigate to="/oop/inheritance/hierarchical" replace />}
             />
-            <Route 
-              path="inheritance/single" 
-              element={<SingleInheritanceVisualizer isEmbedded={true} onNext={() => navigate('/oop/inheritance/multilevel')} />} 
+            <Route
+              path="inheritance/single"
+              element={<SingleInheritanceVisualizer isEmbedded={true} onNext={() => navigate('/oop/inheritance/multilevel')} />}
             />
-            <Route 
-              path="inheritance/multilevel" 
-              element={<MultilevelInheritanceVisualizer isEmbedded={true} onNext={() => navigate('/oop/polymorphism')} />} 
+            <Route
+              path="inheritance/multilevel"
+              element={<MultilevelInheritanceVisualizer isEmbedded={true} onNext={() => navigate('/oop/polymorphism')} />}
             />
-            <Route 
-              path="inheritance/hierarchical" 
-              element={<InheritanceVisualizer isEmbedded={true} onNext={() => navigate('/oop/polymorphism')} />} 
+            <Route
+              path="inheritance/hierarchical"
+              element={<InheritanceVisualizer isEmbedded={true} onNext={() => navigate('/oop/polymorphism')} />}
             />
-            <Route 
-              path="inheritance/:type" 
-              element={<OopInheritanceDispatcher />} 
+            <Route
+              path="inheritance/:type"
+              element={<OopInheritanceDispatcher />}
             />
-            <Route 
-              path="polymorphism" 
-              element={<PolymorphismVisualizer isEmbedded={true} onNext={() => navigate('/oop')} />} 
+            <Route
+              path="polymorphism"
+              element={<PolymorphismVisualizer isEmbedded={true} onNext={() => navigate('/oop')} />}
             />
           </Route>
 

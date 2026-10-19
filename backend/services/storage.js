@@ -2,14 +2,26 @@ const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 
-const DATA_DIR = path.join(__dirname, '..', 'data');
-const USERS_FILE = path.join(DATA_DIR, 'users.json');
-const PROGRESS_FILE = path.join(DATA_DIR, 'progress.json');
-const COMPETITIONS_FILE = path.join(DATA_DIR, 'competitions.json');
+const LEGACY_DATA_DIR = path.join(__dirname, '..', 'data');
+const DATA_DIR = path.join(__dirname, '..', '.data');
 
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
+
+const USERS_FILE = path.join(DATA_DIR, 'users.json');
+const PROGRESS_FILE = path.join(DATA_DIR, 'progress.json');
+const COMPETITIONS_FILE = path.join(DATA_DIR, 'competitions.json');
+
+['users.json', 'progress.json', 'competitions.json'].forEach(file => {
+  const target = path.join(DATA_DIR, file);
+  const source = path.join(LEGACY_DATA_DIR, file);
+  if (!fs.existsSync(target) && fs.existsSync(source)) {
+    try {
+      fs.copyFileSync(source, target);
+    } catch (e) {}
+  }
+});
 
 function readJson(filePath, defaultValue) {
   try {
@@ -158,11 +170,28 @@ const storage = {
   },
 
   createUser: ({ username, email, passwordHash }) => {
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const existingEmail = users.find(u => u.email && u.email.trim().toLowerCase() === cleanEmail);
+    if (existingEmail) {
+      const err = new Error('An account with this email already exists. Please log in instead.');
+      err.code = 11000;
+      throw err;
+    }
+
+    const cleanUsername = (username || '').trim();
+    const existingUsername = users.find(u => u.username && u.username.trim().toLowerCase() === cleanUsername.toLowerCase());
+    if (existingUsername) {
+      const err = new Error('Username is already taken');
+      err.code = 'USERNAME_TAKEN';
+      throw err;
+    }
+
     const newUser = {
       id: 'usr_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
-      username: username.trim(),
-      email: email.trim().toLowerCase(),
+      username: cleanUsername,
+      email: cleanEmail,
       passwordHash,
+      isVerified: true,
       activityLog: [getTodayStr()],
       currentStreak: 1,
       longestStreak: 1,

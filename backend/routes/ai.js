@@ -1,23 +1,42 @@
 const express = require('express');
 const axios = require('axios');
 const User = require('../models/User');
+const authenticate = require('../middleware/authMiddleware');
 const router = express.Router();
 
-router.post('/hint', async (req, res) => {
-  const { username, questionText, options } = req.body;
-  if (!username || !questionText) return res.status(400).json({ error: 'Missing required fields' });
+router.post('/hint', authenticate, async (req, res) => {
+  const { questionText, options } = req.body;
+  if (!questionText || typeof questionText !== 'string' || !questionText.trim()) {
+    return res.status(400).json({ error: 'Missing or invalid required field: questionText must be a non-empty string' });
+  }
+
+  if (questionText.length > 4000) {
+    return res.status(400).json({ error: 'Payload too large: questionText exceeds 4000 character limit' });
+  }
 
   try {
-    const user = await User.findOne({ username });
+    const userId = req.user.id;
+    let user = null;
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState === 1) {
+      try {
+        user = (await User.findById(userId)) || (await User.findOne({ username: req.user.username }));
+      } catch (e) {}
+    }
+    if (!user) {
+      const storage = require('../services/storage');
+      user = storage.findUserById(userId) || storage.findUserByUsername(req.user.username);
+    }
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    // Check if user has enough XP (costs 50 XP)
-    if (user.xp < 50) {
+    // Check if user has enough XP (costs 50 XP, grandfather users with xp undefined)
+    const currentXp = user.xp !== undefined ? user.xp : 100;
+    if (currentXp < 50) {
       return res.status(403).json({ error: 'Not enough XP. Need at least 50 XP.' });
     }
 
     // Call LLM for a hint
-    const prompt = `You are a subtle coding tutor. The student is stuck on this question:\n\nQuestion: "${questionText}"\nOptions: ${JSON.stringify(options || [])}\n\nProvide a concise, helpful hint in 1-2 sentences. Do NOT give away the direct answer. Just nudge them in the right direction.`;
+    const prompt = `You are a subtle coding tutor. The student is stuck on this question:\n\nQuestion: "${questionText.slice(0, 1000)}"\nOptions: ${JSON.stringify(options || []).slice(0, 500)}\n\nProvide a concise, helpful hint in 1-2 sentences. Do NOT give away the direct answer. Just nudge them in the right direction.`;
 
     let hint = "Think about the time complexity or standard design patterns that fit this scenario."; // Fallback
 

@@ -1,0 +1,103 @@
+[
+  {
+    "id": "prog_1788692206410",
+    "userId": "usr_1788692206343_uwosc",
+    "town1Unlocked": true,
+    "town2Unlocked": true,
+    "town3Unlocked": false,
+    "totalScore": 150,
+    "createdAt": "2026-09-06T10:56:46.410Z",
+    "updatedAt": "2026-09-06T10:56:46.412Z"
+  },
+  {
+    "id": "prog_1792181296679",
+    "userId": "usr_demo_account",
+    "town1Unlocked": true,
+    "town2Unlocked": false,
+    "town3Unlocked": false,
+    "totalScore": 0,
+    "createdAt": "2026-10-16T20:08:16.679Z"
+  },
+  {
+    "id": "prog_1792184123045",
+    "userId": "usr_demo_codenova",
+    "town1Unlocked": true,
+    "town2Unlocked": true,
+    "town3Unlocked": false,
+    "totalScore": 50,
+    "createdAt": "2026-10-16T20:55:23.045Z",
+    "updatedAt": "2026-10-16T21:06:01.797Z"
+  },
+  {
+    "id": "prog_1792185830319",
+    "userId": "6ad295e682357ca72eae046e",
+    "town1Unlocked": true,
+    "town2Unlocked": false,
+    "town3Unlocked": false,
+    "totalScore": 0,
+    "createdAt": "2026-10-16T21:23:50.319Z"
+  },
+  {
+    "id": "prog_1792185860545",
+    "userId": "6ad296041c7abaa06f5b2225",
+    "town1Unlocked": true,
+    "town2Unlocked": false,
+    "town3Unlocked": false,
+    "totalScore": 0,
+    "createdAt": "2026-10-16T21:24:20.545Z"
+  },
+  {
+    "id": "prog_1792185870362",
+    "userId": "6ad2960e7fd92bb97f02674a",
+    "town1Unlocked": true,
+    "town2Unlocked": false,
+    "town3Unlocked": false,
+    "totalScore": 0,
+    "createdAt": "2026-10-16T21:24:30.362Z"
+  },
+  {
+    "id": "prog_1792185883815",
+    "userId": "6ad2961bd7e2f1cb92bdbcbe",
+    "town1Unlocked": true,
+    "town2Unlocked": false,
+    "town3Unlocked": false,
+    "totalScore": 0,
+    "createdAt": "2026-10-16T21:24:43.815Z"
+  },
+  {
+    "id": "prog_1792185940406",
+    "userId": "6ad29654996f4f61e41f52a6",
+    "town1Unlocked": true,
+    "town2Unlocked": false,
+    "town3Unlocked": false,
+    "totalScore": 0,
+    "createdAt": "2026-10-16T21:25:40.406Z"
+  },
+  {
+    "id": "prog_1792185963757",
+    "userId": "6ad2966b2d91880f900403ae",
+    "town1Unlocked": true,
+    "town2Unlocked": false,
+    "town3Unlocked": false,
+    "totalScore": 0,
+    "createdAt": "2026-10-16T21:26:03.757Z"
+  },
+  {
+    "id": "prog_1792186017875",
+    "userId": "6ad296a189419e6d9f7bd261",
+    "town1Unlocked": true,
+    "town2Unlocked": false,
+    "town3Unlocked": false,
+    "totalScore": 0,
+    "createdAt": "2026-10-16T21:26:57.875Z"
+  },
+  {
+    "id": "prog_1792188347973",
+    "userId": "6ad29fbb577351b3f9a3674d",
+    "town1Unlocked": true,
+    "town2Unlocked": false,
+    "town3Unlocked": false,
+    "totalScore": 0,
+    "createdAt": "2026-10-16T22:05:47.973Z"
+  }
+]

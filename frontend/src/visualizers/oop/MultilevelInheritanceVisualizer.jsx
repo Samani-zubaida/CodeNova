@@ -6,6 +6,7 @@ import {
   User, Briefcase, Award, GitFork, X
 } from 'lucide-react';
 import useAppStore from '../../store/useAppStore';
+import { useAuth } from '../../context/AuthContext';
 import {
   PERSON_CLASS, EMPLOYEE_CLASS, MANAGER_CLASS,
   MULTILEVEL_TIMELINE_STEPS, MEMBER_ORIGIN_REGISTRY,
@@ -26,12 +27,13 @@ export default function MultilevelInheritanceVisualizer({
   onNext,
 }) {
   const { theme } = useAppStore();
+  const { isAuthenticated, requireAuth } = useAuth();
   const isDark = theme === 'dark' || !theme;
   const isWarm = theme === 'warm';
 
   // ── TIMELINE STATE ──
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(() => isAuthenticated);
   const [playbackSpeed, setPlaybackSpeed] = useState(1); // 1x, 1.5x, 2x
   const [hoveredMember, setHoveredMember] = useState(null);
   const [transferringMember, setTransferringMember] = useState(null);
@@ -167,6 +169,7 @@ export default function MultilevelInheritanceVisualizer({
   }, [isPlaying, currentStepIndex, playbackSpeed]);
 
   const handleReplay = () => {
+    if (!requireAuth(null, { message: 'Please log in first to access this feature.' })) return;
     clearTimer();
     setReceivedPersonMembers([]);
     setReceivedEmployeeMembers([]);
@@ -177,10 +180,12 @@ export default function MultilevelInheritanceVisualizer({
   };
 
   const handleTogglePlay = () => {
+    if (!requireAuth(null, { message: 'Please log in first to access this feature.' })) return;
     setIsPlaying(prev => !prev);
   };
 
   const handleSelectStep = (idx) => {
+    if (!requireAuth(null, { message: 'Please log in first to access this feature.' })) return;
     advanceStep(idx);
     setIsPlaying(false);
   };

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Play, Pause, SkipForward, SkipBack, RotateCcw, FastForward, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, RotateCcw, FastForward, Volume2, VolumeX, Lock } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 /**
  * Universal playback controller for all Algoverse visualizers.
@@ -25,7 +26,12 @@ export default function VisualizerPlaybackBar({
   onToggleVoice = null,
   className = ''
 }) {
+  const { isAuthenticated, requireAuth } = useAuth();
+
   const handlePlayToggle = () => {
+    if (!requireAuth(null, { message: 'Please log in first to access this feature.' })) {
+      return;
+    }
     if (onPlayPause) return onPlayPause();
     if (isPlaying) {
       if (onPause) onPause();
@@ -34,7 +40,27 @@ export default function VisualizerPlaybackBar({
     }
   };
 
-  const handleStepBackAction = onStepBackward || onStepBack;
+  const rawStepBackAction = onStepBackward || onStepBack;
+  const handleStepBackAction = () => {
+    if (!requireAuth(null, { message: 'Please log in first to access this feature.' })) {
+      return;
+    }
+    if (rawStepBackAction) rawStepBackAction();
+  };
+
+  const handleStepForwardAction = () => {
+    if (!requireAuth(null, { message: 'Please log in first to access this feature.' })) {
+      return;
+    }
+    if (onStepForward) onStepForward();
+  };
+
+  const handleResetAction = () => {
+    if (!requireAuth(null, { message: 'Please log in first to access this feature.' })) {
+      return;
+    }
+    if (onReset) onReset();
+  };
 
   // Slower speed options down to 0.25x for relaxed dry-run analysis
   const speedOptions = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2];
@@ -118,10 +144,10 @@ export default function VisualizerPlaybackBar({
       <div className="flex items-center justify-between pt-1">
         {/* Reset */}
         <button
-          onClick={onReset}
-          disabled={disabled || (currentStep === 0 && !isPlaying)}
-          title="Reset to Start"
-          className="p-2 rounded-xl text-gray-600 dark:text-[#BCA297] hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#222] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          onClick={handleResetAction}
+          disabled={disabled || (currentStep === 0 && !isPlaying && isAuthenticated)}
+          title={!isAuthenticated ? "Login required to reset simulation" : "Reset to Start"}
+          className="p-2 rounded-xl text-gray-600 dark:text-[#BCA297] hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#222] transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
         >
           <RotateCcw size={16} />
         </button>
@@ -131,21 +157,29 @@ export default function VisualizerPlaybackBar({
           {/* Step Backward */}
           <button
             onClick={handleStepBackAction}
-            disabled={disabled || currentStep <= 0 || isPlaying}
-            title="Step Backward"
-            className="p-2 rounded-xl text-gray-700 dark:text-[#F0E2A4] hover:bg-white dark:hover:bg-[#5C4E49] transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-xs"
+            disabled={disabled || (currentStep <= 0 && isAuthenticated) || (isPlaying && isAuthenticated)}
+            title={!isAuthenticated ? "Login required to step backward" : "Step Backward"}
+            className="p-2 rounded-xl text-gray-700 dark:text-[#F0E2A4] hover:bg-white dark:hover:bg-[#5C4E49] transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-xs cursor-pointer"
           >
             <SkipBack size={16} />
           </button>
 
           {/* Primary Play / Pause Button */}
           <button
+            id="play-pause-btn"
             onClick={handlePlayToggle}
             disabled={disabled}
-            title={isPlaying ? 'Pause' : 'Play Simulation'}
-            className="px-5 py-2 rounded-xl font-bold text-white bg-[#AB526B] hover:bg-[#8E3B53] active:scale-95 transition-all shadow-md flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+            title={!isAuthenticated ? 'Please log in first to access this feature.' : isPlaying ? 'Pause' : 'Play Simulation'}
+            className={`px-5 py-2 rounded-xl font-bold text-white bg-[#AB526B] hover:bg-[#8E3B53] active:scale-95 transition-all shadow-md flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${
+              !isAuthenticated ? 'ring-2 ring-white/30 opacity-90' : ''
+            }`}
           >
-            {isPlaying ? (
+            {!isAuthenticated ? (
+              <>
+                <Lock size={14} className="text-white/90" />
+                <span className="text-xs tracking-wider uppercase">Play</span>
+              </>
+            ) : isPlaying ? (
               <>
                 <Pause size={16} className="fill-white" />
                 <span className="text-xs tracking-wider uppercase">Pause</span>
@@ -160,10 +194,10 @@ export default function VisualizerPlaybackBar({
 
           {/* Step Forward */}
           <button
-            onClick={onStepForward}
-            disabled={disabled || currentStep >= totalSteps - 1 || isPlaying}
-            title="Step Forward"
-            className="p-2 rounded-xl text-gray-700 dark:text-[#F0E2A4] hover:bg-white dark:hover:bg-[#5C4E49] transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-xs"
+            onClick={handleStepForwardAction}
+            disabled={disabled || (currentStep >= totalSteps - 1 && isAuthenticated) || (isPlaying && isAuthenticated)}
+            title={!isAuthenticated ? "Login required to step forward" : "Step Forward"}
+            className="p-2 rounded-xl text-gray-700 dark:text-[#F0E2A4] hover:bg-white dark:hover:bg-[#5C4E49] transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-xs cursor-pointer"
           >
             <SkipForward size={16} />
           </button>

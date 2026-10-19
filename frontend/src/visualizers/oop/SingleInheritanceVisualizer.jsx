@@ -5,6 +5,7 @@ import {
   CheckCircle2, Info, Code2, Zap, Layers, ShieldCheck, Box, Car as CarIcon
 } from 'lucide-react';
 import useAppStore from '../../store/useAppStore';
+import { useAuth } from '../../context/AuthContext';
 import {
   VEHICLE_CLASS, CAR_CLASS, TIMELINE_STEPS, JAVA_CODE_LINES
 } from './data/singleInheritanceData';
@@ -19,18 +20,13 @@ export default function SingleInheritanceVisualizer({
   onReturnToCatalog,
 }) {
   const { theme } = useAppStore();
+  const { isAuthenticated, requireAuth } = useAuth();
   const isDark = theme === 'dark' || !theme;
   const isWarm = theme === 'warm';
 
   // ── TIMELINE STATE ──
-  // Step 1: 'intro' (Vehicle appears)
-  // Step 2: 'car_enters' (Car appears with extends Vehicle)
-  // Step 3: 'conduit_active' (Conduit line illuminates)
-  // Step 4: 'transfer_traits' (color -> speed -> start -> stop transfer sequentially)
-  // Step 5: 'own_specialization' (numberOfDoors & openTrunk appear)
-  // Step 6: 'completed' (Full single inheritance verified)
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(() => isAuthenticated);
   const [hoveredMember, setHoveredMember] = useState(null);
   const [transferringMember, setTransferringMember] = useState(null);
   const [receivedInheritedMembers, setReceivedInheritedMembers] = useState([]);
@@ -113,6 +109,7 @@ export default function SingleInheritanceVisualizer({
   }, [isPlaying, currentStepIndex]);
 
   const handleReplay = () => {
+    if (!requireAuth(null, { message: 'Please log in first to access this feature.' })) return;
     clearTimer();
     setReceivedInheritedMembers([]);
     setTransferringMember(null);
@@ -121,10 +118,12 @@ export default function SingleInheritanceVisualizer({
   };
 
   const handleTogglePlay = () => {
+    if (!requireAuth(null, { message: 'Please log in first to access this feature.' })) return;
     setIsPlaying(prev => !prev);
   };
 
   const handleSelectStep = (idx) => {
+    if (!requireAuth(null, { message: 'Please log in first to access this feature.' })) return;
     advanceStep(idx);
     setIsPlaying(false);
   };

@@ -1,5 +1,26 @@
 [
   {
+    "id": "usr_demo_codenova",
+    "_id": "usr_demo_codenova",
+    "username": "DemoExplorer",
+    "email": "demo@codenova.dev",
+    "passwordHash": "$2b$10$MsBL1BgtnzjNzcITFP4BkuJi18yIyslJCfcF0rj5UefK.vmX6JYyG",
+    "isVerified": true,
+    "xp": 2500,
+    "currentStreak": 5,
+    "longestStreak": 12,
+    "activityLog": [
+      "2026-10-17"
+    ],
+    "earnedBadges": [
+      {
+        "badgeId": "demo_badge",
+        "name": "Explorer"
+      }
+    ],
+    "createdAt": "2026-10-16T20:10:58.676Z"
+  },
+  {
     "id": "usr_1788692009067_pw5yj",
     "username": "tester2026",
     "email": "tester2026@test.com",
@@ -166,5 +187,3 @@
     "_id": "usr_1790077115145_zploz"
   }
 ]
-
-

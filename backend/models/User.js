@@ -1,12 +1,12 @@
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true },
-  email: { type: String, required: true, unique: true },
+  username: { type: String, required: true, unique: true, trim: true },
+  email: { type: String, required: true, unique: true, lowercase: true, trim: true },
   passwordHash: { type: String, required: true },
 
   // Verification & Security
-  isVerified: { type: Boolean, default: false },
+  isVerified: { type: Boolean, default: true },
   verificationTokenHash: { type: String, default: null },
   verificationTokenExpiry: { type: Date, default: null },
 
@@ -21,6 +21,8 @@ const userSchema = new mongoose.Schema({
   }],
   xp: { type: Number, default: 0 },
 }, { timestamps: true });
+
+userSchema.index({ email: 1 }, { unique: true });
 
 // Ensure sensitive fields are never exposed in JSON output
 userSchema.set('toJSON', {

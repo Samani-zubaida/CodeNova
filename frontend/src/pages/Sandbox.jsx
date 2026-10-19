@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
-import { Play, Settings, Loader2, Code2, Sparkles, X, TerminalSquare, Code, LayoutDashboard } from 'lucide-react';
+import { Play, Settings, Loader2, Code2, Sparkles, X, TerminalSquare, Code, LayoutDashboard, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import CodeEditor from '../components/editor/CodeEditor';
 import OutputTerminal from '../components/editor/OutputTerminal';
 import VisualCanvas from '../components/editor/VisualCanvas';
 import useAppStore from '../store/useAppStore';
+import { useAuth } from '../context/AuthContext';
 
 const DEFAULT_CODE = {
   javascript: 'const arr = [10, 20, 30, 40, 50];\n\nfor (let i = 0; i < arr.length; i++) {\n  console.log(arr[i]);\n}',
@@ -34,6 +35,7 @@ const Sandbox = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   
   const { setExecutionOutput } = useAppStore();
+  const { isAuthenticated, token, requireAuth } = useAuth();
 
   const handleLanguageChange = (e) => {
     const newLang = e.target.value;
@@ -42,7 +44,12 @@ const Sandbox = () => {
     setShowTerminal(false);
   };
 
-  const handleRunCode = async () => {
+  const handleRunCode = useCallback(async () => {
+    // Enforce authentication gate
+    if (!requireAuth(null, { from: '/sandbox', message: 'Please log in first to access this feature.' })) {
+      return;
+    }
+
     setShowTerminal(true);
     setMobileTab('terminal');
     setIsExecuting(true);
@@ -53,6 +60,8 @@ const Sandbox = () => {
       const response = await axios.post('http://localhost:5000/api/sandbox/execute', {
         language,
         code
+      }, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
       
       const { run } = response.data;
@@ -64,13 +73,23 @@ const Sandbox = () => {
       }
     } catch (error) {
       setIsError(true);
-      setExecutionOutput(`Error executing code: ${error.message}`);
+      if (error.response?.status === 401) {
+        setExecutionOutput('Authentication required: Please log in to execute code in the sandbox.');
+        requireAuth(null, { from: '/sandbox', message: 'Please log in first to access this feature.' });
+      } else {
+        setExecutionOutput(`Error executing code: ${error.message}`);
+      }
     } finally {
       setIsExecuting(false);
     }
-  };
+  }, [code, language, requireAuth, setExecutionOutput, token]);
 
-  const handleAnalyze = async () => {
+  const handleAnalyze = useCallback(async () => {
+    // Enforce authentication gate
+    if (!requireAuth(null, { from: '/sandbox', message: 'Please log in first to access this feature.' })) {
+      return;
+    }
+
     setMobileTab('analysis');
     setIsAnalyzing(true);
     setAnalysisData(null);
@@ -78,15 +97,34 @@ const Sandbox = () => {
       const response = await axios.post('http://localhost:5000/api/sandbox/visualize', {
         code,
         language
+      }, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
       setAnalysisData(response.data.analysis);
     } catch (error) {
       console.error('Analysis failed:', error);
-      setAnalysisData({ error: 'Failed to generate code analysis.' });
+      if (error.response?.status === 401) {
+        setAnalysisData({ error: 'Authentication required. Please log in first.' });
+        requireAuth(null, { from: '/sandbox', message: 'Please log in first to access this feature.' });
+      } else {
+        setAnalysisData({ error: 'Failed to generate code analysis.' });
+      }
     } finally {
       setIsAnalyzing(false);
     }
-  };
+  }, [code, language, requireAuth, token]);
+
+  // Keyboard shortcut listener: Ctrl+Enter / Cmd+Enter runs code through the action guard
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        handleRunCode();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleRunCode]);
 
   // Drag to resize logic for Terminal (Vertical)
   const startTerminalDrag = (e) => {
@@ -222,20 +260,44 @@ const Sandbox = () => {
             </div>
             <div className="flex gap-2">
               <button 
+                id="analyze-code-btn"
                 onClick={handleAnalyze}
                 disabled={isAnalyzing}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono font-bold bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-sm shadow-violet-500/25 rounded-xl transition-all transform active:scale-95 disabled:opacity-50 cursor-pointer"
+                title={!isAuthenticated ? "Login required to analyze code" : "Analyze code with AI"}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono font-bold bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-sm shadow-violet-500/25 rounded-xl transition-all transform active:scale-95 disabled:opacity-50 cursor-pointer ${
+                  !isAuthenticated ? 'ring-1 ring-violet-400/50' : ''
+                }`}
               >
-                {isAnalyzing ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} className="text-violet-200" />}
-                <span className="hidden sm:inline">Analyze</span>
+                {isAnalyzing ? (
+                  <Loader2 size={13} className="animate-spin" />
+                ) : !isAuthenticated ? (
+                  <Lock size={13} className="text-violet-200" />
+                ) : (
+                  <Sparkles size={13} className="text-violet-200" />
+                )}
+                <span className="hidden sm:inline">
+                  {!isAuthenticated ? 'Analyze (Login Required)' : 'Analyze'}
+                </span>
               </button>
               <button 
+                id="run-code-btn"
                 onClick={handleRunCode}
                 disabled={isExecuting}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-mono font-black bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-md shadow-emerald-500/25 rounded-xl transition-all transform hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 cursor-pointer"
+                title={!isAuthenticated ? "Login required to run code" : "Run Code (Ctrl + Enter)"}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-mono font-black bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-md shadow-emerald-500/25 rounded-xl transition-all transform hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 cursor-pointer ${
+                  !isAuthenticated ? 'ring-1 ring-emerald-400/50' : ''
+                }`}
               >
-                {isExecuting ? <Loader2 size={13} className="animate-spin" /> : <Play size={13} className="fill-white" />}
-                <span className="hidden sm:inline">Run Code</span>
+                {isExecuting ? (
+                  <Loader2 size={13} className="animate-spin" />
+                ) : !isAuthenticated ? (
+                  <Lock size={13} className="text-emerald-100" />
+                ) : (
+                  <Play size={13} className="fill-white" />
+                )}
+                <span className="hidden sm:inline">
+                  {!isAuthenticated ? 'Run Code (Login Required)' : 'Run Code'}
+                </span>
               </button>
             </div>
           </div>

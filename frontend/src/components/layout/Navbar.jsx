@@ -6,6 +6,7 @@ import {
   Boxes, Shield, Terminal, Menu, X, ArrowRight
 } from 'lucide-react';
 import useAppStore from '../../store/useAppStore';
+import { useAuth } from '../../context/AuthContext';
 
 /**
  * Premium Glassmorphism Navbar for Code Nova
@@ -13,7 +14,8 @@ import useAppStore from '../../store/useAppStore';
  * high-contrast accessible typography, and responsive mobile glass drawer.
  */
 export default function Navbar() {
-  const { theme, setTheme, user, logout } = useAppStore();
+  const { theme, setTheme } = useAppStore();
+  const { user, isAuthenticated, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Sync mobile drawer state with route transitions
@@ -74,7 +76,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         
         {/* Left: Brand Identity */}
-        <NavLink to="/oop" className="flex items-center gap-3 group shrink-0 select-none">
+        <NavLink to={isAuthenticated ? "/oop" : "/"} className="flex items-center gap-3 group shrink-0 select-none">
           <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-[#AB526B] via-[#C9637E] to-[#8C3A50] flex items-center justify-center text-white font-mono font-bold text-sm shadow-[0_2px_10px_rgba(171,82,107,0.35)] border border-white/25 group-hover:scale-105 group-hover:shadow-[0_4px_16px_rgba(171,82,107,0.5)] transition-all duration-200">
             <div className="absolute inset-0 rounded-xl bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
             &lt;/&gt;
@@ -203,7 +205,7 @@ export default function Navbar() {
           </div>
 
           {/* User Profile or Sign In Button */}
-          {user ? (
+          {isAuthenticated && user ? (
             <div className={`h-9 pl-1.5 pr-2.5 rounded-full flex items-center gap-2 backdrop-blur-md border ${
               isDark
                 ? 'bg-white/[0.05] border-white/10 shadow-xs'
@@ -220,11 +222,11 @@ export default function Navbar() {
                 {user.username || 'Explorer'}
               </span>
               <button
+                id="logout-btn"
                 onClick={() => {
                   logout();
-                  window.location.href = '/auth';
                 }}
-                className="text-slate-400 hover:text-rose-500 transition-colors p-1 rounded-full hover:bg-rose-500/10 ml-0.5"
+                className="text-slate-400 hover:text-rose-500 transition-colors p-1 rounded-full hover:bg-rose-500/10 ml-0.5 cursor-pointer"
                 title="Log Out"
                 aria-label="Log Out"
               >
@@ -232,13 +234,32 @@ export default function Navbar() {
               </button>
             </div>
           ) : (
-            <NavLink 
-              to="/auth" 
-              className="h-9 px-4 rounded-full font-semibold text-xs text-white bg-gradient-to-r from-[#AB526B] via-[#BE5A75] to-[#99445B] hover:opacity-95 shadow-[0_2px_10px_rgba(171,82,107,0.35)] hover:shadow-[0_4px_14px_rgba(171,82,107,0.45)] border border-white/20 flex items-center gap-1.5 transition-all duration-200 active:scale-95 shrink-0"
-            >
-              <LogIn size={13} />
-              <span>Sign In</span>
-            </NavLink>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <NavLink 
+                to="/auth" 
+                state={{ mode: 'login' }}
+                id="sign-in-btn"
+                className={`h-9 px-3 sm:px-3.5 rounded-full font-semibold text-xs flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
+                  isDark
+                    ? 'text-slate-300 hover:text-white hover:bg-white/10 border border-white/10'
+                    : isWarm
+                    ? 'text-[#2D1F23] hover:bg-black/5 border border-[#EBE0D3]'
+                    : 'text-slate-700 hover:bg-slate-100 border border-slate-200'
+                }`}
+              >
+                <LogIn size={13} />
+                <span>Log In</span>
+              </NavLink>
+              <NavLink 
+                to="/auth" 
+                state={{ mode: 'signup' }}
+                id="sign-up-btn"
+                className="h-9 px-3.5 sm:px-4 rounded-full font-semibold text-xs text-white bg-gradient-to-r from-[#AB526B] via-[#BE5A75] to-[#99445B] hover:opacity-95 shadow-[0_2px_10px_rgba(171,82,107,0.35)] hover:shadow-[0_4px_14px_rgba(171,82,107,0.45)] border border-white/20 flex items-center gap-1.5 transition-all duration-200 active:scale-95 shrink-0 cursor-pointer"
+              >
+                <Sparkles size={13} />
+                <span>Sign Up</span>
+              </NavLink>
+            </div>
           )}
 
           {/* Mobile Menu Hamburger Button */}
@@ -369,6 +390,54 @@ export default function Navbar() {
                 </div>
                 <ArrowRight size={14} className="opacity-60" />
               </NavLink>
+
+              {/* Mobile Drawer Auth Row */}
+              <div className="pt-3 mt-2 border-t border-black/10 dark:border-white/10">
+                {isAuthenticated && user ? (
+                  <div className="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/10">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#AB526B] to-[#F43F5E] flex items-center justify-center text-white text-xs font-bold">
+                        {user.username ? user.username.charAt(0).toUpperCase() : 'U'}
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-white">{user.username}</div>
+                        <div className="text-[10px] text-slate-400">{user.email || 'Authenticated'}</div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        logout();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 transition-colors"
+                    >
+                      <LogOut size={12} />
+                      <span>Log Out</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    <NavLink
+                      to="/auth"
+                      state={{ mode: 'login' }}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl font-semibold text-xs border border-white/15 hover:bg-white/5 transition-colors"
+                    >
+                      <LogIn size={14} />
+                      <span>Log In</span>
+                    </NavLink>
+                    <NavLink
+                      to="/auth"
+                      state={{ mode: 'signup' }}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="w-full flex items-center justify-center gap-2 p-3 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-[#AB526B] via-[#BE5A75] to-[#99445B] shadow-md"
+                    >
+                      <Sparkles size={14} />
+                      <span>Create Free Account</span>
+                    </NavLink>
+                  </div>
+                )}
+              </div>
             </div>
           </motion.div>
         )}

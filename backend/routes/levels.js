@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const authenticate = require('../middleware/authMiddleware');
 
 const levelData = {
   ds: {
@@ -110,7 +111,7 @@ router.get('/meta/subjects', (req, res) => {
   ]);
 });
 
-router.get('/:subject/:levelId', async (req, res) => {
+router.get('/:subject/:levelId', authenticate, async (req, res) => {
   const { subject, levelId } = req.params;
   
   if (subject === 'trivia') {

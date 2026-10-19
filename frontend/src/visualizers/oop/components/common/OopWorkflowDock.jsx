@@ -1,9 +1,10 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Play, Pause, RotateCcw, ArrowRight, Check, Zap, Sparkles, Info
+  Play, Pause, RotateCcw, ArrowRight, Check, Zap, Sparkles, Info, Lock
 } from 'lucide-react';
 import useAppStore from '../../../../store/useAppStore';
+import { useAuth } from '../../../../context/AuthContext';
 
 /**
  * OopWorkflowDock - Premium Unified Workflow Phase & Explanation Component
@@ -40,8 +41,37 @@ export default function OopWorkflowDock({
   conceptAccent = '#AB526B',
 }) {
   const { theme } = useAppStore();
+  const { isAuthenticated, requireAuth } = useAuth();
   const isDark = theme === 'dark' || !theme;
   const isWarm = theme === 'warm';
+
+  const handleTogglePlay = () => {
+    if (!requireAuth(null, { message: 'Please log in first to access this feature.' })) {
+      return;
+    }
+    if (onTogglePlay) onTogglePlay();
+  };
+
+  const handleReplay = () => {
+    if (!requireAuth(null, { message: 'Please log in first to access this feature.' })) {
+      return;
+    }
+    if (onReplay) onReplay();
+  };
+
+  const handlePrimaryAction = () => {
+    if (!requireAuth(null, { message: 'Please log in first to access this feature.' })) {
+      return;
+    }
+    if (primaryAction?.onClick) primaryAction.onClick();
+  };
+
+  const handleSelectPhase = (id, idx) => {
+    if (!requireAuth(null, { message: 'Please log in first to access this feature.' })) {
+      return;
+    }
+    if (onSelectPhase) onSelectPhase(id, idx);
+  };
 
   // Determine active phase object
   const activePhase = (activePhaseId && phases.find(p => p.id === activePhaseId)) ||
@@ -78,16 +108,33 @@ export default function OopWorkflowDock({
           {onTogglePlay && (
             <button
               type="button"
-              onClick={onTogglePlay}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold text-white transition-all hover:scale-105 active:scale-95 shadow-md cursor-pointer"
+              id="oop-workflow-play-btn"
+              onClick={handleTogglePlay}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold text-white transition-all hover:scale-105 active:scale-95 shadow-md cursor-pointer ${
+                !isAuthenticated ? 'ring-1 ring-white/30 opacity-90' : ''
+              }`}
               style={{
                 backgroundColor: conceptAccent
               }}
-              title={isPlaying ? 'Pause animation' : 'Play animation'}
+              title={!isAuthenticated ? 'Please log in first to access this feature.' : isPlaying ? 'Pause animation' : 'Play animation'}
               aria-label={isPlaying ? 'Pause workflow' : 'Play workflow'}
             >
-              {isPlaying ? <Pause size={12} /> : <Play size={12} />}
-              <span className="hidden sm:inline">{isPlaying ? 'Pause' : 'Play Flow'}</span>
+              {!isAuthenticated ? (
+                <>
+                  <Lock size={12} />
+                  <span className="hidden sm:inline">Play Flow</span>
+                </>
+              ) : isPlaying ? (
+                <>
+                  <Pause size={12} />
+                  <span className="hidden sm:inline">Pause</span>
+                </>
+              ) : (
+                <>
+                  <Play size={12} />
+                  <span className="hidden sm:inline">Play Flow</span>
+                </>
+              )}
             </button>
           )}
 
@@ -95,7 +142,7 @@ export default function OopWorkflowDock({
           {onReplay && (
             <button
               type="button"
-              onClick={onReplay}
+              onClick={handleReplay}
               className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-mono font-bold border transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-xs ${
                 isDark 
                   ? 'bg-white/5 hover:bg-white/10 text-slate-200 border-white/10' 
@@ -103,7 +150,7 @@ export default function OopWorkflowDock({
                   ? 'bg-black/[0.03] hover:bg-black/[0.06] text-[#2D1F23] border-[#EBE0D3]'
                   : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300'
               }`}
-              title="Replay from Step 1"
+              title={!isAuthenticated ? 'Please log in first to access this feature.' : "Replay from Step 1"}
               aria-label="Replay workflow"
             >
               <RotateCcw size={12} style={{ color: conceptAccent }} />
@@ -115,7 +162,7 @@ export default function OopWorkflowDock({
           {primaryAction && (
             <button
               type="button"
-              onClick={primaryAction.onClick}
+              onClick={handlePrimaryAction}
               disabled={primaryAction.disabled}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:pointer-events-none shadow-md cursor-pointer border ${
                 isDark
@@ -125,9 +172,10 @@ export default function OopWorkflowDock({
               style={{
                 borderColor: `${conceptAccent}50`
               }}
+              title={!isAuthenticated ? 'Please log in first to access this feature.' : primaryAction.label}
               aria-label={primaryAction.label}
             >
-              {primaryAction.icon || <Zap size={12} style={{ color: conceptAccent }} />}
+              {!isAuthenticated ? <Lock size={12} style={{ color: conceptAccent }} /> : (primaryAction.icon || <Zap size={12} style={{ color: conceptAccent }} />)}
               <span>{primaryAction.label}</span>
             </button>
           )}
@@ -173,7 +221,7 @@ export default function OopWorkflowDock({
                 <div key={st.id} className="flex items-center shrink-0">
                   <button
                     type="button"
-                    onClick={() => onSelectPhase && onSelectPhase(st.id, idx)}
+                    onClick={() => handleSelectPhase(st.id, idx)}
                     aria-current={isActive ? 'step' : undefined}
                     aria-label={`Step ${idx + 1}: ${st.title}`}
                     className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-xs font-mono transition-all duration-200 cursor-pointer select-none border ${

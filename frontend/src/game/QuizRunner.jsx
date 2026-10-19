@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Play, CheckCircle2, AlertCircle, TerminalSquare, BookOpen, Tag, Code2, XCircle, Star, Trophy } from 'lucide-react';
 import Editor from '@monaco-editor/react';
-import useAppStore from "../store/useAppStore.js"
+import useAppStore from "../store/useAppStore.js";
+import { useAuth } from "../context/AuthContext";
 
 const AESVisualizer = React.lazy(() => import('../visualizers/crypto/AESVisualizer'));
 const CaesarVisualizer = React.lazy(() => import('../visualizers/crypto/CaesarCipherVisualizer'));
@@ -9,6 +10,7 @@ const RSAVisualizer = React.lazy(() => import('../visualizers/crypto/RSAVIsualiz
 
 
 export default function QuizRunner({ subject, levelId, competitionData, onBack, onLevelComplete }) {
+  const { user, token } = useAuth();
   const addXP = useAppStore(state => state.addXP);
   const unlockNextLevel = useAppStore(state => state.unlockNextLevel);
   const addCompletedLevel = useAppStore(state => state.addCompletedLevel);
@@ -16,8 +18,6 @@ export default function QuizRunner({ subject, levelId, competitionData, onBack, 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  const user = useAppStore(state => state.user);
   
   const [selectedOption, setSelectedOption] = useState(null);
   const [codeValue, setCodeValue] = useState('');
@@ -51,7 +51,12 @@ export default function QuizRunner({ subject, levelId, competitionData, onBack, 
       }
       setLoading(false);
     } else {
-      fetch(`http://localhost:5000/api/levels/${subject}/${levelId}`)
+      fetch(`http://localhost:5000/api/levels/${subject}/${levelId}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        }
+      })
         .then(res => {
           if (!res.ok) throw new Error('Failed to fetch level data');
           return res.json();
@@ -157,7 +162,10 @@ export default function QuizRunner({ subject, levelId, competitionData, onBack, 
       const currentQ = questions[currentIndex];
       const res = await fetch('http://localhost:5000/api/ai/hint', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({
           username: user ? user.username : 'Guest',
           questionText: currentQ.question,
@@ -167,8 +175,6 @@ export default function QuizRunner({ subject, levelId, competitionData, onBack, 
       const data = await res.json();
       if (data.success) {
         setHintText(data.hint);
-        // deduct from local global state if possible, though backend did it
-        // for visual sync we might dispatch an action to useAppStore later
       } else {
         setHintText(`Error: ${data.error}`);
       }
@@ -204,7 +210,10 @@ export default function QuizRunner({ subject, levelId, competitionData, onBack, 
           if (earnedXP > 0) {
             fetch(`http://localhost:5000/api/users/award-badge`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 
+                'Content-Type': 'application/json',
+                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+              },
               body: JSON.stringify({ 
                 username: user ? user.username : 'Guest', 
                 badgeId: `${subject}-level-${levelId}`,
@@ -217,13 +226,16 @@ export default function QuizRunner({ subject, levelId, competitionData, onBack, 
         if (competitionData) {
           fetch(`http://localhost:5000/api/competitions/${competitionData._id}/submit-score`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            },
             body: JSON.stringify({ 
               username: user ? user.username : 'Guest', 
               score: earnedXP,
               timeTakenMs: Date.now() - startTimeRef.current
             })
-          });
+          }).catch(e => console.error("Score submission failed:", e));
         }
       }
   };

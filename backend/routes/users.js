@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const User = require('../models/User');
 const storage = require('../services/storage');
 const emailService = require('../services/emailService');
+const authenticate = require('../middleware/authMiddleware');
 const router = express.Router();
 
 const isDbConnected = () => mongoose.connection.readyState === 1;
@@ -15,9 +16,13 @@ const getYesterdayStr = () => {
   return d.toISOString().split('T')[0];
 };
 
-// Record daily activity
-router.post('/record-activity', async (req, res) => {
-  const { username } = req.body;
+// Record daily activity (Protected)
+router.post('/record-activity', authenticate, async (req, res) => {
+  // Prevent IDOR: Always use authenticated user's identity
+  if (req.body.username && req.body.username !== req.user.username) {
+    return res.status(403).json({ error: 'Forbidden: You cannot modify activity for another user.' });
+  }
+  const username = req.user.username;
   if (!username) return res.status(400).json({ error: 'Username required' });
 
   if (isDbConnected()) {
@@ -117,8 +122,14 @@ router.get('/:username', async (req, res) => {
 });
 
 // Award badge with REAL email notification
-router.post('/award-badge', async (req, res) => {
-  const { username, badgeId, badgeName } = req.body;
+// Award badge (Protected)
+router.post('/award-badge', authenticate, async (req, res) => {
+  // Prevent IDOR: Always use authenticated user's identity
+  if (req.body.username && req.body.username !== req.user.username) {
+    return res.status(403).json({ error: 'Forbidden: You cannot award badges to another user.' });
+  }
+  const username = req.user.username;
+  const { badgeId, badgeName } = req.body;
   if (!username || !badgeId || !badgeName) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
@@ -175,9 +186,14 @@ router.post('/award-badge', async (req, res) => {
   return res.status(404).json({ error: 'User not found' });
 });
 
-// Direct user email notification endpoint
-router.post('/notify', async (req, res) => {
-  const { username, title, message, actionUrl, actionText } = req.body;
+// Direct user email notification endpoint (Protected)
+router.post('/notify', authenticate, async (req, res) => {
+  // Prevent IDOR: Always use authenticated user's identity
+  if (req.body.username && req.body.username !== req.user.username) {
+    return res.status(403).json({ error: 'Forbidden: You cannot dispatch notifications for another user.' });
+  }
+  const username = req.user.username;
+  const { title, message, actionUrl, actionText } = req.body;
   if (!username || !title || !message) {
     return res.status(400).json({ error: 'Username, title, and message are required' });
   }

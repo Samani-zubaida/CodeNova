@@ -17,8 +17,26 @@ const aiRoutes = require('./routes/ai');
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+const allowedOrigins = [
+  process.env.FRONTEND_URL || 'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:5173'
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow non-browser requests (e.g. curl, tests, mobile) or registered origins
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Blocked by CORS policy: Origin not allowed'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+app.use(express.json({ limit: '1mb' }));
 
 // MongoDB connection
 console.log('[Database] MongoDB URI provided:', !!process.env.MONGODB_URI);
@@ -60,8 +78,9 @@ const { Server } = require('socket.io');
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: '*',
-    methods: ['GET', 'POST']
+    origin: allowedOrigins,
+    methods: ['GET', 'POST'],
+    credentials: true
   }
 });
 

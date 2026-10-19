@@ -8,18 +8,7 @@ const storage = require('../services/storage');
 const JWT_SECRET = process.env.JWT_SECRET || 'algoverse_super_secret_jwt_key_2026';
 const isDbConnected = () => mongoose.connection.readyState === 1;
 
-const authenticate = (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1];
-  if (!token) return res.status(401).json({ message: 'Access denied' });
-
-  try {
-    const verified = jwt.verify(token, JWT_SECRET);
-    req.user = verified;
-    next();
-  } catch (error) {
-    res.status(400).json({ message: 'Invalid token' });
-  }
-};
+const authenticate = require('../middleware/authMiddleware');
 
 router.get('/', authenticate, async (req, res) => {
   try {
@@ -46,6 +35,16 @@ router.get('/', authenticate, async (req, res) => {
 router.post('/update', authenticate, async (req, res) => {
   try {
     const { score, town2Unlocked, town3Unlocked } = req.body;
+
+    if (score !== undefined && (typeof score !== 'number' || score < 0 || !Number.isFinite(score))) {
+      return res.status(400).json({ message: 'Invalid score: must be a non-negative finite number' });
+    }
+    if (town2Unlocked !== undefined && typeof town2Unlocked !== 'boolean') {
+      return res.status(400).json({ message: 'Invalid town2Unlocked: must be a boolean' });
+    }
+    if (town3Unlocked !== undefined && typeof town3Unlocked !== 'boolean') {
+      return res.status(400).json({ message: 'Invalid town3Unlocked: must be a boolean' });
+    }
     
     if (isDbConnected()) {
       try {

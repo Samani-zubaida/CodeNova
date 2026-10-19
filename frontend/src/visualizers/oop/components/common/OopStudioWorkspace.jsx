@@ -2,9 +2,10 @@ import React, { useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Play, Pause, RotateCcw, ArrowRight, Zap, Sparkles,
-  Code2, CheckCircle2, ChevronRight, Layers, Eye
+  Code2, CheckCircle2, ChevronRight, Layers, Eye, Lock
 } from 'lucide-react';
 import useAppStore from '../../../../store/useAppStore';
+import { useAuth } from '../../../../context/AuthContext';
 import OopIdeCodePanel from './OopIdeCodePanel';
 
 /**
@@ -74,6 +75,7 @@ export default function OopStudioWorkspace({
   canvasHeaderBadge = null,
 }) {
   const { theme } = useAppStore();
+  const { isAuthenticated, requireAuth } = useAuth();
   const isDark = theme === 'dark' || !theme;
   const isWarm = theme === 'warm';
 
@@ -203,7 +205,10 @@ export default function OopStudioWorkspace({
                       <button
                         key={phase.id || idx}
                         type="button"
-                        onClick={() => onSelectPhase && onSelectPhase(phase.id, idx)}
+                        onClick={() => {
+                          if (!requireAuth(null, { message: 'Please log in first to access this feature.' })) return;
+                          onSelectPhase && onSelectPhase(phase.id, idx);
+                        }}
                         className={`w-full text-left p-2.5 rounded-2xl border font-mono transition-all duration-200 cursor-pointer relative group flex items-start gap-2.5 ${
                           isActive
                             ? isDark
@@ -298,21 +303,45 @@ export default function OopStudioWorkspace({
               {onTogglePlay && (
                 <button
                   type="button"
-                  onClick={onTogglePlay}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold text-white transition-all hover:scale-105 active:scale-95 shadow-md cursor-pointer"
+                  id="oop-workflow-play-btn"
+                  onClick={() => {
+                    if (!requireAuth(null, { message: 'Please log in first to access this feature.' })) return;
+                    onTogglePlay();
+                  }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold text-white transition-all hover:scale-105 active:scale-95 shadow-md cursor-pointer ${
+                    !isAuthenticated ? 'ring-1 ring-white/30 opacity-90' : ''
+                  }`}
                   style={{ backgroundColor: conceptAccent }}
-                  title={isPlaying ? 'Pause Workflow' : 'Play Workflow'}
+                  title={!isAuthenticated ? 'Please log in first to access this feature.' : isPlaying ? 'Pause Workflow' : 'Play Workflow'}
                   aria-label={isPlaying ? 'Pause' : 'Play'}
                 >
-                  {isPlaying ? <Pause size={12} /> : <Play size={12} />}
-                  <span>{isPlaying ? 'Pause' : 'Play Flow'}</span>
+                  {!isAuthenticated ? (
+                    <>
+                      <Lock size={12} />
+                      <span>Play Flow</span>
+                    </>
+                  ) : isPlaying ? (
+                    <>
+                      <Pause size={12} />
+                      <span>Pause</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play size={12} />
+                      <span>Play Flow</span>
+                    </>
+                  )}
                 </button>
               )}
 
               {onReplay && (
                 <button
                   type="button"
-                  onClick={onReplay}
+                  id="oop-workflow-replay-btn"
+                  onClick={() => {
+                    if (!requireAuth(null, { message: 'Please log in first to access this feature.' })) return;
+                    onReplay();
+                  }}
                   className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold border transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-xs ${
                     isDark
                       ? 'bg-white/5 hover:bg-white/10 text-slate-200 border-white/10'
@@ -320,10 +349,14 @@ export default function OopStudioWorkspace({
                         ? 'bg-black/[0.03] hover:bg-black/[0.06] text-[#2D1F23] border-[#EBE0D3]'
                         : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300'
                   }`}
-                  title="Replay from Step 1"
+                  title={!isAuthenticated ? 'Please log in first to access this feature.' : "Replay from Step 1"}
                   aria-label="Replay"
                 >
-                  <RotateCcw size={12} style={{ color: conceptAccent }} />
+                  {!isAuthenticated ? (
+                    <Lock size={12} style={{ color: conceptAccent }} />
+                  ) : (
+                    <RotateCcw size={12} style={{ color: conceptAccent }} />
+                  )}
                   <span className="hidden sm:inline">Replay</span>
                 </button>
               )}
@@ -331,7 +364,10 @@ export default function OopStudioWorkspace({
               {primaryAction && (
                 <button
                   type="button"
-                  onClick={primaryAction.onClick}
+                  onClick={() => {
+                    if (!requireAuth(null, { message: 'Please log in first to access this feature.' })) return;
+                    primaryAction.onClick?.();
+                  }}
                   disabled={primaryAction.disabled}
                   className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-mono font-bold transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:pointer-events-none shadow-md cursor-pointer border ${
                     isDark
@@ -339,8 +375,9 @@ export default function OopStudioWorkspace({
                       : 'bg-slate-900 text-white border-slate-800 hover:bg-slate-800'
                   }`}
                   style={{ borderColor: `${conceptAccent}60` }}
+                  title={!isAuthenticated ? 'Please log in first to access this feature.' : primaryAction.label}
                 >
-                  {primaryAction.icon || <Zap size={12} style={{ color: conceptAccent }} />}
+                  {!isAuthenticated ? <Lock size={12} style={{ color: conceptAccent }} /> : (primaryAction.icon || <Zap size={12} style={{ color: conceptAccent }} />)}
                   <span>{primaryAction.label}</span>
                 </button>
               )}

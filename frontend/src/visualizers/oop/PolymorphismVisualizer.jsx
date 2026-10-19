@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { User, Play, Activity } from 'lucide-react';
 import useAppStore from '../../store/useAppStore';
+import { useAuth } from '../../context/AuthContext';
 import { POLYMORPHIC_ROLES } from './data/polymorphismData';
 import OopStudioWorkspace from './components/common/OopStudioWorkspace';
 
@@ -96,6 +97,7 @@ const POLYMORPHISM_PHASES = [
 
 export default function PolymorphismVisualizer({ isEmbedded = false, onNext }) {
   const { theme } = useAppStore();
+  const { isAuthenticated, requireAuth } = useAuth();
   const isDark = theme === 'dark' || !theme;
   const isWarm = theme === 'warm';
 
@@ -113,6 +115,7 @@ export default function PolymorphismVisualizer({ isEmbedded = false, onNext }) {
   };
 
   const handleExecuteRole = async (roleId) => {
+    if (!requireAuth(null, { message: 'Please log in first to access this feature.' })) return;
     if (activePulse) return;
     setActiveRole(roleId);
     setActivePulse(roleId);

@@ -4,6 +4,7 @@ import {
   Smartphone, Cpu, Camera, Send, Wifi, Activity, Zap, Eye, EyeOff
 } from 'lucide-react';
 import useAppStore from '../../store/useAppStore';
+import { useAuth } from '../../context/AuthContext';
 import OopStudioWorkspace from './components/common/OopStudioWorkspace';
 
 const JAVA_ABSTRACTION_CODE = `// Abstraction: Public Interface defining what the object does, hiding how it works
@@ -78,6 +79,7 @@ const ABSTRACTION_PHASES = [
 
 export default function AbstractionVisualizer({ isEmbedded = false, onNext }) {
   const { theme } = useAppStore();
+  const { isAuthenticated, requireAuth } = useAuth();
   const isDark = theme === 'dark' || !theme;
   const isWarm = theme === 'warm';
 
@@ -88,6 +90,7 @@ export default function AbstractionVisualizer({ isEmbedded = false, onNext }) {
   const [logMessage, setLogMessage] = useState("Tap any button on the smartphone to execute a complex task without worrying about microchip circuitry!");
 
   const handlePhoneAction = async (actionType, title) => {
+    if (!requireAuth(null, { message: 'Please log in first to access this feature.' })) return;
     if (activeAction) return;
     setActiveAction(actionType);
     setActivePhaseId(actionType);
@@ -99,6 +102,7 @@ export default function AbstractionVisualizer({ isEmbedded = false, onNext }) {
   };
 
   const handleSelectPhase = (phaseId) => {
+    if (phaseId !== 'interface' && !requireAuth(null, { message: 'Please log in first to access this feature.' })) return;
     setActivePhaseId(phaseId);
     if (phaseId === 'takePhoto') {
       handlePhoneAction('takePhoto', 'Capture 48MP Photo');

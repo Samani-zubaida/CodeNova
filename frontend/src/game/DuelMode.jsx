@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
-import { Swords, Loader2, Trophy, AlertCircle, Play, X, User, CheckCircle2 } from 'lucide-react';
+import { Swords, Loader2, Trophy, AlertCircle, Play, X, User, CheckCircle2, Lock } from 'lucide-react';
 import useAppStore from "../store/useAppStore";
+import { useAuth } from "../context/AuthContext";
 
 export default function DuelMode({ onBack }) {
+  const { isAuthenticated, user, requireAuth } = useAuth();
   const [socket, setSocket] = useState(null);
   const [status, setStatus] = useState('lobby'); // lobby, searching, active, finished
   const [duelData, setDuelData] = useState(null);
@@ -22,8 +24,7 @@ export default function DuelMode({ onBack }) {
   const [results, setResults] = useState(null);
   
   const startTimeRef = useRef(Date.now());
-  const user = useAppStore(state => state.user);
-  const myUsername = user ? user.username : 'Guest'; // Use real user from store
+  const myUsername = user ? (user.username || user.name) : 'Guest'; // Use real user from auth context
 
   useEffect(() => {
     // Connect to Socket server
@@ -74,9 +75,10 @@ export default function DuelMode({ onBack }) {
   }, []);
 
   const joinMatchmaking = () => {
+    if (!requireAuth(null, { from: '/game', message: 'Please log in first to access this feature.' })) return;
     if (socket) {
       setStatus('searching');
-      socket.emit('join_matchmaking', { username: myUsername });
+      socket.emit('join_matchmaking', { username: user?.username || myUsername });
     }
   };
 

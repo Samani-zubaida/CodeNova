@@ -1,12 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Lock, Mail, User, ArrowRight, Eye, EyeOff, Sparkles, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
+import { useAuth } from '../context/AuthContext';
 import DevBuddy from '../components/auth/DevBuddy';
 import HoldingCardBuddy from '../components/auth/HoldingCardBuddy';
 
 export default function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isLogin, setIsLogin] = useState(() => location.state?.mode !== 'signup');
   const [formData, setFormData] = useState({ username: '', email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -35,8 +38,17 @@ export default function Auth() {
   const [mood, setMood] = useState('idle');
   const moodLockRef = useRef(false);
 
-  const navigate = useNavigate();
-  const login = useAppStore((state) => state.login);
+  const { login: authLogin } = useAuth();
+  const redirectMessage = location.state?.message;
+  const returnDestination = location.state?.from || '/oop';
+
+  useEffect(() => {
+    if (location.state?.mode === 'signup') {
+      setIsLogin(false);
+    } else if (location.state?.mode === 'login') {
+      setIsLogin(true);
+    }
+  }, [location.state?.mode]);
 
   // ── Guarded Mood Handlers ──
   const handlePasswordFocus = () => {
@@ -105,12 +117,12 @@ export default function Auth() {
       setSuccessMsg(isLogin ? 'Authentication verified! Entering universe...' : 'Identity created! Welcome to CodeNova.');
 
       if (data.token && data.user) {
-        login(data.user, data.token);
+        authLogin(data.user, data.token);
       }
 
       setTimeout(() => {
-        navigate('/game');
-      }, 1700);
+        navigate(returnDestination, { replace: true });
+      }, 1500);
     } catch (err) {
       // 4. Fail: Fire head shake, downward frown, and concerned eyebrows
       setMood('fail');
@@ -138,32 +150,30 @@ export default function Auth() {
       const res = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: 'aanmirack@example.com', password: 'password123' }),
+        body: JSON.stringify({ email: 'demo@codenova.dev', password: 'password123' }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        const demoUser = { username: 'DemoExplorer', email: 'demo@codenova.dev', xp: 2500, streak: 5 };
-        login(demoUser, 'demo_jwt_token_2026');
-      } else {
-        login(data.user, data.token);
+        throw new Error(data.message || 'Demo authentication failed.');
       }
 
+      authLogin(data.user, data.token);
       setMood('success');
-      setSuccessMsg('Demo credentials approved! Welcome to CodeNova.');
+      setSuccessMsg('Demo credentials approved! Entering CodeNova...');
 
       setTimeout(() => {
-        navigate('/game');
-      }, 1700);
-    } catch {
-      const demoUser = { username: 'DemoExplorer', email: 'demo@codenova.dev', xp: 2500, streak: 5 };
-      login(demoUser, 'demo_jwt_token_2026');
-      setMood('success');
-      setSuccessMsg('Offline demo approved! Welcome to CodeNova.');
+        navigate(returnDestination, { replace: true });
+      }, 1500);
+    } catch (err) {
+      setMood('fail');
+      setError(err.message || 'Demo login failed. Please try again.');
       setTimeout(() => {
-        navigate('/game');
-      }, 1700);
+        moodLockRef.current = false;
+        setMood('idle');
+        setIsDemoSubmitting(false);
+      }, 1800);
     }
   };
 
@@ -207,6 +217,7 @@ export default function Auth() {
         <div className="mt-2">
           <button
             type="button"
+            id="demo-login-btn"
             onClick={handleDemoLogin}
             disabled={isSubmitting || isDemoSubmitting}
             className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-[#AB526B]/20 border border-[#BCA297]/30 hover:border-[#AB526B] text-[#F4EBC3] transition-all cursor-pointer shadow-xs active:scale-95 disabled:opacity-50"
@@ -217,6 +228,14 @@ export default function Auth() {
           </button>
         </div>
       </div>
+
+      {/* Redirect / Protection Notice */}
+      {redirectMessage && !error && !successMsg && (
+        <div className="mb-3 p-2.5 rounded-xl text-xs font-semibold bg-amber-500/15 border border-amber-400/40 text-amber-200 flex items-center gap-2 animate-fadeIn shadow-sm">
+          <Lock size={14} className="text-amber-400 shrink-0" />
+          <span>{redirectMessage}</span>
+        </div>
+      )}
 
       {/* Dynamic Status Feedback Slot */}
       {(error || successMsg) && (

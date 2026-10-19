@@ -2,11 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Lock, RotateCcw, ArrowRight, Zap, Ban, CheckCircle2, Code2 } from 'lucide-react';
 import useAppStore from '../../store/useAppStore';
+import { useAuth } from '../../context/AuthContext';
 import { ENCAPSULATION_PHASES, JAVA_ENCAPSULATION_CODE } from './data/encapsulationData';
 import OopStudioWorkspace from './components/common/OopStudioWorkspace';
 
 export default function EncapsulationVisualizer({ isEmbedded = false, onNext, onReturnToCatalog }) {
   const { theme } = useAppStore();
+  const { isAuthenticated, requireAuth } = useAuth();
   const isDark = theme === 'dark' || !theme;
   const isWarm = theme === 'warm';
 
@@ -58,12 +60,15 @@ export default function EncapsulationVisualizer({ isEmbedded = false, onNext, on
   };
 
   useEffect(() => {
-    startCinematicTimeline();
+    if (isAuthenticated) {
+      startCinematicTimeline();
+    }
     return () => clearAllTimeouts();
-  }, [requestCount]);
+  }, [requestCount, isAuthenticated]);
 
   // Handle manual interactive request
   const handleTriggerManualRequest = async () => {
+    if (!requireAuth(null, { message: 'Please log in first to access this feature.' })) return;
     if (isManualRequestRunning) return;
     setIsManualRequestRunning(true);
     setPhase('requesting');
@@ -77,6 +82,7 @@ export default function EncapsulationVisualizer({ isEmbedded = false, onNext, on
   };
 
   const handleReplay = () => {
+    if (!requireAuth(null, { message: 'Please log in first to access this feature.' })) return;
     setRequestCount(prev => prev + 1);
   };
 
@@ -111,6 +117,7 @@ export default function EncapsulationVisualizer({ isEmbedded = false, onNext, on
       ]}
       activePhaseId={phase === 'responding' ? 'requesting' : phase}
       onSelectPhase={(phaseId) => {
+        if (!requireAuth(null, { message: 'Please log in first to access this feature.' })) return;
         clearAllTimeouts();
         setPhase(phaseId);
       }}

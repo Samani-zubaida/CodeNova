@@ -8,6 +8,7 @@ import { CodeModal, JAVA_CODE_FILES } from './inheritance/CodeModal';
 import { InheritanceConduits } from './inheritance/InheritanceConduits';
 import { INHERITANCE_CLASSES as CLASSES } from './data/inheritanceData';
 import useAppStore from '../../store/useAppStore';
+import { useAuth } from '../../context/AuthContext';
 import OopStudioWorkspace from './components/common/OopStudioWorkspace';
 
 const HIERARCHICAL_PHASES = [
@@ -50,6 +51,11 @@ const HIERARCHICAL_PHASES = [
 ];
 
 export default function InheritanceVisualizer({ isEmbedded = false, onNext, onReturnToCatalog }) {
+  const { theme } = useAppStore();
+  const { isAuthenticated, requireAuth } = useAuth();
+  const isDark = theme === 'dark' || !theme;
+  const isWarm = theme === 'warm';
+
   // Animation timeline state:
   // 'intro' -> 'delivering_traits' -> 'specialization' -> 'completed'
   const [phase, setPhase] = useState('intro');
@@ -96,15 +102,19 @@ export default function InheritanceVisualizer({ isEmbedded = false, onNext, onRe
   };
 
   useEffect(() => {
-    startTimeline();
+    if (isAuthenticated) {
+      startTimeline();
+    }
     return () => clearAllTimeouts();
-  }, [requestCount]);
+  }, [requestCount, isAuthenticated]);
 
   const handleReplay = () => {
+    if (!requireAuth(null, { message: 'Please log in first to access this feature.' })) return;
     setRequestCount(prev => prev + 1);
   };
 
   const handleManualTransmit = () => {
+    if (!requireAuth(null, { message: 'Please log in first to access this feature.' })) return;
     clearAllTimeouts();
     setPhase('delivering_traits');
     setHighlightedMembers(['skinTone', 'wearsGlasses', 'hairColor', 'height']);
@@ -118,6 +128,7 @@ export default function InheritanceVisualizer({ isEmbedded = false, onNext, onRe
   };
 
   const handleSelectChild = (childId) => {
+    if (!requireAuth(null, { message: 'Please log in first to access this feature.' })) return;
     clearAllTimeouts();
     setSelectedNode(childId);
     setPhase('delivering_traits');
@@ -188,10 +199,6 @@ export default function InheritanceVisualizer({ isEmbedded = false, onNext, onRe
   const isLeftConduitActive = isChild1Active || phase === 'delivering_traits' || phase === 'specialization';
   const isRightConduitActive = isChild2Active || phase === 'delivering_traits' || phase === 'specialization';
 
-  const { theme } = useAppStore();
-  const isDark = theme === 'dark' || !theme;
-  const isWarm = theme === 'warm';
-
   const containerBgClass = isDark
     ? 'bg-[#080C16] text-slate-100'
     : isWarm
@@ -221,6 +228,7 @@ export default function InheritanceVisualizer({ isEmbedded = false, onNext, onRe
         phases={HIERARCHICAL_PHASES}
         activePhaseId={phase}
         onSelectPhase={(id) => {
+          if (!requireAuth(null, { message: 'Please log in first to access this feature.' })) return;
           clearAllTimeouts();
           setPhase(id);
           if (id === 'delivering_traits') setHighlightedMembers(['skinTone', 'wearsGlasses', 'hairColor', 'height']);

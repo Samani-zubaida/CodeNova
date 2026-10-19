@@ -142,11 +142,8 @@ export default function OopOverview() {
               <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-sky-500/15 text-sky-600 dark:text-sky-400 font-mono hidden md:inline-block">40+</span>
             </button>
 
-            <button
-              onClick={() => {
-                const crypto = CATEGORIES.find(c => c.id === 'crypto');
-                if (crypto) setSelectedCat(crypto);
-              }}
+            <Link
+              to="/visualizer/crypto"
               className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0 select-none ${
                 isDark
                   ? 'bg-white/[0.05] hover:bg-white/[0.09] text-slate-300 hover:text-white border border-white/10 hover:border-rose-400/40'
@@ -158,7 +155,7 @@ export default function OopOverview() {
               <Lock size={13} className="text-[#F43F5E]" />
               <span>Cryptography</span>
               <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 font-mono hidden md:inline-block">13</span>
-            </button>
+            </Link>
           </div>
         </div>
 
@@ -299,16 +296,26 @@ export default function OopOverview() {
                   Live cryptographic engines: AES-256 Rijndael, RSA asymmetric factoring, Diffie-Hellman key exchange, SHA-256, and Enigma machine.
                 </p>
               </div>
-              <button
-                onClick={() => {
-                  const crypto = CATEGORIES.find(c => c.id === 'crypto');
-                  if (crypto) setSelectedCat(crypto);
-                }}
-                className="w-full py-2.5 px-4 rounded-xl bg-[#AB526B] hover:bg-[#8B4255] text-white text-xs font-semibold flex items-center justify-center gap-2 transition-colors shadow-md"
-              >
-                <span>Explore 13 Ciphers</span>
-                <ArrowRight size={13} />
-              </button>
+              <div className="flex gap-2">
+                <Link
+                  to="/visualizer/crypto"
+                  className="flex-1 py-2.5 px-3 rounded-xl bg-[#AB526B] hover:bg-[#8B4255] text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-md text-center"
+                >
+                  <Lock size={12} />
+                  <span>Enter Studio</span>
+                </Link>
+                <button
+                  onClick={() => {
+                    const crypto = CATEGORIES.find(c => c.id === 'crypto');
+                    if (crypto) setSelectedCat(crypto);
+                  }}
+                  className="py-2.5 px-3 rounded-xl bg-black/5 hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center justify-center gap-1 border border-black/10 dark:border-white/10 transition-colors cursor-pointer"
+                  title="Browse 13 Cipher Profiles"
+                >
+                  <span>13 Ciphers</span>
+                  <ArrowRight size={12} />
+                </button>
+              </div>
             </motion.div>
 
             {/* Card 4: Code Studio & 3D Game */}

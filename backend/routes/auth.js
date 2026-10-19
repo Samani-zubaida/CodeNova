@@ -10,6 +10,8 @@ const User = require('../models/User');
 const storage = require('../services/storage');
 const emailService = require('../services/emailService');
 const { authLimiter, verificationLimiter } = require('../middleware/rateLimiter');
+const authenticate = require('../middleware/authMiddleware');
+const { revokeToken } = authenticate;
 
 const JWT_SECRET = process.env.JWT_SECRET || 'algoverse_super_secret_jwt_key_2026';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
@@ -18,41 +20,17 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 const isDbConnected = () => mongoose.connection.readyState === 1;
 
 /**
- * Helper to validate real email addresses & reject dummy strings
+ * Helper to validate real email addresses using standard RFC format
  */
 function isValidRealEmail(email) {
   if (!email || typeof email !== 'string') return false;
   const clean = email.trim().toLowerCase();
-
-  // Basic RFC validation requiring proper domain & TLD
-  if (!validator.isEmail(clean, { allow_utf8_local_part: false, require_tld: true })) {
-    return false;
-  }
-
-  const parts = clean.split('@');
-  if (parts.length !== 2) return false;
-  const [local, domain] = parts;
-
-  // Domain structure checks
-  if (!domain || !domain.includes('.')) return false;
-  const domainParts = domain.split('.');
-  const tld = domainParts[domainParts.length - 1];
-  if (!tld || tld.length < 2) return false;
-
-  // Reject placeholder / fake domains
-  const blacklistedDomains = ['test', 'abc', 'localhost', 'invalid', 'example.com', 'test.com', 'fake.com', 'sample.com'];
-  if (blacklistedDomains.includes(domain)) return false;
-
-  // Reject placeholder local names on generic domain
-  const blacklistedLocals = ['test', 'abc', 'dummy', 'fake'];
-  if (blacklistedLocals.includes(local) && domainParts.length <= 2) return false;
-
-  return true;
+  return validator.isEmail(clean);
 }
 
 /**
  * 1. REGISTER ENDPOINT
- * Creates account with isVerified: false, hashes token, and sends verification email
+ * Creates unique account with normalized email, hashed password, and initializes user state
  */
 router.post('/register', authLimiter, async (req, res) => {
   try {
@@ -70,141 +48,125 @@ router.post('/register', authLimiter, async (req, res) => {
     }
 
     if (!isValidRealEmail(cleanEmail)) {
-      return res.status(400).json({ message: 'Invalid email format. Please provide a real email address.' });
+      return res.status(400).json({ message: 'Invalid email format. Please provide a valid email address.' });
     }
 
     if (password.length < 6) {
       return res.status(400).json({ message: 'Password must be at least 6 characters' });
     }
 
-    // Generate secure random verification token & hash
-    const rawVerificationToken = crypto.randomBytes(32).toString('hex');
-    const verificationTokenHash = crypto.createHash('sha256').update(rawVerificationToken).digest('hex');
-    const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-
-    const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(password, salt);
-
-    // ── MongoDB Persistence ──
+    // ── Check if Account Already Exists (MongoDB) ──
     if (isDbConnected()) {
       try {
         const existingEmailUser = await User.findOne({ email: cleanEmail }).maxTimeMS(2000);
         if (existingEmailUser) {
-          // If already verified, do not allow duplicate
-          if (existingEmailUser.isVerified) {
-            return res.status(400).json({ message: 'An account with this email already exists' });
-          }
-
-          // If unverified, refresh credentials & verification token
-          existingEmailUser.username = cleanUsername;
-          existingEmailUser.passwordHash = passwordHash;
-          existingEmailUser.verificationTokenHash = verificationTokenHash;
-          existingEmailUser.verificationTokenExpiry = verificationTokenExpiry;
-          await existingEmailUser.save();
-
-          const verificationLink = `${FRONTEND_URL}/verify-email?token=${rawVerificationToken}`;
-          await emailService.sendVerificationEmail({
-            to: cleanEmail,
-            username: cleanUsername,
-            verificationLink
-          });
-
-          return res.status(201).json({
-            message: 'Verification email sent! Please check your inbox to activate your account.',
-            emailSent: true,
-            email: cleanEmail
-          });
+          return res.status(400).json({ message: 'An account with this email already exists. Please log in instead.' });
         }
 
         const existingUsernameUser = await User.findOne({ username: cleanUsername }).maxTimeMS(2000);
         if (existingUsernameUser) {
           return res.status(400).json({ message: 'Username is already taken' });
         }
+      } catch (dbErr) {
+        console.warn('[Auth Register Pre-check] MongoDB error:', dbErr.message);
+      }
+    }
 
+    // ── Check if Account Already Exists (Local Persistent Storage) ──
+    const existingLocalByEmail = storage.findUserByEmail(cleanEmail);
+    if (existingLocalByEmail) {
+      return res.status(400).json({ message: 'An account with this email already exists. Please log in instead.' });
+    }
+
+    const existingLocalByName = storage.findUserByUsername(cleanUsername);
+    if (existingLocalByName) {
+      return res.status(400).json({ message: 'Username is already taken' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
+
+    let createdUser = null;
+
+    // ── 1. Create in MongoDB if connected ──
+    if (isDbConnected()) {
+      try {
         const newUser = new User({
           username: cleanUsername,
           email: cleanEmail,
           passwordHash,
-          isVerified: false,
-          verificationTokenHash,
-          verificationTokenExpiry
+          isVerified: true,
+          activityLog: [new Date().toISOString().split('T')[0]],
+          currentStreak: 1,
+          longestStreak: 1,
+          earnedBadges: [{ badgeId: 'welcome', name: 'Novice Coder' }],
+          xp: 100
         });
         await newUser.save();
-
-        const verificationLink = `${FRONTEND_URL}/verify-email?token=${rawVerificationToken}`;
-        await emailService.sendVerificationEmail({
-          to: cleanEmail,
-          username: cleanUsername,
-          verificationLink
-        });
-
-        return res.status(201).json({
-          message: 'Registration successful! Please check your email to verify your account.',
-          emailSent: true,
-          email: cleanEmail
-        });
+        createdUser = {
+          id: newUser._id.toString(),
+          _id: newUser._id.toString(),
+          username: newUser.username,
+          email: newUser.email,
+          xp: newUser.xp,
+          currentStreak: newUser.currentStreak,
+          earnedBadges: newUser.earnedBadges
+        };
       } catch (dbErr) {
-        console.warn('[Auth Register] MongoDB error, attempting local store fallback:', dbErr.message);
+        if (dbErr.code === 11000 || dbErr.message?.includes('duplicate key') || dbErr.message?.includes('already exists')) {
+          return res.status(400).json({ message: 'An account with this email already exists. Please log in instead.' });
+        }
+        console.warn('[Auth Register] MongoDB save error, attempting local store fallback:', dbErr.message);
       }
     }
 
-    // ── Local Storage Fallback ──
-    const existingByEmail = storage.findUserByEmail(cleanEmail);
-    if (existingByEmail) {
-      if (existingByEmail.isVerified) {
-        return res.status(400).json({ message: 'An account with this email already exists' });
+    // ── 2. Create in Local Storage Fallback ──
+    if (!createdUser) {
+      try {
+        createdUser = storage.createUser({
+          username: cleanUsername,
+          email: cleanEmail,
+          passwordHash
+        });
+      } catch (storageErr) {
+        if (storageErr.code === 11000 || storageErr.message?.includes('already exists')) {
+          return res.status(400).json({ message: 'An account with this email already exists. Please log in instead.' });
+        }
+        if (storageErr.code === 'USERNAME_TAKEN') {
+          return res.status(400).json({ message: 'Username is already taken' });
+        }
+        throw storageErr;
       }
-
-      // Refresh verification token for unverified local user
-      storage.updateUser(existingByEmail.id, {
-        username: cleanUsername,
-        passwordHash,
-        verificationTokenHash,
-        verificationTokenExpiry: verificationTokenExpiry.toISOString()
-      });
-
-      const verificationLink = `${FRONTEND_URL}/verify-email?token=${rawVerificationToken}`;
-      await emailService.sendVerificationEmail({
-        to: cleanEmail,
-        username: cleanUsername,
-        verificationLink
-      });
-
-      return res.status(201).json({
-        message: 'Verification email sent! Please check your inbox to activate your account.',
-        emailSent: true,
-        email: cleanEmail
-      });
     }
 
-    const existingByName = storage.findUserByUsername(cleanUsername);
-    if (existingByName) {
-      return res.status(400).json({ message: 'Username is already taken' });
-    }
+    // Automatically initialize progress for the user
+    storage.getProgress(createdUser.id || createdUser._id);
 
-    storage.createUser({
-      username: cleanUsername,
-      email: cleanEmail,
-      passwordHash,
-      isVerified: false,
-      verificationTokenHash,
-      verificationTokenExpiry: verificationTokenExpiry.toISOString()
-    });
-
-    const verificationLink = `${FRONTEND_URL}/verify-email?token=${rawVerificationToken}`;
-    await emailService.sendVerificationEmail({
-      to: cleanEmail,
-      username: cleanUsername,
-      verificationLink
-    });
+    // Issue JWT token so new user can immediately use platform
+    const token = jwt.sign(
+      { id: createdUser.id || createdUser._id, username: createdUser.username, email: createdUser.email },
+      JWT_SECRET,
+      { algorithm: 'HS256', expiresIn: '7d' }
+    );
 
     return res.status(201).json({
-      message: 'Registration successful! Please check your email to verify your account.',
-      emailSent: true,
-      email: cleanEmail
+      success: true,
+      message: 'Account created successfully! Welcome to Code Nova.',
+      token,
+      user: {
+        id: createdUser.id || createdUser._id,
+        username: createdUser.username,
+        email: createdUser.email,
+        xp: createdUser.xp || 100,
+        streak: createdUser.currentStreak || 1,
+        earnedBadges: createdUser.earnedBadges || []
+      }
     });
 
   } catch (error) {
+    if (error.code === 11000 || error.message?.includes('duplicate key') || error.message?.includes('already exists')) {
+      return res.status(400).json({ message: 'An account with this email already exists. Please log in instead.' });
+    }
     console.error('[Auth Register] Internal Error:', error);
     res.status(500).json({ message: error.message || 'Registration failed. Please try again.' });
   }
@@ -387,7 +349,7 @@ router.post('/resend-verification', verificationLimiter, async (req, res) => {
 
 /**
  * 4. LOGIN ENDPOINT
- * Enforces email format, email existence, correct password, and verified email status
+ * Normalizes email, verifies hashed password against persistent record, and issues JWT session
  */
 router.post('/login', authLimiter, async (req, res) => {
   try {
@@ -404,87 +366,76 @@ router.post('/login', authLimiter, async (req, res) => {
       return res.status(400).json({ message: 'Invalid email format' });
     }
 
+    let authenticatedUser = null;
+
     // ── 1. Try MongoDB Atlas ──
     if (isDbConnected()) {
       try {
         const user = await User.findOne({ email: cleanEmail }).maxTimeMS(2000);
 
-        if (!user) {
-          return res.status(404).json({ message: 'Email does not exist' });
-        }
-
-        const isMatch = await bcrypt.compare(password, user.passwordHash);
-        if (!isMatch) {
-          return res.status(401).json({ message: 'Incorrect password' });
-        }
-
-        // Email Verification Check (grandfather existing users whose isVerified is undefined)
-        if (user.isVerified === false) {
-          return res.status(403).json({ 
-            message: 'Email not verified. Please verify your email before logging in.',
-            emailNotVerified: true,
-            email: user.email
-          });
-        }
-
-        const token = jwt.sign(
-          { id: user._id, username: user.username, email: user.email }, 
-          JWT_SECRET, 
-          { expiresIn: '7d' }
-        );
-
-        return res.json({
-          message: 'Authentication successful',
-          token,
-          user: {
-            id: user._id,
-            username: user.username,
-            email: user.email,
-            xp: user.xp || 0,
-            streak: user.currentStreak || 0,
-            earnedBadges: user.earnedBadges || []
+        if (user) {
+          const isMatch = await bcrypt.compare(password, user.passwordHash);
+          if (isMatch) {
+            authenticatedUser = {
+              id: user._id.toString(),
+              _id: user._id.toString(),
+              username: user.username,
+              email: user.email,
+              xp: user.xp || 0,
+              currentStreak: user.currentStreak || 0,
+              earnedBadges: user.earnedBadges || []
+            };
+          } else {
+            // Generic 401 error prevents account enumeration
+            return res.status(401).json({ message: 'Invalid email or password.' });
           }
-        });
+        }
       } catch (dbErr) {
         console.warn('[Auth Login] MongoDB error, checking local store:', dbErr.message);
       }
     }
 
     // ── 2. Check Local Persistent Storage Fallback ──
-    const localUser = storage.findUserByEmail(cleanEmail);
-    if (!localUser) {
-      return res.status(404).json({ message: 'Email does not exist' });
-    }
+    if (!authenticatedUser) {
+      const localUser = storage.findUserByEmail(cleanEmail);
+      if (!localUser) {
+        // Generic 401 error prevents account enumeration
+        return res.status(401).json({ message: 'Invalid email or password.' });
+      }
 
-    const isMatch = await bcrypt.compare(password, localUser.passwordHash);
-    if (!isMatch) {
-      return res.status(401).json({ message: 'Incorrect password' });
-    }
+      const isMatch = await bcrypt.compare(password, localUser.passwordHash);
+      if (!isMatch) {
+        // Generic 401 error prevents account enumeration
+        return res.status(401).json({ message: 'Invalid email or password.' });
+      }
 
-    if (localUser.isVerified === false) {
-      return res.status(403).json({ 
-        message: 'Email not verified. Please verify your email before logging in.',
-        emailNotVerified: true,
-        email: localUser.email
-      });
+      authenticatedUser = {
+        id: localUser.id || localUser._id,
+        _id: localUser.id || localUser._id,
+        username: localUser.username,
+        email: localUser.email,
+        xp: localUser.xp || 0,
+        currentStreak: localUser.currentStreak || 0,
+        earnedBadges: localUser.earnedBadges || []
+      };
     }
 
     const token = jwt.sign(
-      { id: localUser.id || localUser._id, username: localUser.username, email: localUser.email }, 
+      { id: authenticatedUser.id, username: authenticatedUser.username, email: authenticatedUser.email }, 
       JWT_SECRET, 
-      { expiresIn: '7d' }
+      { algorithm: 'HS256', expiresIn: '7d' }
     );
 
     return res.json({
       message: 'Authentication successful',
       token,
       user: {
-        id: localUser.id || localUser._id,
-        username: localUser.username,
-        email: localUser.email,
-        xp: localUser.xp || 0,
-        streak: localUser.currentStreak || 0,
-        earnedBadges: localUser.earnedBadges || []
+        id: authenticatedUser.id,
+        username: authenticatedUser.username,
+        email: authenticatedUser.email,
+        xp: authenticatedUser.xp,
+        streak: authenticatedUser.currentStreak,
+        earnedBadges: authenticatedUser.earnedBadges
       }
     });
 
@@ -496,23 +447,20 @@ router.post('/login', authLimiter, async (req, res) => {
 
 /**
  * 5. CURRENT USER ENDPOINT
- * Sanitizes sensitive fields before returning user data
+ * Sanitizes sensitive fields before returning user data (Protected)
  */
-router.get('/me', async (req, res) => {
-  const token = req.headers.authorization?.split(' ')[1];
-  if (!token) return res.status(401).json({ message: 'No token provided' });
-
+router.get('/me', authenticate, async (req, res) => {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    
+    const userId = req.user.id || req.user._id;
+
     if (isDbConnected()) {
       try {
-        const user = await User.findById(decoded.id).select('-passwordHash -verificationTokenHash -verificationTokenExpiry');
+        const user = await User.findById(userId).select('-passwordHash -verificationTokenHash -verificationTokenExpiry');
         if (user) return res.json(user);
       } catch (e) {}
     }
 
-    const localUser = storage.findUserById(decoded.id);
+    const localUser = storage.findUserById(userId);
     if (localUser) {
       const { passwordHash, verificationTokenHash, verificationTokenExpiry, ...safeUser } = localUser;
       return res.json(safeUser);
@@ -520,8 +468,22 @@ router.get('/me', async (req, res) => {
 
     return res.status(404).json({ message: 'User not found' });
   } catch (err) {
-    return res.status(401).json({ message: 'Invalid or expired token' });
+    return res.status(500).json({ message: 'Error retrieving user profile' });
   }
+});
+
+/**
+ * 6. LOGOUT ENDPOINT (Protected)
+ * Revokes the current session JWT token on the server
+ */
+router.post('/logout', authenticate, (req, res) => {
+  if (req.token) {
+    revokeToken(req.token);
+  }
+  return res.json({ 
+    success: true, 
+    message: 'Logged out successfully. Session invalidated.' 
+  });
 });
 
 module.exports = router;

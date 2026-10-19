@@ -319,7 +319,7 @@ export default function CryptoHub({ defaultAlgo }) {
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#FAF7F2] dark:bg-[#331921] text-[#2D1F23] dark:text-[#F4EBC3] flex flex-col font-sans transition-colors duration-300">
+    <div className="w-full h-full min-h-[calc(100vh-64px)] bg-[#FAF7F2] dark:bg-[#331921] text-[#2D1F23] dark:text-[#F4EBC3] flex flex-col font-sans transition-colors duration-300">
       
       {/* Top Header & Command Bar */}
       <header className="h-16 px-4 md:px-8 border-b border-[#BCA297]/30 dark:border-[#5C4E49] bg-white/85 dark:bg-[#423834]/90 backdrop-blur-md flex items-center justify-between z-30 sticky top-0 shadow-sm">

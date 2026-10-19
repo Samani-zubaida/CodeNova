@@ -17,25 +17,50 @@ const aiRoutes = require('./routes/ai');
 
 const app = express();
 
-const allowedOrigins = [
-  process.env.FRONTEND_URL || 'http://localhost:5173',
-  'http://127.0.0.1:5173',
-  'http://localhost:5173'
-];
+app.set('trust proxy', 1);
 
-app.use(cors({
+const configuredFrontend = (process.env.FRONTEND_URL || '').replace(/\/+$/, '');
+
+const exactAllowedOrigins = new Set([
+  'https://code-nova-ashen.vercel.app',
+  'https://code-nova.vercel.app',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'http://localhost:4173',
+  'http://127.0.0.1:4173',
+]);
+
+if (configuredFrontend) {
+  exactAllowedOrigins.add(configuredFrontend);
+}
+
+const isOriginAllowed = (origin) => {
+  // Allow non-browser requests (e.g. curl, tests, mobile, server-to-server)
+  if (!origin) return true;
+  const normalized = origin.toLowerCase().replace(/\/+$/, '');
+  if (exactAllowedOrigins.has(normalized)) return true;
+  // Allow Code Nova Vercel preview and deployment branch domains
+  if (/^https:\/\/code-nova[\w-]*\.vercel\.app$/.test(normalized)) return true;
+  return false;
+};
+
+const corsOptions = {
   origin: (origin, callback) => {
-    // Allow non-browser requests (e.g. curl, tests, mobile) or registered origins
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (isOriginAllowed(origin)) {
       callback(null, true);
     } else {
-      callback(new Error('Blocked by CORS policy: Origin not allowed'));
+      callback(null, false);
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '1mb' }));
 
 // MongoDB connection
@@ -72,13 +97,30 @@ app.get('/', (req, res) => {
   res.send('Code Nova API is running');
 });
 
+// Centralized error handler ensuring CORS headers and JSON format
+app.use((err, req, res, next) => {
+  console.error('[Server Error]:', err.message || err);
+  if (res.headersSent) {
+    return next(err);
+  }
+  res.status(err.status || 500).json({
+    message: err.message || 'Internal Server Error'
+  });
+});
+
 const http = require('http');
 const { Server } = require('socket.io');
 
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      if (isOriginAllowed(origin)) {
+        callback(null, true);
+      } else {
+        callback(null, false);
+      }
+    },
     methods: ['GET', 'POST'],
     credentials: true
   }

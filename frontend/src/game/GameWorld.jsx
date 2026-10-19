@@ -7,6 +7,9 @@ import CompetitionModal from './CompetitionModal';
 import ActivityHeatmap from './ActivityHeatmap';
 import useAppStore from "../store/useAppStore.js";
 import { useAuth } from "../context/AuthContext";
+import * as dsaService from "../services/dsaService";
+import * as competitionService from "../services/competitionService";
+import * as userService from "../services/userService";
 
 export default function GameWorld() {
   const navigate = useNavigate();
@@ -32,33 +35,24 @@ export default function GameWorld() {
 
     const fetchData = async () => {
       try {
-        const publicPromises = [
-          fetch('http://localhost:5000/api/levels/meta/subjects'),
-          fetch('http://localhost:5000/api/dashboard/leaderboard'),
-          fetch('http://localhost:5000/api/dashboard/competitions')
-        ];
-
-        const [subRes, leadRes, compRes] = await Promise.all(publicPromises);
+        const [subjectsData, leaderboardData, competitionsData] = await Promise.all([
+          dsaService.getSubjectsMeta(),
+          competitionService.getGlobalLeaderboard(),
+          competitionService.getCompetitions()
+        ]);
         
         if (isMounted) {
-          if (subRes.ok) setSubjects(await subRes.json());
-          if (leadRes.ok) setLeaderboard(await leadRes.json());
-          if (compRes.ok) setCompetitions(await compRes.json());
+          setSubjects(subjectsData);
+          setLeaderboard(leaderboardData);
+          setCompetitions(competitionsData);
         }
 
         // Only record user activity and fetch user profile when authenticated with valid token
         if (token && isAuthenticated) {
           try {
-            const actRes = await fetch('http://localhost:5000/api/users/record-activity', {
-              method: 'POST',
-              headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-              },
-              body: JSON.stringify({ username: user?.username || 'Explorer' })
-            });
-            if (actRes.ok && isMounted) {
-              setUserProfile(await actRes.json());
+            const profileData = await userService.recordActivity(user?.username || 'Explorer');
+            if (isMounted) {
+              setUserProfile(profileData);
             }
           } catch (actErr) {
             console.warn("Could not record activity:", actErr.message);
@@ -77,9 +71,9 @@ export default function GameWorld() {
 
     const interval = setInterval(async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/dashboard/leaderboard");
-        if (res.ok && isMounted) {
-          setLeaderboard(await res.json());
+        const liveLeaderboard = await competitionService.getGlobalLeaderboard();
+        if (isMounted) {
+          setLeaderboard(liveLeaderboard);
         }
       } catch(e) {}
     }, 5000);

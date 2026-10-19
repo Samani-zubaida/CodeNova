@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Sparkles, Code2, Clock, Calendar } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import * as competitionService from '../services/competitionService';
 
 export default function HostDashboard() {
   const navigate = useNavigate();
@@ -25,21 +26,16 @@ export default function HostDashboard() {
     setGenerating(true);
     try {
       const q = questions[index];
-      const res = await fetch('http://localhost:5000/api/competitions/generate-tests', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({ description: q.description, solution: q.initialCode })
+      const data = await competitionService.generateTests({
+        description: q.description,
+        solution: q.initialCode,
       });
-      const data = await res.json();
       
       const newQs = [...questions];
       newQs[index].testCases = data.testCases;
       setQuestions(newQs);
     } catch (err) {
-      console.error(err);
+      console.error('Failed to generate tests:', err);
     } finally {
       setGenerating(false);
     }
@@ -51,26 +47,17 @@ export default function HostDashboard() {
       const start = new Date(`${startDate}T${startTime}`);
       const end = new Date(start.getTime() + durationMins * 60000);
 
-      const res = await fetch('http://localhost:5000/api/competitions/create', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({
-          title,
-          hostOrg: orgName,
-          startTime: start,
-          endTime: end,
-          questions
-        })
+      await competitionService.createCompetition({
+        title,
+        hostOrg: orgName,
+        startTime: start,
+        endTime: end,
+        questions,
       });
 
-      if (res.ok) {
-        navigate('/game');
-      }
+      navigate('/game');
     } catch (err) {
-      console.error(err);
+      console.error('Failed to create competition:', err);
     } finally {
       setLoading(false);
     }

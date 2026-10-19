@@ -3,6 +3,7 @@ import { io } from 'socket.io-client';
 import { Swords, Loader2, Trophy, AlertCircle, Play, X, User, CheckCircle2, Lock } from 'lucide-react';
 import useAppStore from "../store/useAppStore";
 import { useAuth } from "../context/AuthContext";
+import { createDuelSocket } from "../services/socketService";
 
 export default function DuelMode({ onBack }) {
   const { isAuthenticated, user, requireAuth } = useAuth();
@@ -28,7 +29,7 @@ export default function DuelMode({ onBack }) {
 
   useEffect(() => {
     // Connect to Socket server
-    const newSocket = io('http://localhost:5000');
+    const newSocket = createDuelSocket();
     setSocket(newSocket);
 
     // Socket Event Listeners
@@ -86,7 +87,7 @@ export default function DuelMode({ onBack }) {
     // In a real app we'd emit 'leave_matchmaking', for now just reset socket or state
     setStatus('lobby');
     socket.disconnect();
-    const newSocket = io('http://localhost:5000');
+    const newSocket = createDuelSocket();
     setSocket(newSocket);
   };
 

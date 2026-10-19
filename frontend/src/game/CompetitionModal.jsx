@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Play, Trophy, Users, Clock, Calendar } from 'lucide-react';
-import useAppStore from "../store/useAppStore.js"
+import useAppStore from "../store/useAppStore.js";
+import * as competitionService from "../services/competitionService";
 
 export default function CompetitionModal({ comp, onClose, onEnter }) {
   const [leaderboard, setLeaderboard] = useState([]);
@@ -10,13 +11,12 @@ export default function CompetitionModal({ comp, onClose, onEnter }) {
 
   const fetchLeaderboard = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/competitions/${comp._id}/leaderboard`);
-      const data = await res.json();
+      const data = await competitionService.getCompetitionLeaderboard(comp._id);
       setLeaderboard(data.participants || []);
       setEnrollmentCount(data.enrollmentCount || 0);
       setLoading(false);
     } catch (e) {
-      console.error(e);
+      console.error('Failed to fetch competition leaderboard:', e);
     }
   };
 
@@ -102,7 +102,7 @@ export default function CompetitionModal({ comp, onClose, onEnter }) {
                 {isActive ? (
                   <button onClick={() => {
                       // Trigger enroll endpoint in the background before entering
-                      fetch(`http://localhost:5000/api/competitions/${comp._id}/enroll`, { method: 'POST' }).catch(console.error);
+                      competitionService.enrollInCompetition(comp._id).catch(console.error);
                       onEnter(comp);
                   }} className="w-full bg-[#C5CEAE] hover:bg-[#F0E2A4] text-[#121212] font-black py-3 rounded-lg flex items-center justify-center gap-2 transition-colors">
                     <Play size={18} /> ENTER COMPETITION

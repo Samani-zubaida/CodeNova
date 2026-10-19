@@ -3,6 +3,10 @@ import { ArrowLeft, Play, CheckCircle2, AlertCircle, TerminalSquare, BookOpen, T
 import Editor from '@monaco-editor/react';
 import useAppStore from "../store/useAppStore.js";
 import { useAuth } from "../context/AuthContext";
+import * as dsaService from "../services/dsaService";
+import * as aiService from "../services/aiService";
+import * as userService from "../services/userService";
+import * as competitionService from "../services/competitionService";
 
 const AESVisualizer = React.lazy(() => import('../visualizers/crypto/AESVisualizer'));
 const CaesarVisualizer = React.lazy(() => import('../visualizers/crypto/CaesarCipherVisualizer'));
@@ -51,16 +55,7 @@ export default function QuizRunner({ subject, levelId, competitionData, onBack, 
       }
       setLoading(false);
     } else {
-      fetch(`http://localhost:5000/api/levels/${subject}/${levelId}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        }
-      })
-        .then(res => {
-          if (!res.ok) throw new Error('Failed to fetch level data');
-          return res.json();
-        })
+      dsaService.getLevelQuestions(subject, levelId)
         .then(data => {
           setQuestions(data);
           if (data[0]?.type === 'code-editor') {
@@ -69,7 +64,7 @@ export default function QuizRunner({ subject, levelId, competitionData, onBack, 
           setLoading(false);
         })
         .catch(err => {
-          setError(err.message);
+          setError(err.message || 'Failed to fetch level data');
           setLoading(false);
         });
     }
@@ -160,19 +155,10 @@ export default function QuizRunner({ subject, levelId, competitionData, onBack, 
     setHintText(null);
     try {
       const currentQ = questions[currentIndex];
-      const res = await fetch('http://localhost:5000/api/ai/hint', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({
-          username: user ? user.username : 'Guest',
-          questionText: currentQ.question,
-          options: currentQ.options || []
-        })
+      const data = await aiService.getAIHint({
+        questionText: currentQ.question,
+        options: currentQ.options || [],
       });
-      const data = await res.json();
       if (data.success) {
         setHintText(data.hint);
       } else {
@@ -208,33 +194,19 @@ export default function QuizRunner({ subject, levelId, competitionData, onBack, 
           
           // Award Badge if they got some XP
           if (earnedXP > 0) {
-            fetch(`http://localhost:5000/api/users/award-badge`, {
-              method: 'POST',
-              headers: { 
-                'Content-Type': 'application/json',
-                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-              },
-              body: JSON.stringify({ 
-                username: user ? user.username : 'Guest', 
-                badgeId: `${subject}-level-${levelId}`,
-                badgeName: `${subject.toUpperCase()} Master Level ${levelId}`
-              })
+            userService.awardBadge({ 
+              username: user ? user.username : 'Guest', 
+              badgeId: `${subject}-level-${levelId}`,
+              badgeName: `${subject.toUpperCase()} Master Level ${levelId}`
             }).catch(e => console.error("Badge award failed:", e));
           }
         }
         setIsLevelComplete(true);
         if (competitionData) {
-          fetch(`http://localhost:5000/api/competitions/${competitionData._id}/submit-score`, {
-            method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-            },
-            body: JSON.stringify({ 
-              username: user ? user.username : 'Guest', 
-              score: earnedXP,
-              timeTakenMs: Date.now() - startTimeRef.current
-            })
+          competitionService.submitCompetitionScore(competitionData._id, { 
+            username: user ? user.username : 'Guest', 
+            score: earnedXP, 
+            timeTakenMs: Date.now() - startTimeRef.current
           }).catch(e => console.error("Score submission failed:", e));
         }
       }

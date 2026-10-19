@@ -1,6 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation, Navigate, Outlet } from 'react-router-dom';
 import useAppStore from '../store/useAppStore';
+import * as authService from '../services/authService';
+import {
+  getAuthToken,
+  setAuthToken,
+  getStoredUser,
+  setStoredUser,
+  clearAuthStorage,
+} from '../utils/tokenStorage';
 
 const AuthContext = createContext(null);
 
@@ -9,62 +17,40 @@ export const AuthProvider = ({ children }) => {
   const location = useLocation();
 
   // Sync with zustand store
-  const storeUser = useAppStore(state => state.user);
-  const storeToken = useAppStore(state => state.token);
-  const storeLogin = useAppStore(state => state.login);
-  const storeLogout = useAppStore(state => state.logout);
+  const storeLogin = useAppStore((state) => state.login);
+  const storeLogout = useAppStore((state) => state.logout);
 
-  const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('nova_user');
-    try {
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [user, setUser] = useState(() => getStoredUser());
+  const [token, setToken] = useState(() => getAuthToken());
 
-  const [token, setToken] = useState(() => {
-    return localStorage.getItem('nova_token') || localStorage.getItem('token') || null;
-  });
-
-  // Critical: Start with isLoading true if token exists to validate session with backend
-  const [isLoading, setIsLoading] = useState(() => {
-    const existingToken = localStorage.getItem('nova_token') || localStorage.getItem('token');
-    return Boolean(existingToken);
-  });
+  // Start with isLoading true if token exists to validate session with backend
+  const [isLoading, setIsLoading] = useState(() => Boolean(getAuthToken()));
 
   // Track if backend has confirmed authentication
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Synchronize login state
-  const login = useCallback((userData, jwtToken) => {
-    localStorage.setItem('nova_user', JSON.stringify(userData));
-    localStorage.setItem('nova_token', jwtToken);
-    localStorage.setItem('token', jwtToken); // backward compatibility
-    setUser(userData);
-    setToken(jwtToken);
-    setIsAuthenticated(true);
-    setIsLoading(false);
-    storeLogin(userData, jwtToken);
-  }, [storeLogin]);
+  const login = useCallback(
+    (userData, jwtToken) => {
+      setStoredUser(userData);
+      setAuthToken(jwtToken);
+      setUser(userData);
+      setToken(jwtToken);
+      setIsAuthenticated(true);
+      setIsLoading(false);
+      storeLogin(userData, jwtToken);
+    },
+    [storeLogin]
+  );
 
   // Synchronize logout state & invalidate token on server
   const logout = useCallback(async () => {
-    const currentToken = localStorage.getItem('nova_token') || localStorage.getItem('token');
-    if (currentToken) {
-      try {
-        await fetch('http://localhost:5000/api/auth/logout', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${currentToken}`,
-            'Content-Type': 'application/json'
-          }
-        }).catch(() => {});
-      } catch (e) {}
+    try {
+      await authService.logout();
+    } catch {
+      // Continue client cleanup even if network fails
     }
-    localStorage.removeItem('nova_user');
-    localStorage.removeItem('nova_token');
-    localStorage.removeItem('token');
+    clearAuthStorage();
     setUser(null);
     setToken(null);
     setIsAuthenticated(false);
@@ -75,7 +61,7 @@ export const AuthProvider = ({ children }) => {
 
   // Validate session against backend on mount or token change
   useEffect(() => {
-    const activeToken = localStorage.getItem('nova_token') || localStorage.getItem('token');
+    const activeToken = getAuthToken();
 
     if (!activeToken) {
       setUser(null);
@@ -90,35 +76,28 @@ export const AuthProvider = ({ children }) => {
 
     const validateSession = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/auth/me', {
-          headers: {
-            'Authorization': `Bearer ${activeToken}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (res.ok) {
-          const verifiedUser = await res.json();
-          if (isMounted) {
-            setUser(verifiedUser);
-            setToken(activeToken);
-            setIsAuthenticated(true);
-            setIsLoading(false);
-            storeLogin(verifiedUser, activeToken);
-          }
-        } else {
+        const verifiedUser = await authService.getCurrentUser();
+        if (isMounted) {
+          setUser(verifiedUser);
+          setToken(activeToken);
+          setIsAuthenticated(true);
+          setIsLoading(false);
+          storeLogin(verifiedUser, activeToken);
+        }
+      } catch (err) {
+        if (err.response?.status === 401 || err.response?.status === 403) {
           // Token is invalid, expired, or rejected by server
-          console.warn('[Auth] Session validation failed (status:', res.status, '). Invalidating session.');
+          console.warn('[Auth] Session validation rejected. Invalidating session.');
           if (isMounted) {
             logout();
           }
-        }
-      } catch (err) {
-        console.warn('[Auth] Session validation network error:', err.message);
-        // If server is unreachable, we do not mark as authenticated without server verification
-        if (isMounted) {
-          setIsLoading(false);
-          setIsAuthenticated(false);
+        } else {
+          console.warn('[Auth] Session validation network error:', err.message);
+          // If server is unreachable, we do not mark as authenticated without verification
+          if (isMounted) {
+            setIsLoading(false);
+            setIsAuthenticated(false);
+          }
         }
       }
     };
@@ -128,39 +107,36 @@ export const AuthProvider = ({ children }) => {
     return () => {
       isMounted = false;
     };
-  }, [login, logout, storeLogin, storeLogout]);
+  }, [logout, storeLogin, storeLogout]);
 
   /**
    * Centralized access-control action guard.
    * If authenticated: invokes actionCallback().
    * If not authenticated: intercepts interaction and navigates to /auth with return destination and message.
-   *
-   * @param {Function} [actionCallback] - Function to execute if authorized
-   * @param {Object} [options] - Optional redirect configuration
-   * @param {string} [options.from] - Custom return URL (defaults to current path + search)
-   * @param {string} [options.message] - Custom notification message
-   * @returns {boolean} Whether user was authenticated and action executed
    */
-  const requireAuth = useCallback((actionCallback, options = {}) => {
-    if (isAuthenticated) {
-      if (typeof actionCallback === 'function') {
-        actionCallback();
+  const requireAuth = useCallback(
+    (actionCallback, options = {}) => {
+      if (isAuthenticated) {
+        if (typeof actionCallback === 'function') {
+          actionCallback();
+        }
+        return true;
       }
-      return true;
-    }
 
-    const currentDestination = options.from || (location.pathname + location.search);
-    const message = options.message || 'Please log in first to access this feature.';
+      const currentDestination = options.from || (location.pathname + location.search);
+      const message = options.message || 'Please log in first to access this feature.';
 
-    navigate('/auth', {
-      state: {
-        from: currentDestination,
-        message: message
-      }
-    });
+      navigate('/auth', {
+        state: {
+          from: currentDestination,
+          message,
+        },
+      });
 
-    return false;
-  }, [isAuthenticated, location, navigate]);
+      return false;
+    },
+    [isAuthenticated, location, navigate]
+  );
 
   const value = {
     user,
@@ -169,14 +145,10 @@ export const AuthProvider = ({ children }) => {
     isLoading,
     login,
     logout,
-    requireAuth
+    requireAuth,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
@@ -188,7 +160,7 @@ export const useAuth = () => {
 };
 
 /**
- * Route-level guard for strictly private routes (e.g. host / management dashboards)
+ * Route-level guard for strictly private routes
  */
 export const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -207,13 +179,13 @@ export const ProtectedRoute = ({ children }) => {
 
   if (!isAuthenticated) {
     return (
-      <Navigate 
-        to="/auth" 
-        state={{ 
-          from: location.pathname + location.search, 
-          message: 'Please log in first to access this feature.' 
-        }} 
-        replace 
+      <Navigate
+        to="/auth"
+        state={{
+          from: location.pathname + location.search,
+          message: 'Please log in first to access this feature.',
+        }}
+        replace
       />
     );
   }

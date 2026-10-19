@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer';
 
-const BASE_FRONTEND = 'http://localhost:5173';
-const BASE_BACKEND = 'http://localhost:5000';
+const BASE_FRONTEND = process.env.FRONTEND_URL || 'http://localhost:5173';
+const BASE_BACKEND = process.env.VITE_API_URL || 'http://localhost:5000';
 
 async function testBackendApis() {
   console.log('\n--- 1. Testing Backend API Security Directly ---');

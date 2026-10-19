@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { CheckCircle2, AlertCircle, Loader2, ArrowRight, Mail, Sparkles } from 'lucide-react';
+import * as authService from '../services/authService';
+import { extractErrorMessage } from '../utils/formatters';
 
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
@@ -22,19 +24,12 @@ export default function VerifyEmail() {
 
     const verifyToken = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/auth/verify-email?token=${encodeURIComponent(token)}`);
-        const data = await res.json();
-
-        if (res.ok) {
-          setStatus('success');
-          setMessage(data.message || 'Email verified successfully! Your CodeNova account is now active.');
-        } else {
-          setStatus('error');
-          setMessage(data.message || 'Verification link is invalid or has expired.');
-        }
+        const data = await authService.verifyEmail(token);
+        setStatus('success');
+        setMessage(data.message || 'Email verified successfully! Your CodeNova account is now active.');
       } catch (err) {
         setStatus('error');
-        setMessage('Failed to connect to verification server. Please ensure the backend is running.');
+        setMessage(extractErrorMessage(err, 'Verification link is invalid or has expired.'));
       }
     };
 
@@ -49,20 +44,16 @@ export default function VerifyEmail() {
     setResendStatus('');
 
     try {
-      const res = await fetch('http://localhost:5000/api/auth/resend-verification', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: resendEmail.trim() })
+      const data = await authService.resendVerification(resendEmail);
+      setResendStatus({
+        type: 'success',
+        text: data.message || 'New verification email sent! Check your inbox.',
       });
-
-      const data = await res.json();
-      if (res.ok) {
-        setResendStatus({ type: 'success', text: data.message || 'New verification email sent! Check your inbox.' });
-      } else {
-        setResendStatus({ type: 'error', text: data.message || 'Failed to resend verification link.' });
-      }
     } catch (err) {
-      setResendStatus({ type: 'error', text: 'Network error. Please try again.' });
+      setResendStatus({
+        type: 'error',
+        text: extractErrorMessage(err, 'Failed to resend verification link.'),
+      });
     } finally {
       setIsResending(false);
     }
@@ -164,7 +155,13 @@ export default function VerifyEmail() {
               </form>
 
               {resendStatus && (
-                <div className={`mt-2 p-2 rounded-lg text-[11px] font-medium ${resendStatus.type === 'success' ? 'bg-[#C5CEAE]/20 text-[#C5CEAE] border border-[#C5CEAE]/40' : 'bg-[#AB526B]/20 text-[#fca5a5] border border-[#AB526B]/40'}`}>
+                <div
+                  className={`mt-2 p-2 rounded-lg text-[11px] font-medium ${
+                    resendStatus.type === 'success'
+                      ? 'bg-[#C5CEAE]/20 text-[#C5CEAE] border border-[#C5CEAE]/40'
+                      : 'bg-[#AB526B]/20 text-[#fca5a5] border border-[#AB526B]/40'
+                  }`}
+                >
                   {resendStatus.text}
                 </div>
               )}

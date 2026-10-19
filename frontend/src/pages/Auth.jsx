@@ -1,23 +1,28 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { Lock, Mail, User, ArrowRight, Eye, EyeOff, Sparkles, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
-import useAppStore from '../store/useAppStore';
-import { useAuth } from '../context/AuthContext';
 import DevBuddy from '../components/auth/DevBuddy';
 import HoldingCardBuddy from '../components/auth/HoldingCardBuddy';
+import useAuthForm from '../hooks/useAuthForm';
 
 export default function Auth() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [isLogin, setIsLogin] = useState(() => location.state?.mode !== 'signup');
-  const [formData, setFormData] = useState({ username: '', email: '', password: '' });
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDemoSubmitting, setIsDemoSubmitting] = useState(false);
-  const [unverifiedEmail, setUnverifiedEmail] = useState('');
-  const [isResending, setIsResending] = useState(false);
+  const {
+    isLogin,
+    setIsLogin,
+    formData,
+    handleInputChange,
+    showPassword,
+    toggleShowPassword,
+    error,
+    successMsg,
+    isSubmitting,
+    isDemoSubmitting,
+    mood,
+    handlePasswordFocus,
+    handlePasswordBlur,
+    handleSubmit,
+    handleDemoLogin,
+    redirectMessage,
+  } = useAuthForm();
 
   // Responsive Breakpoint: Trigger the "Holding the Card" fused pose on all viewports
   // where the buddy cannot be cleanly aligned horizontally side-by-side (< 1024px width OR < 680px height)
@@ -34,151 +39,8 @@ export default function Auth() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Character Mood State Machine: 'idle' | 'thinking' | 'peek' | 'success' | 'fail' | 'missing_input'
-  const [mood, setMood] = useState('idle');
-  const moodLockRef = useRef(false);
-
-  const { login: authLogin } = useAuth();
-  const redirectMessage = location.state?.message;
-  const returnDestination = location.state?.from || '/oop';
-
-  useEffect(() => {
-    if (location.state?.mode === 'signup') {
-      setIsLogin(false);
-    } else if (location.state?.mode === 'login') {
-      setIsLogin(true);
-    }
-  }, [location.state?.mode]);
-
-  // ── Guarded Mood Handlers ──
-  const handlePasswordFocus = () => {
-    if (moodLockRef.current) return;
-    setMood('peek');
-  };
-
-  const handlePasswordBlur = () => {
-    if (moodLockRef.current) return;
-    setMood('idle');
-  };
-
-  // ── Form Submission with Multi-Emotion Handling ──
-  const handleSubmit = async (e) => {
-    if (e) e.preventDefault();
-    if (isSubmitting || isDemoSubmitting || moodLockRef.current) return;
-
-    // 1. Missing Input Prompt Handling
-    if (!formData.email.trim() || !formData.password || (!isLogin && !formData.username.trim())) {
-      moodLockRef.current = true;
-      setMood('missing_input');
-
-      if (!isLogin && !formData.username.trim()) {
-        setError('Please designate a developer handle.');
-      } else if (!formData.email.trim()) {
-        setError('Please enter your email designation.');
-      } else {
-        setError('Please enter your passcode.');
-      }
-
-      setTimeout(() => {
-        moodLockRef.current = false;
-        setMood('idle');
-      }, 1800);
-      return;
-    }
-
-    setError('');
-    setSuccessMsg('');
-    setIsSubmitting(true);
-
-    // 2. Lock mood to 'thinking' during request
-    moodLockRef.current = true;
-    setMood('thinking');
-
-    const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
-    const payload = isLogin
-      ? { email: formData.email.trim(), password: formData.password }
-      : { username: formData.username.trim(), email: formData.email.trim(), password: formData.password };
-
-    try {
-      const res = await fetch(`http://localhost:5000${endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || 'Authentication failed. Please check credentials.');
-      }
-
-      // 3. Success: Fire celebratory bounce, smile, and thumbs-up
-      setMood('success');
-      setSuccessMsg(isLogin ? 'Authentication verified! Entering universe...' : 'Identity created! Welcome to CodeNova.');
-
-      if (data.token && data.user) {
-        authLogin(data.user, data.token);
-      }
-
-      setTimeout(() => {
-        navigate(returnDestination, { replace: true });
-      }, 1500);
-    } catch (err) {
-      // 4. Fail: Fire head shake, downward frown, and concerned eyebrows
-      setMood('fail');
-      setError(err.message || 'Authentication failed. Check your credentials.');
-
-      setTimeout(() => {
-        moodLockRef.current = false;
-        setMood('idle');
-        setIsSubmitting(false);
-      }, 1800);
-    }
-  };
-
-  // ── 1-Click Instant Demo Login ──
-  const handleDemoLogin = async () => {
-    if (isSubmitting || isDemoSubmitting || moodLockRef.current) return;
-
-    setError('');
-    setSuccessMsg('');
-    setIsDemoSubmitting(true);
-    moodLockRef.current = true;
-    setMood('thinking');
-
-    try {
-      const res = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: 'demo@codenova.dev', password: 'password123' }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || 'Demo authentication failed.');
-      }
-
-      authLogin(data.user, data.token);
-      setMood('success');
-      setSuccessMsg('Demo credentials approved! Entering CodeNova...');
-
-      setTimeout(() => {
-        navigate(returnDestination, { replace: true });
-      }, 1500);
-    } catch (err) {
-      setMood('fail');
-      setError(err.message || 'Demo login failed. Please try again.');
-      setTimeout(() => {
-        moodLockRef.current = false;
-        setMood('idle');
-        setIsDemoSubmitting(false);
-      }, 1800);
-    }
-  };
-
   // Reusable Dark Glassmorphic Login Card (Guaranteed Dark Theme & High Contrast)
-  const renderCard = (isHeldMode = false) => (
+  const renderCard = () => (
     <div
       className="auth-glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-5 relative overflow-hidden transition-all duration-300 w-full"
       style={{
@@ -267,7 +129,7 @@ export default function Auth() {
               type="text"
               required
               value={formData.username}
-              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              onChange={(e) => handleInputChange('username', e.target.value)}
               className="auth-glass-input w-full h-9 sm:h-10 rounded-xl px-3 text-white text-xs sm:text-sm"
               placeholder="e.g. CodeArchitect"
             />
@@ -282,7 +144,7 @@ export default function Auth() {
           <input
             type="email"
             value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            onChange={(e) => handleInputChange('email', e.target.value)}
             className="auth-glass-input w-full h-9 sm:h-10 rounded-xl px-3 text-white text-xs sm:text-sm"
             placeholder="developer@codenova.dev"
           />
@@ -296,7 +158,7 @@ export default function Auth() {
             </label>
             <button
               type="button"
-              onClick={() => setShowPassword(!showPassword)}
+              onClick={toggleShowPassword}
               className="text-[11px] text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer transition-colors"
               title={showPassword ? 'Hide passcode' : 'Show passcode'}
             >
@@ -307,7 +169,7 @@ export default function Auth() {
           <input
             type={showPassword ? 'text' : 'password'}
             value={formData.password}
-            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            onChange={(e) => handleInputChange('password', e.target.value)}
             onFocus={handlePasswordFocus}
             onBlur={handlePasswordBlur}
             className="auth-glass-input w-full h-9 sm:h-10 rounded-xl px-3 text-white text-xs sm:text-sm"
@@ -336,15 +198,10 @@ export default function Auth() {
       {/* Footer Mode Switcher */}
       <div className="mt-2.5 pt-2 border-t border-white/10 text-center">
         <p className="text-slate-400 text-xs">
-          {isLogin ? "No identity yet?" : 'Already registered?'}{' '}
+          {isLogin ? 'No identity yet?' : 'Already registered?'}{' '}
           <button
             type="button"
-            onClick={() => {
-              setIsLogin(!isLogin);
-              setError('');
-              setSuccessMsg('');
-              setUnverifiedEmail('');
-            }}
+            onClick={() => setIsLogin(!isLogin)}
             className="text-[#C5CEAE] hover:text-white font-bold hover:underline cursor-pointer ml-1 transition-colors"
           >
             {isLogin ? 'Create One Here' : 'Sign In Instead'}
@@ -359,27 +216,26 @@ export default function Auth() {
       className="fixed inset-0 w-full h-[100dvh] overflow-hidden flex items-center justify-center p-2 sm:p-4 relative select-none text-[#F4EBC3] font-sans selection:bg-[#AB526B] selection:text-white"
       style={{ backgroundColor: '#0A0A0A' }}
     >
-      {/* ── AMBIENT BACKGROUND GLOWS (Fixed in Viewport) ── */}
+      {/* Ambient background glows */}
       <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] max-w-[600px] max-h-[600px] bg-[#AB526B] rounded-full blur-[160px] opacity-15 pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] max-w-[600px] max-h-[600px] bg-[#7928CA] rounded-full blur-[170px] opacity-15 pointer-events-none" />
       <div className="absolute top-[40%] right-[30%] w-[35vw] h-[35vw] max-w-[450px] max-h-[450px] bg-[#C5CEAE] rounded-full blur-[180px] opacity-8 pointer-events-none" />
 
-      {/* ── ADAPTIVE FIXED LAYOUT ── */}
+      {/* Adaptive fixed layout */}
       {isHeldCardLayout ? (
-        /* MOBILE / TABLET / SHORT-SCREEN: Fused "Holding the Card" Full-Body Layout */
+        /* Mobile / Tablet / Short screen */
         <div className="w-full max-w-[360px] mx-auto flex flex-col items-center justify-center z-10">
           <HoldingCardBuddy mood={mood}>
-            {renderCard(true)}
+            {renderCard()}
           </HoldingCardBuddy>
         </div>
       ) : (
-        /* DESKTOP / LARGE-SCREEN: Side-by-Side Horizontal Alignment with 3D Standing Character */
+        /* Desktop / Large screen */
         <div className="w-full max-w-5xl mx-auto flex flex-row items-center justify-center gap-8 lg:gap-14 xl:gap-20 z-10 py-4">
-          {/* COLUMN 1: FULL-BODY 3D DEV BUDDY CHARACTER */}
+          {/* Column 1: Dev Buddy */}
           <div className="w-full flex flex-col items-center justify-center shrink-0 max-w-[240px] sm:max-w-[280px] md:max-w-[320px] lg:max-w-[340px] xl:max-w-[360px]">
             <DevBuddy mood={mood} isPasswordVisible={showPassword} />
 
-            {/* Character Presence Sub-badge */}
             <div className="flex items-center gap-2 mt-2 px-3 py-0.5 rounded-full bg-white/5 border border-white/10 text-[11px] text-[#BCA297] tracking-wide shadow-xs">
               <span
                 className={`w-1.5 h-1.5 rounded-full ${
@@ -394,9 +250,9 @@ export default function Auth() {
             </div>
           </div>
 
-          {/* COLUMN 2: GLASSMORPHIC LOGIN CARD */}
+          {/* Column 2: Login Card */}
           <div className="w-full max-w-[380px] lg:max-w-[400px] shrink-0">
-            {renderCard(false)}
+            {renderCard()}
           </div>
         </div>
       )}

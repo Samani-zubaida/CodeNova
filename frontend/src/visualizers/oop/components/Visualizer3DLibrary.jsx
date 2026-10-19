@@ -1148,6 +1148,10 @@ function LibraryScene({ onSelectCat }) {
    INNER VIEW (Category Modal / Detail)
    ───────────────────────────────────────────────────────────── */
 export function InnerView({ cat, onClose }) {
+  const navigate = useNavigate();
+  const [activeItem, setActiveItem] = useState(null);
+  const [search, setSearch] = useState('');
+
   if (cat?.id === 'dsa') {
     return <AppleDataStructuresView cat={cat} onClose={onClose} />;
   }
@@ -1155,11 +1159,8 @@ export function InnerView({ cat, onClose }) {
     return <AppleCryptoView cat={cat} onClose={onClose} />;
   }
 
-  const navigate = useNavigate();
-  const pal = PALETTE[cat.palette] || PALETTE.red;
+  const pal = PALETTE[cat?.palette] || PALETTE.red;
   const accent = pal.light;
-  const [activeItem, setActiveItem] = useState(null);
-  const [search, setSearch] = useState('');
 
   const filtered = activeItem
     ? activeItem.subtopics.filter(s => !search || s.name.toLowerCase().includes(search.toLowerCase()))

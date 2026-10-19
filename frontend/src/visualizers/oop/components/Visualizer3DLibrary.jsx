@@ -1115,7 +1115,7 @@ function LibraryScene({ onSelectCat }) {
   const [cam, setCam] = useState({ ...HOME_CAM, pos: HOME_CAM.pos.clone(), look: HOME_CAM.look.clone() });
 
   const handleSelect = useCallback((cat, idx) => {
-    if (cat?.id === 'oop') {
+    if (cat?.id === 'oop' || cat?.id === 'crypto') {
       onSelectCat(cat);
       return;
     }
@@ -1380,6 +1380,10 @@ export default function Visualizer3DLibrary({ onExitToPillars }) {
   const handleSelectCat = useCallback((cat) => {
     if (cat?.id === 'oop') {
       navigate('/oop');
+      return;
+    }
+    if (cat?.id === 'crypto') {
+      navigate('/visualizer/crypto');
       return;
     }
     setSelectedCat(cat);

@@ -124,7 +124,7 @@ function AppContent() {
   );
   const isOopRoute = isOopLanding || isOopConcept;
 
-  const hideNavbar = isFullscreen || isOopConcept;
+  const hideNavbar = isFullscreen || isOopConcept || isIntro;
   const { theme } = useAppStore();
 
   React.useEffect(() => {
@@ -160,7 +160,7 @@ function AppContent() {
             : 'min-h-[calc(100vh-64px)] pb-16';
 
   return (
-    <div className={isFullscreen ? '' : isOopConcept ? `h-screen w-screen overflow-hidden ${themeClass} font-sans transition-colors duration-300` : `min-h-screen ${themeClass} font-sans transition-colors duration-300`}>
+    <div className={isFullscreen || isIntro ? '' : isOopConcept ? `h-screen w-screen overflow-hidden ${themeClass} font-sans transition-colors duration-300` : `min-h-screen ${themeClass} font-sans transition-colors duration-300`}>
       {!hideNavbar && <Navbar />}
 
       <main className={mainClass}>

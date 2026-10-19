@@ -41,6 +41,7 @@ const InheritanceInPrepView = React.lazy(() => import('./visualizers/oop/inherit
 
 // Cryptography Studio
 import CryptoHub from './visualizers/crypto/CryptoHub';
+import AppleCryptoView from './components/visualizer/AppleCryptoView';
 
 const PrivateRoute = ({ children }) => {
   return <ProtectedRoute>{children}</ProtectedRoute>;
@@ -249,7 +250,7 @@ function AppContent() {
           {/* Crypto Routes */}
           <Route path="/crypto" element={<Navigate to="/visualizer/crypto" replace />} />
           <Route path="/cryptography" element={<Navigate to="/visualizer/crypto" replace />} />
-          <Route path="/visualizer/crypto" element={<CryptoHub />} />
+          <Route path="/visualizer/crypto" element={<AppleCryptoView />} />
           <Route path="/visualizer/cryptography" element={<Navigate to="/visualizer/crypto" replace />} />
           <Route path="/visualizer/crypto/studio" element={<CryptoHub />} />
           <Route path="/visualizer/crypto/studio/:algoId" element={<CryptoHub />} />

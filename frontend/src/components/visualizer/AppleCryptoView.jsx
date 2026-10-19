@@ -493,9 +493,12 @@ export default function AppleCryptoView({ onClose }) {
       exit={{ opacity: 0, y: 40 }}
       transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
       style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 500,
+        position: onClose ? 'fixed' : 'relative',
+        inset: onClose ? 0 : undefined,
+        zIndex: onClose ? 500 : 1,
+        width: '100%',
+        minHeight: onClose ? '100vh' : 'calc(100vh - 64px)',
+        height: onClose ? '100vh' : 'calc(100vh - 64px)',
         background: '#FAF5EC',
         display: 'flex',
         flexDirection: 'column',
@@ -524,8 +527,10 @@ export default function AppleCryptoView({ onClose }) {
             onClick={() => {
               if (onClose) {
                 onClose();
+              } else if (window.history.length > 2) {
+                navigate(-1);
               } else {
-                navigate('/oop');
+                navigate('/visualizer');
               }
             }}
             style={{
@@ -588,7 +593,7 @@ export default function AppleCryptoView({ onClose }) {
         {/* Right Action: Direct Jump into Visualizer Studio */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Link
-            to="/visualizer/crypto"
+            to="/visualizer/crypto/studio"
             style={{
               display: 'flex',
               alignItems: 'center',

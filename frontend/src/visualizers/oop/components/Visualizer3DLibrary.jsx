@@ -1115,6 +1115,10 @@ function LibraryScene({ onSelectCat }) {
   const [cam, setCam] = useState({ ...HOME_CAM, pos: HOME_CAM.pos.clone(), look: HOME_CAM.look.clone() });
 
   const handleSelect = useCallback((cat, idx) => {
+    if (cat?.id === 'oop') {
+      onSelectCat(cat);
+      return;
+    }
     const sz = SHELF_Z_POSITIONS[idx];
     setCam({
       pos:  new THREE.Vector3(-7.0, 1.0, sz),
@@ -1373,7 +1377,14 @@ export default function Visualizer3DLibrary({ onExitToPillars }) {
   const navigate = useNavigate();
   const [selectedCat, setSelectedCat] = useState(null);
 
-  const handleSelectCat = useCallback((cat) => setSelectedCat(cat), []);
+  const handleSelectCat = useCallback((cat) => {
+    if (cat?.id === 'oop') {
+      navigate('/oop');
+      return;
+    }
+    setSelectedCat(cat);
+  }, [navigate]);
+
   const handleClose = useCallback(() => setSelectedCat(null), []);
 
   return (

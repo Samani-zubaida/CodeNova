@@ -1,17 +1,31 @@
 const axios = require('axios');
 
-// Execute code via JDoodle API
+// Execute code via JDoodle API (Isolated container execution)
 exports.executeCode = async (req, res) => {
   try {
     const { language, code } = req.body;
+
+    // 1. Input Validation: Type & Existence
+    if (!code || typeof code !== 'string' || !code.trim()) {
+      return res.status(400).json({
+        message: 'Invalid request: code must be a non-empty string'
+      });
+    }
+
+    // 2. Input Validation: Payload Size Limit (50 KB max to prevent DoS)
+    if (code.length > 50000) {
+      return res.status(400).json({
+        message: 'Payload too large: code exceeds maximum allowed size (50KB)'
+      });
+    }
 
     const clientId = process.env.JDOODLE_CLIENT_ID;
     const clientSecret = process.env.JDOODLE_CLIENT_SECRET;
 
     if (!clientId || !clientSecret) {
-      return res.status(500).json({
-        message: 'Missing JDoodle credentials in backend .env file',
-        error: 'Please add JDOODLE_CLIENT_ID and JDOODLE_CLIENT_SECRET to your .env file.'
+      return res.status(503).json({
+        message: 'Code execution service currently unconfigured',
+        error: 'Execution credentials not found in backend environment.'
       });
     }
 
@@ -26,10 +40,11 @@ exports.executeCode = async (req, res) => {
 
     if (!jConfig) {
       return res.status(400).json({
-        message: 'Unsupported language'
+        message: 'Unsupported language. Allowed languages: javascript, python, cpp, java'
       });
     }
 
+    // 3. Execution Request with Strict 15-Second Timeout
     const response = await axios.post(
       'https://api.jdoodle.com/v1/execute',
       {
@@ -38,6 +53,9 @@ exports.executeCode = async (req, res) => {
         versionIndex: jConfig.versionIndex,
         clientId,
         clientSecret
+      },
+      {
+        timeout: 15000 // 15s execution timeout
       }
     );
 
@@ -53,14 +71,12 @@ exports.executeCode = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(
-      'Execution error:',
-      error.response?.data || error.message
-    );
+    console.error('Execution service error:', error.message);
 
+    // Sanitize error: never leak backend stack traces or internal paths
     res.status(500).json({
       message: 'Failed to execute code',
-      error: error.response?.data?.error || error.message
+      error: error.response?.data?.error || 'Execution service timeout or communication error.'
     });
   }
 };
@@ -305,12 +321,20 @@ ${code}
   return null;
 }
 
-// Analyze code for visual complexity, space, and time breakdowns
+// Analyze code for visual complexity, space, and time breakdowns (Protected)
 exports.visualizeCode = async (req, res) => {
   try {
     const { language = 'javascript', code = '' } = req.body;
 
-    if (!code || !code.trim()) {
+    if (typeof code !== 'string') {
+      return res.status(400).json({ message: 'Invalid payload: code must be a string' });
+    }
+
+    if (code.length > 50000) {
+      return res.status(400).json({ message: 'Payload too large: code exceeds 50KB limit' });
+    }
+
+    if (!code.trim()) {
       return res.json({
         analysis: {
           timeComplexity: "O(1)",

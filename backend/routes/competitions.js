@@ -1,15 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const Competition = require('../models/Competition');
+const authenticate = require('../middleware/authMiddleware');
 
-// POST /api/competitions/create
-router.post('/create', async (req, res) => {
+// POST /api/competitions/create (Protected)
+router.post('/create', authenticate, async (req, res) => {
   try {
     const { title, hostOrg, startTime, endTime, questions } = req.body;
     
     const newComp = new Competition({
       title,
-      hostOrg,
+      hostOrg: hostOrg || req.user.username,
       startTime: new Date(startTime),
       endTime: new Date(endTime),
       dateString: new Date(startTime).toLocaleString(),
@@ -27,16 +28,12 @@ router.post('/create', async (req, res) => {
   }
 });
 
-// POST /api/competitions/generate-tests
-// Mock AI Service to auto-generate test cases from a problem description and solution
-router.post('/generate-tests', (req, res) => {
+// POST /api/competitions/generate-tests (Protected)
+router.post('/generate-tests', authenticate, (req, res) => {
   const { description, solution } = req.body;
   
-  // In a real app, this would call OpenAI/Gemini API.
-  // For now, we mock some robust test cases based on simple heuristics.
   let mockTestCases = [];
-  
-  const descLower = description.toLowerCase();
+  const descLower = (description || '').toLowerCase();
   if (descLower.includes('array') || descLower.includes('list')) {
     mockTestCases = [
       { input: "[1, 2, 3]", expectedOutput: "6" },
@@ -57,14 +54,13 @@ router.post('/generate-tests', (req, res) => {
     ];
   }
 
-  // Adding random artificial delay to simulate AI processing
   setTimeout(() => {
     res.json({ testCases: mockTestCases });
   }, 1500);
 });
 
-// POST /api/competitions/:id/enroll
-router.post('/:id/enroll', async (req, res) => {
+// POST /api/competitions/:id/enroll (Protected)
+router.post('/:id/enroll', authenticate, async (req, res) => {
   try {
     const comp = await Competition.findById(req.params.id);
     if (!comp) return res.status(404).json({ error: 'Competition not found' });
@@ -78,10 +74,14 @@ router.post('/:id/enroll', async (req, res) => {
   }
 });
 
-// POST /api/competitions/:id/submit-score
-router.post('/:id/submit-score', async (req, res) => {
+// POST /api/competitions/:id/submit-score (Protected)
+router.post('/:id/submit-score', authenticate, async (req, res) => {
   try {
-    const { username, score, timeTakenMs } = req.body;
+    const { score, timeTakenMs } = req.body;
+    if (req.body.username && req.body.username !== req.user.username) {
+      return res.status(403).json({ error: 'Forbidden: You cannot submit scores for another user.' });
+    }
+    const username = req.user.username;
     const comp = await Competition.findById(req.params.id);
     if (!comp) return res.status(404).json({ error: 'Competition not found' });
 

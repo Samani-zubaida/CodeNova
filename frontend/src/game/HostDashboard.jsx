@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Sparkles, Code2, Clock, Calendar } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export default function HostDashboard() {
   const navigate = useNavigate();
+  const { token } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -25,7 +27,10 @@ export default function HostDashboard() {
       const q = questions[index];
       const res = await fetch('http://localhost:5000/api/competitions/generate-tests', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({ description: q.description, solution: q.initialCode })
       });
       const data = await res.json();
@@ -48,7 +53,10 @@ export default function HostDashboard() {
 
       const res = await fetch('http://localhost:5000/api/competitions/create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({
           title,
           hostOrg: orgName,

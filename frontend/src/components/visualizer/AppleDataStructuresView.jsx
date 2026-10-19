@@ -812,7 +812,10 @@ export default function AppleDataStructuresView({ cat, onClose }) {
       }}>
         {/* Left: Back button with Apple pill styling */}
         <button
-          onClick={onClose}
+          onClick={() => {
+            if (onClose) onClose();
+            else navigate('/oop');
+          }}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -830,7 +833,7 @@ export default function AppleDataStructuresView({ cat, onClose }) {
           onMouseEnter={e => { e.currentTarget.style.background = '#E8E8ED'; }}
           onMouseLeave={e => { e.currentTarget.style.background = '#F5F5F7'; }}
         >
-          <ArrowLeft size={14} /> Back to 3D Library
+          <ArrowLeft size={14} /> Back to OOP Hub
         </button>
 
         {/* Center: Apple Catalog Tag */}

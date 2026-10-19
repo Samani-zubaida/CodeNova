@@ -16,15 +16,15 @@ import puppeteer from 'puppeteer';
   const lightBtn = await page.waitForSelector('button[title="Light mode"]');
   if (lightBtn) await lightBtn.click();
   await new Promise(r => setTimeout(r, 600));
-  await page.screenshot({ path: 'inherit_mobile_light.png' });
-  console.log('Captured inherit_mobile_light.png');
+  await page.screenshot({ path: 'screenshots/inherit_mobile_light.png' });
+  console.log('Captured screenshots/inherit_mobile_light.png');
 
   // 2. Dark Mode Mobile
   const darkBtn = await page.waitForSelector('button[title="Dark mode"]');
   if (darkBtn) await darkBtn.click();
   await new Promise(r => setTimeout(r, 600));
-  await page.screenshot({ path: 'inherit_mobile_dark.png' });
-  console.log('Captured inherit_mobile_dark.png');
+  await page.screenshot({ path: 'screenshots/inherit_mobile_dark.png' });
+  console.log('Captured screenshots/inherit_mobile_dark.png');
 
   await browser.close();
   console.log('Mobile verification captures finished successfully!');

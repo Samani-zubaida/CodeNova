@@ -1,7 +1,6 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
-import VisualizerDashboard from './pages/VisualizerDashboard';
 import Sandbox from './pages/Sandbox';
 import GameWorld from './game/GameWorld';
 import HostDashboard from './game/HostDashboard';
@@ -9,6 +8,7 @@ import Intro from './pages/Intro';
 import Auth from './pages/Auth';
 import VerifyEmail from './pages/VerifyEmail';
 import useAppStore from './store/useAppStore';
+import { AuthProvider, ProtectedRoute, useAuth } from './context/AuthContext';
 
 // Data Structures
 import ArrayHub from './visualizers/ds/ArrayHub';
@@ -43,11 +43,7 @@ const InheritanceInPrepView = React.lazy(() => import('./visualizers/oop/inherit
 import CryptoHub from './visualizers/crypto/CryptoHub';
 
 const PrivateRoute = ({ children }) => {
-  const user = useAppStore(state => state.user);
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
-  return children;
+  return <ProtectedRoute>{children}</ProtectedRoute>;
 };
 
 // Dispatcher for dynamic inheritance subtypes (/oop/inheritance/:type)
@@ -57,7 +53,7 @@ const OopInheritanceDispatcher = () => {
 
   if (type === 'single') {
     return (
-      <SingleInheritanceVisualizer 
+      <SingleInheritanceVisualizer
         isEmbedded={true}
         onNext={() => navigate('/oop/inheritance/multilevel')}
       />
@@ -66,7 +62,7 @@ const OopInheritanceDispatcher = () => {
 
   if (type === 'multilevel') {
     return (
-      <MultilevelInheritanceVisualizer 
+      <MultilevelInheritanceVisualizer
         isEmbedded={true}
         onNext={() => navigate('/oop/polymorphism')}
       />
@@ -75,7 +71,7 @@ const OopInheritanceDispatcher = () => {
 
   if (type === 'hierarchical') {
     return (
-      <InheritanceVisualizer 
+      <InheritanceVisualizer
         isEmbedded={true}
         onNext={() => navigate('/oop/polymorphism')}
       />
@@ -83,8 +79,8 @@ const OopInheritanceDispatcher = () => {
   }
 
   return (
-    <InheritanceInPrepView 
-      type={type} 
+    <InheritanceInPrepView
+      type={type}
       onSwitchType={(t) => navigate(`/oop/inheritance/${t}`)}
       onSwitchToHierarchical={() => navigate('/oop/inheritance/hierarchical')}
     />
@@ -97,6 +93,16 @@ const LegacyInheritanceRedirect = () => {
   return <Navigate to={type ? `/oop/inheritance/${type}` : '/oop/inheritance/hierarchical'} replace />;
 };
 
+// Visualizer redirect dispatcher: routes ?cat=crypto directly to /visualizer/crypto
+const VisualizerRouteDispatcher = () => {
+  const [searchParams] = useSearchParams();
+  const cat = searchParams.get('cat') || searchParams.get('tab') || searchParams.get('view');
+  if (cat === 'crypto' || cat === 'cryptography') {
+    return <Navigate to="/visualizer/crypto" replace />;
+  }
+  return <Navigate to="/oop" replace />;
+};
+
 function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -104,13 +110,20 @@ function AppContent() {
   const isVisualizerHub = location.pathname === '/visualizer' || location.pathname === '/visualization' || location.pathname === '/visualizations';
   const isAuth = location.pathname === '/auth';
   const isVerifyEmail = location.pathname === '/verify-email';
-  const isFullscreen = isIntro || isAuth || isVerifyEmail;
-  const isAppStudio = isVisualizerHub || location.pathname === '/sandbox' || location.pathname === '/game' || location.pathname === '/host';
+  const isFullscreen = isAuth || isVerifyEmail;
+
+  const isCryptoRoute = location.pathname.startsWith('/visualizer/crypto') ||
+    location.pathname.startsWith('/crypto') ||
+    location.pathname.startsWith('/cryptography') ||
+    ['caesar', 'vigenere', 'playfair', 'railfence', 'columnar', 'aes', 'rsa', 'hash', 'signature', 'steg', 'enigma', 'hacker', 'dh']
+      .some(algo => location.pathname.includes(algo));
+
+  const isAppStudio = isVisualizerHub || isCryptoRoute || location.pathname === '/sandbox' || location.pathname === '/game' || location.pathname === '/host';
 
   const isOopLanding = ['/oop', '/oop/', '/oops', '/oops/'].includes(location.pathname);
-  const isOopConcept = !isOopLanding && (
-    location.pathname.startsWith('/oop') || 
-    location.pathname.startsWith('/oops') || 
+  const isOopConcept = !isOopLanding && !isCryptoRoute && (
+    location.pathname.startsWith('/oop') ||
+    location.pathname.startsWith('/oops') ||
     location.pathname.startsWith('/visualizer/oop') ||
     location.pathname.startsWith('/visualizer/encapsulation') ||
     location.pathname.startsWith('/visualizer/abstraction') ||
@@ -136,26 +149,28 @@ function AppContent() {
     }
   }, [theme]);
 
-  const themeClass = theme === 'dark' 
-    ? (isOopRoute ? 'dark bg-[#0B0F17] text-[#FAF7F2]' : 'dark bg-[#331921] text-[#F4EBC3]') 
-    : theme === 'warm' 
-    ? (isOopRoute ? 'warm bg-[#FDFBF7] text-[#2D1F23]' : 'warm bg-[#F4EBC3] text-[#2D1F23]') 
-    : (isOopRoute ? 'bg-[#F8FAFC] text-slate-900' : 'bg-[#FAF7F2] text-[#2D1F23]');
+  const themeClass = theme === 'dark'
+    ? (isOopRoute ? 'dark bg-[#0B0F17] text-[#FAF7F2]' : 'dark bg-[#331921] text-[#F4EBC3]')
+    : theme === 'warm'
+      ? (isOopRoute ? 'warm bg-[#FDFBF7] text-[#2D1F23]' : 'warm bg-[#F4EBC3] text-[#2D1F23]')
+      : (isOopRoute ? 'bg-[#F8FAFC] text-slate-900' : 'bg-[#FAF7F2] text-[#2D1F23]');
 
-  const mainClass = isFullscreen 
-    ? '' 
-    : isAppStudio 
-    ? 'h-[calc(100vh-64px)] overflow-hidden' 
-    : isOopConcept
-    ? 'h-screen w-screen overflow-hidden flex flex-col'
-    : isOopRoute 
-    ? 'h-[calc(100vh-64px)] overflow-hidden flex flex-col' 
-    : 'min-h-[calc(100vh-64px)] pb-16';
+  const mainClass = isFullscreen
+    ? ''
+    : isIntro
+      ? 'relative'
+      : isAppStudio
+        ? 'h-[calc(100vh-64px)] overflow-hidden'
+        : isOopConcept
+          ? 'h-screen w-screen overflow-hidden flex flex-col'
+          : isOopRoute
+            ? 'h-[calc(100vh-64px)] overflow-hidden flex flex-col'
+            : 'min-h-[calc(100vh-64px)] pb-16';
 
   return (
     <div className={isFullscreen ? '' : isOopConcept ? `h-screen w-screen overflow-hidden ${themeClass} font-sans transition-colors duration-300` : `min-h-screen ${themeClass} font-sans transition-colors duration-300`}>
       {!hideNavbar && <Navbar />}
-      
+
       <main className={mainClass}>
         <Routes>
           {/* Root and Intro routes */}
@@ -164,10 +179,14 @@ function AppContent() {
           <Route path="/home" element={<Intro />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
-          <Route path="/visualizer" element={<VisualizerDashboard />} />
-          <Route path="/visualization" element={<VisualizerDashboard />} />
-          <Route path="/visualizations" element={<VisualizerDashboard />} />
-          
+
+          {/* Protected Platform Experience - Requires Valid Authentication */}
+          <Route element={<ProtectedRoute />}>
+            {/* Legacy /visualizer Routes -> Redirected to /oop or /visualizer/crypto */}
+            <Route path="/visualizer" element={<VisualizerRouteDispatcher />} />
+            <Route path="/visualization" element={<VisualizerRouteDispatcher />} />
+            <Route path="/visualizations" element={<VisualizerRouteDispatcher />} />
+
           {/* DS Routes */}
           <Route path="/visualizer/array" element={<ArrayHub />} />
           <Route path="/visualizer/array/:algoId" element={<Array3DVisualizer />} />
@@ -189,37 +208,37 @@ function AppContent() {
           {/* OOP Nested Architecture */}
           <Route path="/oop" element={<OopLayout />}>
             <Route index element={<OopOverview />} />
-            <Route 
-              path="abstraction" 
-              element={<AbstractionVisualizer isEmbedded={true} onNext={() => navigate('/oop/inheritance/single')} />} 
+            <Route
+              path="abstraction"
+              element={<AbstractionVisualizer isEmbedded={true} onNext={() => navigate('/oop/inheritance/single')} />}
             />
-            <Route 
-              path="encapsulation" 
-              element={<EncapsulationVisualizer isEmbedded={true} onNext={() => navigate('/oop/abstraction')} />} 
+            <Route
+              path="encapsulation"
+              element={<EncapsulationVisualizer isEmbedded={true} onNext={() => navigate('/oop/abstraction')} />}
             />
-            <Route 
-              path="inheritance" 
-              element={<Navigate to="/oop/inheritance/hierarchical" replace />} 
+            <Route
+              path="inheritance"
+              element={<Navigate to="/oop/inheritance/hierarchical" replace />}
             />
-            <Route 
-              path="inheritance/single" 
-              element={<SingleInheritanceVisualizer isEmbedded={true} onNext={() => navigate('/oop/inheritance/multilevel')} />} 
+            <Route
+              path="inheritance/single"
+              element={<SingleInheritanceVisualizer isEmbedded={true} onNext={() => navigate('/oop/inheritance/multilevel')} />}
             />
-            <Route 
-              path="inheritance/multilevel" 
-              element={<MultilevelInheritanceVisualizer isEmbedded={true} onNext={() => navigate('/oop/polymorphism')} />} 
+            <Route
+              path="inheritance/multilevel"
+              element={<MultilevelInheritanceVisualizer isEmbedded={true} onNext={() => navigate('/oop/polymorphism')} />}
             />
-            <Route 
-              path="inheritance/hierarchical" 
-              element={<InheritanceVisualizer isEmbedded={true} onNext={() => navigate('/oop/polymorphism')} />} 
+            <Route
+              path="inheritance/hierarchical"
+              element={<InheritanceVisualizer isEmbedded={true} onNext={() => navigate('/oop/polymorphism')} />}
             />
-            <Route 
-              path="inheritance/:type" 
-              element={<OopInheritanceDispatcher />} 
+            <Route
+              path="inheritance/:type"
+              element={<OopInheritanceDispatcher />}
             />
-            <Route 
-              path="polymorphism" 
-              element={<PolymorphismVisualizer isEmbedded={true} onNext={() => navigate('/oop')} />} 
+            <Route
+              path="polymorphism"
+              element={<PolymorphismVisualizer isEmbedded={true} onNext={() => navigate('/oop')} />}
             />
           </Route>
 
@@ -237,8 +256,10 @@ function AppContent() {
           <Route path="/visualizer/polymorphism" element={<Navigate to="/oop/polymorphism" replace />} />
 
           {/* Crypto Routes */}
-          <Route path="/visualizer/crypto" element={<Navigate to="/visualizer?cat=crypto" replace />} />
-          <Route path="/visualizer/cryptography" element={<Navigate to="/visualizer?cat=crypto" replace />} />
+          <Route path="/crypto" element={<Navigate to="/visualizer/crypto" replace />} />
+          <Route path="/cryptography" element={<Navigate to="/visualizer/crypto" replace />} />
+          <Route path="/visualizer/crypto" element={<CryptoHub />} />
+          <Route path="/visualizer/cryptography" element={<Navigate to="/visualizer/crypto" replace />} />
           <Route path="/visualizer/crypto/studio" element={<CryptoHub />} />
           <Route path="/visualizer/crypto/studio/:algoId" element={<CryptoHub />} />
           <Route path="/visualizer/crypto/:algoId" element={<CryptoHub />} />
@@ -256,12 +277,13 @@ function AppContent() {
           <Route path="/visualizer/hacker" element={<CryptoHub defaultAlgo="hacker" />} />
           <Route path="/visualizer/dh" element={<CryptoHub defaultAlgo="dh" />} />
 
-          {/* Game Routes */}
-          <Route path="/game" element={<GameWorld />} />
-          <Route path="/host" element={<HostDashboard />} />
+            {/* Game Routes */}
+            <Route path="/game" element={<GameWorld />} />
+            <Route path="/host" element={<HostDashboard />} />
 
-          {/* Sandbox */}
-          <Route path="/sandbox" element={<Sandbox />} />
+            {/* Sandbox */}
+            <Route path="/sandbox" element={<Sandbox />} />
+          </Route>
 
           {/* Fallback to Intro */}
           <Route path="*" element={<Navigate to="/" replace />} />
@@ -274,8 +296,10 @@ function AppContent() {
 function App() {
   return (
     <Router>
-      <AppContent />
-     </Router>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </Router>
   );
 }
 

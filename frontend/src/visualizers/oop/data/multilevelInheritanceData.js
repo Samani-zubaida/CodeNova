@@ -331,6 +331,8 @@ export const MULTILEVEL_TIMELINE_STEPS = [
     activeHighlight: 'person',
     activeClassId: 'person',
     activeCodeLine: 1,
+    accentColor: '#0284C7',
+    principleInsight: 'Root classes define universal core attributes shared across the entire downstream family lineage.'
   },
   {
     id: 'employee_enters',
@@ -342,6 +344,8 @@ export const MULTILEVEL_TIMELINE_STEPS = [
     activeHighlight: 'employee_extends',
     activeClassId: 'employee',
     activeCodeLine: 10,
+    accentColor: '#6366F1',
+    principleInsight: 'Intermediate classes act simultaneously as child to the root, and parent to downstream subclasses.'
   },
   {
     id: 'employee_traits',
@@ -353,6 +357,8 @@ export const MULTILEVEL_TIMELINE_STEPS = [
     activeHighlight: 'transfer_p_to_e',
     activeClassId: 'employee',
     activeCodeLine: null,
+    accentColor: '#38BDF8',
+    principleInsight: 'Inherited members flow through the chain, ensuring DRY (Don\'t Repeat Yourself) architecture.'
   },
   {
     id: 'employee_specialization',
@@ -364,6 +370,8 @@ export const MULTILEVEL_TIMELINE_STEPS = [
     activeHighlight: 'employee_own',
     activeClassId: 'employee',
     activeCodeLine: 12,
+    accentColor: '#10B981',
+    principleInsight: 'Each hierarchy tier enriches the model with properties relevant to its specialized organizational level.'
   },
   {
     id: 'manager_enters',
@@ -375,6 +383,8 @@ export const MULTILEVEL_TIMELINE_STEPS = [
     activeHighlight: 'manager_extends',
     activeClassId: 'manager',
     activeCodeLine: 21,
+    accentColor: '#A855F7',
+    principleInsight: 'Multilevel hierarchies establish transitive relationships: if Manager extends Employee and Employee extends Person, Manager is also a Person.'
   },
   {
     id: 'manager_traits',
@@ -386,6 +396,8 @@ export const MULTILEVEL_TIMELINE_STEPS = [
     activeHighlight: 'transfer_e_to_m',
     activeClassId: 'manager',
     activeCodeLine: null,
+    accentColor: '#EC4899',
+    principleInsight: 'The direct parent passes its own specialized capabilities to the child subclass.'
   },
   {
     id: 'deep_chain_transfer',
@@ -397,6 +409,8 @@ export const MULTILEVEL_TIMELINE_STEPS = [
     activeHighlight: 'transfer_deep_chain',
     activeClassId: 'manager',
     activeCodeLine: null,
+    accentColor: '#F59E0B',
+    principleInsight: 'Grandparent traits cascade automatically through the entire chain without requiring direct links.'
   },
   {
     id: 'completed',
@@ -408,6 +422,8 @@ export const MULTILEVEL_TIMELINE_STEPS = [
     activeHighlight: 'complete',
     activeClassId: 'manager',
     activeCodeLine: null,
+    accentColor: '#10B981',
+    principleInsight: 'Multilevel inheritance delivers full cumulative reuse across any number of architectural layers.'
   },
 ];
 

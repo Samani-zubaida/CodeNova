@@ -13,8 +13,15 @@ if (typeof document !== 'undefined') {
 }
 
 const useAppStore = create((set) => ({
-  user: JSON.parse(localStorage.getItem('nova_user')) || { username: 'DemoExplorer', email: 'demo@codenova.dev' },
-  token: localStorage.getItem('nova_token') || null,
+  user: (() => {
+    try {
+      const saved = localStorage.getItem('nova_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  })(),
+  token: localStorage.getItem('nova_token') || localStorage.getItem('token') || null,
   theme: initialTheme,
   currentCodeOutput: '',
   isPlayingVisualizer: false,
@@ -25,12 +32,14 @@ const useAppStore = create((set) => ({
   login: (user, token) => {
     localStorage.setItem('nova_user', JSON.stringify(user));
     localStorage.setItem('nova_token', token);
+    localStorage.setItem('token', token);
     set({ user, token });
   },
 
   logout: () => {
     localStorage.removeItem('nova_user');
     localStorage.removeItem('nova_token');
+    localStorage.removeItem('token');
     set({ user: null, token: null });
   },
 

@@ -525,7 +525,7 @@ export default function AppleCryptoView({ onClose }) {
               if (onClose) {
                 onClose();
               } else {
-                navigate('/visualizer');
+                navigate('/oop');
               }
             }}
             style={{
@@ -588,7 +588,7 @@ export default function AppleCryptoView({ onClose }) {
         {/* Right Action: Direct Jump into Visualizer Studio */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Link
-            to="/visualizer/caesar"
+            to="/visualizer/crypto"
             style={{
               display: 'flex',
               alignItems: 'center',

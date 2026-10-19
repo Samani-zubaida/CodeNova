@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Code2, Database, Shield, BookOpen, Star, Clock, Trophy, FileText, BarChart2, Medal, User, Play, Swords, Menu, X } from 'lucide-react';
+import { ArrowLeft, Code2, Database, Shield, BookOpen, Star, Clock, Trophy, FileText, BarChart2, Medal, User, Play, Swords, Menu, X, Lock } from 'lucide-react';
 import QuizRunner from './QuizRunner';
 import DuelMode from './DuelMode';
 import CompetitionModal from './CompetitionModal';
 import ActivityHeatmap from './ActivityHeatmap';
-import useAppStore from "../store/useAppStore.js"
+import useAppStore from "../store/useAppStore.js";
+import { useAuth } from "../context/AuthContext";
 
 export default function GameWorld() {
   const navigate = useNavigate();
@@ -21,42 +22,73 @@ export default function GameWorld() {
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const { isAuthenticated, user, token, requireAuth } = useAuth();
+
   const [activeTab, setActiveTab] = useState('Assessment');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchData = async () => {
       try {
-        const [subRes, leadRes, compRes, actRes] = await Promise.all([
+        const publicPromises = [
           fetch('http://localhost:5000/api/levels/meta/subjects'),
           fetch('http://localhost:5000/api/dashboard/leaderboard'),
-          fetch('http://localhost:5000/api/dashboard/competitions'),
-          fetch('http://localhost:5000/api/users/record-activity', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: 'Hacker1' })
-          })
-        ]);
+          fetch('http://localhost:5000/api/dashboard/competitions')
+        ];
+
+        const [subRes, leadRes, compRes] = await Promise.all(publicPromises);
         
-        setSubjects(await subRes.json());
-        setLeaderboard(await leadRes.json());
-        setCompetitions(await compRes.json());
-        setUserProfile(await actRes.json());
+        if (isMounted) {
+          if (subRes.ok) setSubjects(await subRes.json());
+          if (leadRes.ok) setLeaderboard(await leadRes.json());
+          if (compRes.ok) setCompetitions(await compRes.json());
+        }
+
+        // Only record user activity and fetch user profile when authenticated with valid token
+        if (token && isAuthenticated) {
+          try {
+            const actRes = await fetch('http://localhost:5000/api/users/record-activity', {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({ username: user?.username || 'Explorer' })
+            });
+            if (actRes.ok && isMounted) {
+              setUserProfile(await actRes.json());
+            }
+          } catch (actErr) {
+            console.warn("Could not record activity:", actErr.message);
+          }
+        } else if (isMounted) {
+          setUserProfile(null);
+        }
       } catch (err) {
         console.error("Failed to load dashboard data:", err);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
+
     fetchData();
+
     const interval = setInterval(async () => {
       try {
         const res = await fetch("http://localhost:5000/api/dashboard/leaderboard");
-        setLeaderboard(await res.json());
+        if (res.ok && isMounted) {
+          setLeaderboard(await res.json());
+        }
       } catch(e) {}
     }, 5000);
-    return () => clearInterval(interval);
-  }, []);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [token, isAuthenticated, user?.username]);
 
   if (activeQuiz) {
     return (
@@ -101,7 +133,12 @@ export default function GameWorld() {
           {navItems.map((item, i) => (
             <div 
               key={i} 
-              onClick={() => setActiveTab(item.name)}
+              onClick={() => {
+                if (item.name === '1v1 Duel' && !requireAuth(null, { from: '/game', message: 'Please log in first to access this feature.' })) {
+                  return;
+                }
+                setActiveTab(item.name);
+              }}
               className={`flex items-center gap-3 px-6 py-3 cursor-pointer transition-colors ${
                 activeTab === item.name ? 'bg-[#FAF7F2] dark:bg-[#5C4E49] border-l-4 border-[#AB526B] text-[#AB526B] font-bold' : 'text-[#2D1F23]/60 dark:text-[#BCA297] hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-[#5C4E49]'
               }`}
@@ -112,7 +149,15 @@ export default function GameWorld() {
           ))}
         </nav>
         <div className="px-6 py-4 border-t border-[#EBE0D3] dark:border-[#5C4E49] dark:border-[#5C4E49] mt-auto">
-          <button onClick={() => window.location.href="/host"} className="w-full bg-[#AB526B] hover:bg-[#a03e48] text-white font-bold py-3 rounded-lg transition-colors text-sm shadow-lg shadow-[#AB526B]/20">Host Competition</button>
+          <button 
+            onClick={() => {
+              if (!requireAuth(null, { from: '/host', message: 'Please log in first to access this feature.' })) return;
+              navigate('/host');
+            }} 
+            className="w-full bg-[#AB526B] hover:bg-[#a03e48] text-white font-bold py-3 rounded-lg transition-colors text-sm shadow-lg shadow-[#AB526B]/20 cursor-pointer"
+          >
+            Host Competition
+          </button>
         </div>
       </aside>
 
@@ -165,7 +210,13 @@ export default function GameWorld() {
                 {navItems.map((item, i) => (
                   <div 
                     key={i} 
-                    onClick={() => { setActiveTab(item.name); setIsMobileMenuOpen(false); }}
+                    onClick={() => { 
+                      if (item.name === '1v1 Duel' && !requireAuth(null, { from: '/game', message: 'Please log in first to access this feature.' })) {
+                        return;
+                      }
+                      setActiveTab(item.name); 
+                      setIsMobileMenuOpen(false); 
+                    }}
                     className={`flex items-center gap-3 px-6 py-3 cursor-pointer transition-colors ${
                       activeTab === item.name ? 'bg-[#FAF7F2] dark:bg-[#5C4E49] border-l-4 border-[#AB526B] text-[#AB526B] font-bold' : 'text-[#2D1F23]/60 dark:text-[#BCA297] hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-[#5C4E49]'
                     }`}
@@ -176,10 +227,18 @@ export default function GameWorld() {
                 ))}
               </nav>
               <div className="px-6 py-4 border-t border-[#EBE0D3] dark:border-[#5C4E49] dark:border-[#5C4E49]">
-                <button onClick={() => navigate('/')} className="w-full bg-[#333] hover:bg-[#444] text-white font-bold py-3 rounded-lg transition-colors text-sm mb-2 flex items-center justify-center gap-2">
+                <button onClick={() => navigate('/')} className="w-full bg-[#333] hover:bg-[#444] text-white font-bold py-3 rounded-lg transition-colors text-sm mb-2 flex items-center justify-center gap-2 cursor-pointer">
                   <ArrowLeft size={16} /> Exit Game
                 </button>
-                <button onClick={() => window.location.href="/host"} className="w-full bg-[#AB526B] hover:bg-[#a03e48] text-white font-bold py-3 rounded-lg transition-colors text-sm shadow-lg shadow-[#AB526B]/20">Host Competition</button>
+                <button 
+                  onClick={() => {
+                    if (!requireAuth(null, { from: '/host', message: 'Please log in first to access this feature.' })) return;
+                    navigate('/host');
+                  }} 
+                  className="w-full bg-[#AB526B] hover:bg-[#a03e48] text-white font-bold py-3 rounded-lg transition-colors text-sm shadow-lg shadow-[#AB526B]/20 cursor-pointer"
+                >
+                  Host Competition
+                </button>
               </div>
             </aside>
           </div>
@@ -220,10 +279,20 @@ export default function GameWorld() {
                     </p>
                     
                     <button 
-                      onClick={() => setActiveQuiz({ subject: subject.id, level: currentLevelId })}
-                      className="mt-auto w-full py-2.5 rounded-lg font-bold transition-colors bg-[#C5CEAE] text-[#121212] hover:bg-[#F0E2A4]"
+                      id={`start-level-${subject.id}`}
+                      onClick={() => {
+                        if (!requireAuth(null, { from: '/game', message: 'Please log in first to access this feature.' })) return;
+                        setActiveQuiz({ subject: subject.id, level: currentLevelId });
+                      }}
+                      title={!isAuthenticated ? 'Please log in first to access this feature.' : `Start Level ${currentLevelId}`}
+                      className={`mt-auto w-full py-2.5 rounded-lg font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                        !isAuthenticated 
+                          ? 'bg-[#C5CEAE]/70 text-[#121212] ring-1 ring-black/10 hover:bg-[#C5CEAE]' 
+                          : 'bg-[#C5CEAE] text-[#121212] hover:bg-[#F0E2A4]'
+                      }`}
                     >
-                      START LEVEL {currentLevelId}
+                      {!isAuthenticated && <Lock size={14} className="text-black/80" />}
+                      <span>START LEVEL {currentLevelId}{!isAuthenticated ? ' (Login Required)' : ''}</span>
                     </button>
                   </div>
                 );
@@ -294,8 +363,18 @@ export default function GameWorld() {
                     </div>
                     
                     <div className="mt-auto pt-4 border-t border-[#5C4E49]">
-                      <button onClick={() => setSelectedComp(comp)} className={`w-full text-xs font-bold py-2 px-3 rounded transition-colors ${comp.type === 'Global' ? 'bg-[#AB526B] hover:bg-[#8E3B53] text-white' : 'border border-[#BCA297] text-[#BCA297] hover:bg-[#D3DFC8] dark:bg-[#3A4A2F]/10'}`}>
-                        {comp.type === 'Global' ? 'View Competition' : 'Details'}
+                      <button 
+                        onClick={() => {
+                          if (!requireAuth(null, { from: '/game', message: 'Please log in first to access this feature.' })) return;
+                          setSelectedComp(comp);
+                        }} 
+                        title={!isAuthenticated ? 'Please log in first to access this feature.' : 'View Competition'}
+                        className={`w-full text-xs font-bold py-2 px-3 rounded transition-colors flex items-center justify-center gap-1.5 cursor-pointer ${
+                          comp.type === 'Global' ? 'bg-[#AB526B] hover:bg-[#8E3B53] text-white' : 'border border-[#BCA297] text-[#BCA297] hover:bg-[#D3DFC8] dark:bg-[#3A4A2F]/10'
+                        }`}
+                      >
+                        {!isAuthenticated && <Lock size={12} />}
+                        <span>{comp.type === 'Global' ? 'View Competition' : 'Details'}</span>
                       </button>
                     </div>
                   </div>

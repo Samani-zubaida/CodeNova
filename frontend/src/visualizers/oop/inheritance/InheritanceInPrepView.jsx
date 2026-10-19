@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { 
-  GitFork, Sparkles, ArrowRight, Clock, Code2, 
+import {
+  GitFork, Sparkles, ArrowRight, Clock, Code2,
   Layers, Shield, Check, BookOpen, AlertCircle
 } from 'lucide-react';
 import useAppStore from '../../../store/useAppStore';
@@ -12,7 +12,7 @@ export const INHERITANCE_TYPES_DATA = {
     num: '01',
     name: 'Single Inheritance',
     headline: '1 Base Class → 1 Derived Subclass',
-    badge: 'IN PREPARATION',
+    badge: 'ACTIVE LABORATORY',
     concept: 'class Dog extends Animal',
     description: 'A subclass inherits all non-private fields and methods directly from a single parent superclass. This represents the simplest form of object reuse and specialization in Java.',
     codeSnippet: `// 1 Base Class (Superclass)
@@ -36,7 +36,7 @@ public class Dog extends Animal {
     num: '02',
     name: 'Multilevel Inheritance',
     headline: 'Grandparent → Parent → Child Chain',
-    badge: 'IN PREPARATION',
+    badge: 'ACTIVE LABORATORY',
     concept: 'class BabyDog extends Dog extends Animal',
     description: 'A class extends another class that is itself a subclass of an ancestor base class, forming a vertical transitive inheritance chain where traits flow down through generations.',
     codeSnippet: `// Level 1: Grandparent
@@ -132,10 +132,10 @@ public class Amphibian extends GroundVehicle implements Aquatic {
   },
 };
 
-export default function InheritanceInPrepView({ 
-  type = 'single', 
-  onSwitchType, 
-  onSwitchToHierarchical 
+export default function InheritanceInPrepView({
+  type = 'single',
+  onSwitchType,
+  onSwitchToHierarchical
 }) {
   const { theme } = useAppStore();
   const isDark = theme === 'dark' || !theme;
@@ -146,24 +146,24 @@ export default function InheritanceInPrepView({
   const bgClasses = isDark
     ? 'bg-[#080C16] text-[#FAF7F2]'
     : isWarm
-    ? 'bg-[#FDFBF7] text-[#2D1F23]'
-    : 'bg-[#F8FAFC] text-slate-900';
+      ? 'bg-[#FDFBF7] text-[#2D1F23]'
+      : 'bg-[#F8FAFC] text-slate-900';
 
   const cardClasses = isDark
     ? 'bg-[#090D17]/90 border-white/10 shadow-2xl'
     : isWarm
-    ? 'bg-[#FAF7F2]/95 border-[#EBE0D3] shadow-xl'
-    : 'bg-white/95 border-slate-200/90 shadow-xl';
+      ? 'bg-[#FAF7F2]/95 border-[#EBE0D3] shadow-xl'
+      : 'bg-white/95 border-slate-200/90 shadow-xl';
 
   const codeBgClasses = isDark
     ? 'bg-[#04060B] border-white/10 text-slate-300'
     : isWarm
-    ? 'bg-[#F4EDE2] border-[#EBE0D3] text-[#2D1F23]'
-    : 'bg-slate-900 border-slate-700 text-slate-200';
+      ? 'bg-[#F4EDE2] border-[#EBE0D3] text-[#2D1F23]'
+      : 'bg-slate-900 border-slate-700 text-slate-200';
 
   return (
     <div className={`w-full flex-1 flex flex-col items-center justify-center p-4 sm:p-8 relative overflow-y-auto ${bgClasses} transition-colors duration-300`}>
-      
+
       {/* Ambient Aurora Glow */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <div className="absolute top-[10%] left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-gradient-to-tr from-sky-500/15 via-indigo-500/10 to-transparent rounded-full blur-[140px]" />
@@ -171,12 +171,12 @@ export default function InheritanceInPrepView({
       </div>
 
       <div className="relative z-10 w-full max-w-4xl flex flex-col items-center my-auto py-6">
-        
+
         {/* Category Switcher Tabs */}
         <div className="flex items-center gap-1.5 p-1 rounded-2xl border backdrop-blur-md mb-6 overflow-x-auto max-w-full">
           {Object.values(INHERITANCE_TYPES_DATA).map((item) => {
             const isCurrent = item.id === type;
-            const isLive = item.id === 'hierarchical';
+            const isLive = ['single', 'multilevel', 'hierarchical'].includes(item.id);
 
             return (
               <button
@@ -185,15 +185,14 @@ export default function InheritanceInPrepView({
                   if (onSwitchType) onSwitchType(item.id);
                   if (item.id === 'hierarchical' && onSwitchToHierarchical) onSwitchToHierarchical();
                 }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-mono text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                  isCurrent
-                    ? isDark 
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-mono text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${isCurrent
+                    ? isDark
                       ? 'bg-sky-500/20 text-sky-300 border border-sky-500/50 shadow-sm'
                       : 'bg-sky-500 text-white shadow-sm'
                     : isDark
-                    ? 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-black/5 border border-transparent'
-                }`}
+                      ? 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-black/5 border border-transparent'
+                  }`}
               >
                 <span>{item.name}</span>
                 {isLive ? (
@@ -241,11 +240,19 @@ export default function InheritanceInPrepView({
 
             {/* Quick Link to Live Visualizer */}
             <button
-              onClick={onSwitchToHierarchical}
+              onClick={() => {
+                if (type === 'single' && onSwitchType) onSwitchType('single');
+                else if (type === 'multilevel' && onSwitchType) onSwitchType('multilevel');
+                else if (onSwitchToHierarchical) onSwitchToHierarchical();
+              }}
               className="self-start sm:self-center flex items-center gap-2 px-4 py-2.5 rounded-xl font-mono text-xs font-black bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-lg shadow-amber-500/25 transition-all hover:scale-105 active:scale-95 cursor-pointer shrink-0"
             >
               <Sparkles size={14} />
-              <span>Launch Live Hierarchical Lab</span>
+              <span>
+                {type === 'single' ? 'Launch Live Single Lab' :
+                 type === 'multilevel' ? 'Launch Live Multilevel Lab' :
+                 'Launch Live Hierarchical Lab'}
+              </span>
               <ArrowRight size={14} />
             </button>
           </div>

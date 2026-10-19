@@ -112,10 +112,10 @@ export default function GalaxySection({ scrollYProgress }) {
             >
               {/* Solid CTA Pill */}
               <Link
-                to="/visualizer"
+                to="/oop"
                 className="inline-flex items-center justify-center gap-2.5 px-6 sm:px-7 py-3 rounded-full bg-[#FF380F] text-white font-medium text-xs sm:text-sm tracking-wide shadow-lg shadow-[#FF380F]/25 hover:bg-[#ff4e29] hover:scale-[1.02] active:scale-[0.98] transition-all"
               >
-                <span>Launch Visualizers</span>
+                <span>Launch OOP Studio</span>
                 <ArrowRight size={14} />
               </Link>
 

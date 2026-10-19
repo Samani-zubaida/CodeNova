@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const sandboxController = require('../controllers/sandboxController');
+const authenticate = require('../middleware/authMiddleware');
 
-// Execute code via JDoodle API
-router.post('/execute', sandboxController.executeCode);
+// Execute code via JDoodle API (Protected)
+router.post('/execute', authenticate, sandboxController.executeCode);
 
-// Visualize code using native Gemini API
-router.post('/visualize', sandboxController.visualizeCode);
+// Visualize code using native Gemini API (Protected)
+router.post('/visualize', authenticate, sandboxController.visualizeCode);
 
 module.exports = router;

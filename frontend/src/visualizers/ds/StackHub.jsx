@@ -290,7 +290,7 @@ export default function StackHub() {
         {/* Top Navigation */}
         <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <Link
-            to="/visualizer"
+            to="/oop"
             className="inline-flex items-center gap-2 text-xs font-bold text-gray-600 dark:text-gray-400 hover:text-[#AB526B] dark:hover:text-[#F0E2A4] transition-colors"
           >
             <ArrowLeft size={16} />

@@ -369,7 +369,7 @@ export default function StringHub() {
         {/* Top Navigation */}
         <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <Link
-            to="/visualizer"
+            to="/oop"
             className="inline-flex items-center gap-2 text-xs font-bold text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
           >
             <ArrowLeft size={16} />

@@ -102,7 +102,7 @@ export default function Navbar() {
         {/* Center: Desktop Floating Glass Capsule */}
         <div className={`hidden md:flex items-center ${capsuleBgClass} rounded-full p-1 border backdrop-blur-lg transition-colors duration-300`}>
           <NavLink
-            to="/oop"
+            to="/visualizer"
             className={getNavLinkClass(isOopVisualizerRoute)}
           >
             <Boxes 
@@ -300,7 +300,7 @@ export default function Navbar() {
           >
             <div className="px-5 py-4 space-y-2">
               <NavLink
-                to="/oop"
+                to="/visualizer"
                 onClick={() => setMobileMenuOpen(false)}
                 className={`flex items-center justify-between p-3 rounded-2xl transition-all ${
                   isOopVisualizerRoute

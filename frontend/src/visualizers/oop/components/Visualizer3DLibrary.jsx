@@ -1370,6 +1370,7 @@ export function InnerView({ cat, onClose }) {
    VISUALIZER 3D LIBRARY MAIN COMPONENT
    ───────────────────────────────────────────────────────────── */
 export default function Visualizer3DLibrary({ onExitToPillars }) {
+  const navigate = useNavigate();
   const [selectedCat, setSelectedCat] = useState(null);
 
   const handleSelectCat = useCallback((cat) => setSelectedCat(cat), []);
@@ -1380,15 +1381,13 @@ export default function Visualizer3DLibrary({ onExitToPillars }) {
       
       {/* Top Floating Control Bar */}
       <div className="absolute top-4 left-4 z-40 flex items-center gap-2">
-        {onExitToPillars && (
-          <button
-            onClick={onExitToPillars}
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-slate-100 font-medium text-xs shadow-lg backdrop-blur-md border border-slate-200 dark:border-white/10 hover:bg-white dark:hover:bg-slate-800 transition-all hover:scale-105"
-          >
-            <ArrowLeft size={14} />
-            <span>OOP Pillars Overview</span>
-          </button>
-        )}
+        <button
+          onClick={() => onExitToPillars ? onExitToPillars() : navigate('/oop')}
+          className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-slate-100 font-medium text-xs shadow-lg backdrop-blur-md border border-slate-200 dark:border-white/10 hover:bg-white dark:hover:bg-slate-800 transition-all hover:scale-105 cursor-pointer"
+        >
+          <ArrowLeft size={14} />
+          <span>OOP Pillars Overview</span>
+        </button>
         <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 text-amber-200 text-xs font-mono backdrop-blur-md border border-amber-300/20">
           <SparklesIcon size={13} className="text-amber-400 animate-pulse" />
           <span>3D Interactive Studio</span>

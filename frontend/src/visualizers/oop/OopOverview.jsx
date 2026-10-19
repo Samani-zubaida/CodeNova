@@ -32,9 +32,15 @@ export default function OopOverview() {
     ? (CATEGORIES.find(c => c.id === 'crypto') || null)
     : null;
 
-  // Mode: 'pillars' (default discovery grid) or '3d' (Three.js 3D Library canvas)
-  const [viewMode, setViewMode] = useState(tabParam === '3d' ? '3d' : 'pillars');
+  // Mode: 'pillars' default discovery grid
   const [selectedCat, setSelectedCat] = useState(initialCategory);
+
+  // Redirect to /visualizer if 3d tab requested
+  useEffect(() => {
+    if (tabParam === '3d') {
+      navigate('/visualizer', { replace: true });
+    }
+  }, [tabParam, navigate]);
 
   // Handle legacy query params concept redirection (e.g. /oop?concept=encapsulation)
   useEffect(() => {
@@ -55,15 +61,6 @@ export default function OopOverview() {
       navigate(`/oop/${conceptId}`);
     }
   };
-
-  // If 3D view is active, render full-screen 3D library
-  if (viewMode === '3d') {
-    return (
-      <div className="w-full flex-1 flex flex-col h-full min-h-[calc(100vh-64px)] relative">
-        <Visualizer3DLibrary onExitToPillars={() => setViewMode('pillars')} />
-      </div>
-    );
-  }
 
   return (
     <div className="w-full flex-1 flex flex-col font-sans relative overflow-x-hidden transition-colors duration-300">
@@ -94,24 +91,16 @@ export default function OopOverview() {
           {/* Right: Quick View Switcher & Category Hubs */}
           <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-0 [scrollbar-width:none]">
             <button
-              onClick={() => setViewMode('pillars')}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0 select-none shadow-xs ${
-                viewMode === 'pillars'
-                  ? 'bg-gradient-to-r from-[#AB526B] via-[#BD5A75] to-[#99445B] text-white shadow-[0_2px_10px_rgba(171,82,107,0.35)] border border-white/20'
-                  : isDark
-                  ? 'bg-white/[0.05] hover:bg-white/[0.09] text-slate-300 hover:text-white border border-white/10'
-                  : isWarm
-                  ? 'bg-black/[0.03] hover:bg-black/[0.06] text-[#2D1F23]/80 hover:text-[#2D1F23] border border-[#EBE0D3]'
-                  : 'bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border border-slate-200/90'
-              }`}
+              onClick={() => {}}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0 select-none shadow-xs bg-gradient-to-r from-[#AB526B] via-[#BD5A75] to-[#99445B] text-white shadow-[0_2px_10px_rgba(171,82,107,0.35)] border border-white/20"
             >
               <span>🏛️ Pillars</span>
               <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-black/20 font-mono">4</span>
             </button>
 
             <button
-              onClick={() => setViewMode('3d')}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0 select-none ${
+              onClick={() => navigate('/visualizer')}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0 select-none cursor-pointer ${
                 isDark
                   ? 'bg-white/[0.05] hover:bg-white/[0.09] text-slate-300 hover:text-white border border-white/10 hover:border-amber-400/40'
                   : isWarm

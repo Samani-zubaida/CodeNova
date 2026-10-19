@@ -7,9 +7,9 @@ import HostDashboard from './game/HostDashboard';
 import Intro from './pages/Intro';
 import Auth from './pages/Auth';
 import VerifyEmail from './pages/VerifyEmail';
+import VisualizerDashboard from './pages/VisualizerDashboard';
 import useAppStore from './store/useAppStore';
 import { AuthProvider, ProtectedRoute, useAuth } from './context/AuthContext';
-
 // Data Structures
 import ArrayHub from './visualizers/ds/ArrayHub';
 import Array3DVisualizer from './visualizers/ds/Array3DVisualizer';
@@ -93,15 +93,6 @@ const LegacyInheritanceRedirect = () => {
   return <Navigate to={type ? `/oop/inheritance/${type}` : '/oop/inheritance/hierarchical'} replace />;
 };
 
-// Visualizer redirect dispatcher: routes ?cat=crypto directly to /visualizer/crypto
-const VisualizerRouteDispatcher = () => {
-  const [searchParams] = useSearchParams();
-  const cat = searchParams.get('cat') || searchParams.get('tab') || searchParams.get('view');
-  if (cat === 'crypto' || cat === 'cryptography') {
-    return <Navigate to="/visualizer/crypto" replace />;
-  }
-  return <Navigate to="/oop" replace />;
-};
 
 function AppContent() {
   const location = useLocation();
@@ -182,10 +173,10 @@ function AppContent() {
 
           {/* Protected Platform Experience - Requires Valid Authentication */}
           <Route element={<ProtectedRoute />}>
-            {/* Legacy /visualizer Routes -> Redirected to /oop or /visualizer/crypto */}
-            <Route path="/visualizer" element={<VisualizerRouteDispatcher />} />
-            <Route path="/visualization" element={<VisualizerRouteDispatcher />} />
-            <Route path="/visualizations" element={<VisualizerRouteDispatcher />} />
+            {/* Visualizer 3D Library Room */}
+            <Route path="/visualizer" element={<VisualizerDashboard />} />
+            <Route path="/visualization" element={<Navigate to="/visualizer" replace />} />
+            <Route path="/visualizations" element={<Navigate to="/visualizer" replace />} />
 
           {/* DS Routes */}
           <Route path="/visualizer/array" element={<ArrayHub />} />
@@ -245,9 +236,9 @@ function AppContent() {
           {/* Legacy / Backward-Compatible OOP Redirects */}
           <Route path="/oops" element={<Navigate to="/oop" replace />} />
           <Route path="/oops/*" element={<Navigate to="/oop" replace />} />
-          <Route path="/visualizer/oop" element={<Navigate to="/visualizer?cat=oop" replace />} />
-          <Route path="/visualizer/oops" element={<Navigate to="/visualizer?cat=oop" replace />} />
-          <Route path="/visualizer/dsa" element={<Navigate to="/visualizer?cat=dsa" replace />} />
+          <Route path="/visualizer/oop" element={<Navigate to="/oop" replace />} />
+          <Route path="/visualizer/oops" element={<Navigate to="/oop" replace />} />
+          <Route path="/visualizer/dsa" element={<Navigate to="/visualizer" replace />} />
           <Route path="/visualizer/encapsulation" element={<Navigate to="/oop/encapsulation" replace />} />
           <Route path="/visualizer/abstraction" element={<Navigate to="/oop/abstraction" replace />} />
           <Route path="/visualizer/inheritance" element={<Navigate to="/oop/inheritance/hierarchical" replace />} />

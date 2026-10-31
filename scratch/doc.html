@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Algoverse (Code Nova) Technical Documentation</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+    @page {
+      size: A4;
+      margin: 18mm 16mm 20mm 16mm;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 10pt;
+      line-height: 1.6;
+      color: #334155;
+      background-color: #ffffff;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Cover Page */
+    .cover-page {
+      page-break-after: always;
+      min-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .cover-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      font-size: 9pt;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #AB526B;
+      background: rgba(171, 82, 107, 0.1);
+      border: 1px solid rgba(171, 82, 107, 0.25);
+      border-radius: 999px;
+      margin-bottom: 24px;
+    }
+
+    .cover-title {
+      font-size: 32pt;
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: #0F172A;
+      margin: 0 0 16px 0;
+      line-height: 1.15;
+    }
+
+    .cover-subtitle {
+      font-size: 13pt;
+      color: #64748B;
+      max-width: 650px;
+      margin: 0 auto 36px auto;
+      line-height: 1.5;
+    }
+
+    .cover-meta {
+      display: flex;
+      gap: 16px;
+      margin-top: 20px;
+      justify-content: center;
+    }
+
+    .meta-card {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 14px 20px;
+      text-align: center;
+      min-width: 140px;
+    }
+
+    .meta-card .label {
+      font-size: 8pt;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94A3B8;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .meta-card .val {
+      font-size: 10pt;
+      color: #1E293B;
+      font-weight: 700;
+    }
+
+    /* Typography & Hierarchy */
+    h1 {
+      font-size: 20pt;
+      font-weight: 800;
+      color: #0F172A;
+      margin-top: 36px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #F1F5F9;
+      page-break-after: avoid;
+    }
+
+    h2 {
+      font-size: 15pt;
+      font-weight: 700;
+      color: #AB526B;
+      margin-top: 28px;
+      margin-bottom: 12px;
+      padding-bottom: 6px;
+      border-bottom: 1.5px solid #F8FAFC;
+      page-break-after: avoid;
+    }
+
+    h3 {
+      font-size: 12pt;
+      font-weight: 700;
+      color: #1E293B;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      page-break-after: avoid;
+    }
+
+    h4 {
+      font-size: 10.5pt;
+      font-weight: 600;
+      color: #475569;
+      margin-top: 16px;
+      margin-bottom: 6px;
+      page-break-after: avoid;
+    }
+
+    p {
+      margin: 0 0 10px 0;
+    }
+
+    ul, ol {
+      margin: 0 0 12px 0;
+      padding-left: 22px;
+    }
+
+    li {
+      margin-bottom: 5px;
+    }
+
+    li strong {
+      color: #1E293B;
+    }
+
+    /* Code & Syntax */
+    code {
+      font-family: 'JetBrains Mono', Consolas, Monaco, monospace;
+      font-size: 8.5pt;
+      background: #F1F5F9;
+      color: #AB526B;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid #E2E8F0;
+    }
+
+    pre {
+      background: #111827;
+      border-radius: 8px;
+      padding: 14px 16px;
+      overflow-x: auto;
+      margin: 12px 0 16px 0;
+      border: 1px solid #1F2937;
+      page-break-inside: avoid;
+    }
+
+    pre code {
+      background: transparent;
+      color: #F3F4F6;
+      padding: 0;
+      border: none;
+      font-size: 8pt;
+      line-height: 1.5;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 20px 0;
+      font-size: 8.5pt;
+      page-break-inside: avoid;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #CBD5E1;
+    }
+
+    th {
+      background: #331921;
+      color: #F4EBC3;
+      font-weight: 700;
+      text-align: left;
+      padding: 8px 12px;
+      border-bottom: 2px solid #AB526B;
+      letter-spacing: 0.3px;
+    }
+
+    td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #E2E8F0;
+      vertical-align: middle;
+      color: #334155;
+    }
+
+    tr:nth-child(even) td {
+      background: #F8FAFC;
+    }
+
+    /* Links */
+    a {
+      color: #AB526B;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    /* Mermaid diagrams container */
+    pre.mermaid {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+      margin: 16px 0;
+      page-break-inside: avoid;
+    }
+
+    /* Divider */
+    hr {
+      border: none;
+      border-top: 1px solid #E2E8F0;
+      margin: 24px 0;
+    }
+
+    /* Header/Footer Spacer */
+    .page-break {
+      page-break-after: always;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'neutral',
+      fontFamily: 'Plus Jakarta Sans, sans-serif',
+      securityLevel: 'loose'
+    });
+  </script>
+</head>
+<body>
+
+  <!-- Cover Page -->
+  <div class="cover-page">
+    <div class="cover-badge">ENGINEERING & ARCHITECTURE MANUAL</div>
+    <h1 class="cover-title">ALGOVERSE<br/><span style="color: #AB526B;">(CODE NOVA)</span></h1>
+    <div class="cover-subtitle">
+      Comprehensive Technical Architecture, Definition Specifications, Algorithm Visualizers, and Workflow Documentation
+    </div>
+
+    <div class="cover-meta">
+      <div class="meta-card">
+        <div class="label">Platform Version</div>
+        <div class="val">1.0.0 Production</div>
+      </div>
+      <div class="meta-card">
+        <div class="label">Core Framework</div>
+        <div class="val">React 19 + Express 5</div>
+      </div>
+      <div class="meta-card">
+        <div class="label">Graphics & Physics</div>
+        <div class="val">Three.js / WebGL</div>
+      </div>
+      <div class="meta-card">
+        <div class="label">Execution Engine</div>
+        <div class="val">JDoodle + Gemini AI</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content-body">
+    <h1>Algoverse (Code Nova) — Comprehensive Architecture &amp; Technical Documentation</h1>
+<hr />
+<h2>1. Executive Overview &amp; System Topology</h2>
+<p><strong>Algoverse</strong> (also known as <strong>Code Nova</strong>) is a full-stack, browser-based computer science education, visualization, and competitive programming platform. It combines:</p>
+<ol>
+<li><strong>Interactive Visualizers</strong>: 3D and 2D animated visualizations for <strong>Data Structures</strong> (40+ algorithms), <strong>Object-Oriented Programming</strong> (4 pillars &amp; inheritance variants), and <strong>Cryptography</strong> (13 classical, modern, and cryptanalytic ciphers).</li>
+<li><strong>Code Studio &amp; Sandbox</strong>: An in-browser multi-language Monaco code editor executing in isolated containers via JDoodle, paired with a multi-tier AI complexity analysis engine (Google Gemini 2.0 Flash, OpenRouter, and a deterministic AST parser).</li>
+<li><strong>Assessment &amp; Gamification Engine</strong>: 6 subject tracks, customizable level progression, daily streak tracking, activity heatmaps, and automated badge rewards sent via real emails.</li>
+<li><strong>Multiplayer 1v1 PvP Coding Duels</strong>: Real-time WebSockets ([Socket.io](file:///d:/yusra/programming/Major_Projects/Algoverse/backend/socket/duelManager.js)) matchmaking, question broadcasting, live opponent progress sync, and millisecond tie-breaker resolution.</li>
+<li><strong>Host &amp; Competition Center</strong>: Teacher/host dashboards for hosting custom coding contests, generating automatic test cases, and viewing live leaderboards.</li>
+</ol>
+<h3>1.1 High-Level Architecture Diagram</h3>
+<pre class="mermaid">graph TD
+    Client[&quot;Frontend Client (React 19 + Vite + TailwindCSS v4)&quot;]
+    ThreeJS[&quot;Three.js / @react-three/fiber (3D Particle Field &amp; 3D Library Room)&quot;]
+    Monaco[&quot;Monaco Code Editor &amp; Visualizer Canvas&quot;]
+    SocketClient[&quot;Socket.io Client (Real-time PvP Duels)&quot;]
+    ZustandStore[&quot;Zustand Store (useAppStore) + AuthContext&quot;]
+
+    Client --&gt; ThreeJS
+    Client --&gt; Monaco
+    Client --&gt; SocketClient
+    Client --&gt; ZustandStore
+
+    Express[&quot;Backend API Server (Express 5.2 / Node.js)&quot;]
+    SocketServer[&quot;Socket.io Server (duelManager)&quot;]
+
+    Client -- &quot;REST API (JWT Bearer)&quot; --&gt; Express
+    SocketClient &lt;== &quot;WebSockets (Bi-directional)&quot; ==&gt; SocketServer
+
+    subgraph Backend Services
+        AuthService[&quot;Auth &amp; Security (Bcrypt + Crypto)&quot;]
+        SandboxController[&quot;Sandbox Controller (JDoodle + LLM / AST)&quot;]
+        LevelEngine[&quot;Level Engine (OpenTDB Trivia + Curated Sets)&quot;]
+        EmailService[&quot;Email Engine (Resend API + Nodemailer SMTP)&quot;]
+        CompService[&quot;Competition &amp; Leaderboard Engine&quot;]
+    end
+
+    Express --&gt; AuthService
+    Express --&gt; SandboxController
+    Express --&gt; LevelEngine
+    Express --&gt; EmailService
+    Express --&gt; CompService
+
+    subgraph Persistence Layer (Dual-Resilient Engine)
+        MongoAtlas[(&quot;MongoDB Atlas Primary&quot;)]
+        LocalJSON[(&quot;Local Persistent JSON Storage (.data/*.json)&quot;)]
+    end
+
+    Express -- &quot;Primary Connection (4s Timeout)&quot; --&gt; MongoAtlas
+    Express -- &quot;Automatic Zero-Downtime Fallback&quot; --&gt; LocalJSON
+
+    subgraph External Cloud APIs
+        JDoodleAPI[&quot;JDoodle Compiler API (Isolated Runtime)&quot;]
+        GeminiAPI[&quot;Google Gemini 2.0 Flash / OpenRouter LLM&quot;]
+        ResendAPI[&quot;Resend Email API / SMTP Host&quot;]
+        OpenTDBAPI[&quot;Open Trivia Database API&quot;]
+    end
+
+    SandboxController --&gt; JDoodleAPI
+    SandboxController --&gt; GeminiAPI
+    EmailService --&gt; ResendAPI
+    LevelEngine --&gt; OpenTDBAPI
+</pre>
+<hr />
+<h2>2. Technology Stack Breakdown</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Layer</th>
+<th style="text-align:left">Technologies &amp; Libraries</th>
+<th style="text-align:left">Key Responsibilities</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>Frontend Framework</strong></td>
+<td style="text-align:left">[React 19](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/package.json#L28), [Vite 8](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/package.json#L45)</td>
+<td style="text-align:left">Component rendering, fast HMR bundling, code splitting.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Styling &amp; Motion</strong></td>
+<td style="text-align:left">[TailwindCSS v4](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/package.json#L32), [Framer Motion](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/package.json#L22), [GSAP](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/package.json#L23), [Lenis](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/package.json#L24)</td>
+<td style="text-align:left">Responsive UI, fluid layout transitions, smooth inertial scrolling.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>3D Graphics &amp; Postprocessing</strong></td>
+<td style="text-align:left">[Three.js](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/package.json#L33), [@react-three/fiber](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/package.json#L15), [@react-three/drei](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/package.json#L14), [@react-three/postprocessing](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/package.json#L16)</td>
+<td style="text-align:left">18,000 GPU GLSL morphing particle field on intro page, 3D interactive library room with procedural books and shelves.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Code Editor</strong></td>
+<td style="text-align:left">[@monaco-editor/react](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/package.json#L13)</td>
+<td style="text-align:left">Multi-language syntax highlighting, line tracking, in-editor debugging.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>State &amp; Navigation</strong></td>
+<td style="text-align:left">[Zustand](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/package.json#L34), [React Router v7](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/package.json#L30)</td>
+<td style="text-align:left">Global theme, XP, unlocked levels, authenticated routing guards.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Backend Runtime</strong></td>
+<td style="text-align:left">[Express 5](file:///d:/yusra/programming/Major_Projects/Algoverse/backend/package.json#L21), Node.js (CommonJS)</td>
+<td style="text-align:left">REST routing, CORS policies, payload validation, error sanitization.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Real-time Networking</strong></td>
+<td style="text-align:left">[Socket.io](file:///d:/yusra/programming/Major_Projects/Algoverse/backend/package.json#L27)</td>
+<td style="text-align:left">Matchmaking queues, 1v1 duel rooms, real-time score/progress broadcasting.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Database &amp; Fallback</strong></td>
+<td style="text-align:left">[Mongoose 9](file:///d:/yusra/programming/Major_Projects/Algoverse/backend/package.json#L24), FileSystem JSON ([storage.js](file:///d:/yusra/programming/Major_Projects/Algoverse/backend/services/storage.js))</td>
+<td style="text-align:left">MongoDB Atlas with automatic fallback to local JSON database (<code>.data/</code>).</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>AI &amp; LLM Services</strong></td>
+<td style="text-align:left">[@google/genai](file:///d:/yusra/programming/Major_Projects/Algoverse/backend/package.json#L15) (Gemini 2.0 Flash), OpenRouter API</td>
+<td style="text-align:left">Code complexity reasoning, visual timeline generation, contextual hints.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Code Execution Engine</strong></td>
+<td style="text-align:left">JDoodle Compiler REST API</td>
+<td style="text-align:left">Multi-language compilation (Node.js, Python 3, C++17, Java 4).</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Email Infrastructure</strong></td>
+<td style="text-align:left">[Resend SDK](file:///d:/yusra/programming/Major_Projects/Algoverse/backend/package.json#L26), [Nodemailer](file:///d:/yusra/programming/Major_Projects/Algoverse/backend/package.json#L25)</td>
+<td style="text-align:left">Transactional verification links, welcome emails, and badge announcements.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Security &amp; Cryptography</strong></td>
+<td style="text-align:left">[bcryptjs](file:///d:/yusra/programming/Major_Projects/Algoverse/backend/package.json#L18), [jsonwebtoken](file:///d:/yusra/programming/Major_Projects/Algoverse/backend/package.json#L23), [express-rate-limit](file:///d:/yusra/programming/Major_Projects/Algoverse/backend/package.json#L22), Node <code>crypto</code></td>
+<td style="text-align:left">Password hashing (10 salt rounds), JWT revocation, SHA-256 token hashing, DDoS rate limiting.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>3. Data Models &amp; Schema Definitions</h2>
+<p>All primary data entities are defined via Mongoose schemas under [<code>backend/models/</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/backend/models) and mirrored in local persistent storage by [<code>backend/services/storage.js</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/backend/services/storage.js).</p>
+<h3>3.1 User Model ([<code>backend/models/User.js</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/backend/models/User.js))</h3>
+<p>Represents a registered platform account, credentials, verification state, and gamified progress.</p>
+<pre><code class="language-javascript">{
+  username: { type: String, required: true, unique: true, trim: true },
+  email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+  passwordHash: { type: String, required: true },
+
+  // Verification &amp; Security
+  isVerified: { type: Boolean, default: true },
+  verificationTokenHash: { type: String, default: null },
+  verificationTokenExpiry: { type: Date, default: null },
+
+  // Gamification &amp; Retention
+  activityLog: [{ type: String }],         // Array of date strings: &quot;YYYY-MM-DD&quot;
+  currentStreak: { type: Number, default: 0 },
+  longestStreak: { type: Number, default: 0 },
+  earnedBadges: [{ 
+    badgeId: String, 
+    name: String, 
+    awardedAt: { type: Date, default: Date.now } 
+  }],
+  xp: { type: Number, default: 0 }
+}
+</code></pre>
+<ul>
+<li><strong>Security Transform</strong>: The schema defines a <code>toJSON</code> transform that strips <code>passwordHash</code>, <code>verificationTokenHash</code>, and <code>verificationTokenExpiry</code> before returning any JSON response.</li>
+</ul>
+<h3>3.2 Progress Model ([<code>backend/models/Progress.js</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/backend/models/Progress.js))</h3>
+<p>Tracks the user's quest-world progression across the 3D learning world:</p>
+<ul>
+<li><code>userId</code>: Reference to <code>User</code> document.</li>
+<li><code>town1Unlocked</code>: Boolean (defaults to <code>true</code>).</li>
+<li><code>town2Unlocked</code>: Boolean (unlocked after mastering fundamental arrays and stacks).</li>
+<li><code>town3Unlocked</code>: Boolean (unlocked after advanced graph and dynamic programming challenges).</li>
+<li><code>totalScore</code>: Cumulative assessment and quest score.</li>
+</ul>
+<h3>3.3 Competition Model ([<code>backend/models/Competition.js</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/backend/models/Competition.js))</h3>
+<p>Represents coding competitions, either pre-seeded global challenges or custom contests created by instructors:</p>
+<ul>
+<li><code>title</code>: Name of the competition.</li>
+<li><code>hostOrg</code>: Host organization or username of the contest author.</li>
+<li><code>startTime</code> / <code>endTime</code>: Contest active window.</li>
+<li><code>status</code>: <code>'Upcoming'</code>, <code>'Active'</code>, or <code>'Completed'</code>.</li>
+<li><code>type</code>: <code>'Global'</code>, <code>'Challenge'</code>, <code>'Series'</code>, or <code>'Hosted'</code>.</li>
+<li><code>enrollmentCount</code>: Number of enrolled competitors.</li>
+<li><code>questions</code>: Array of challenge problems containing <code>title</code>, <code>description</code>, <code>initialCode</code>, and <code>testCases</code> (<code>input</code>, <code>expectedOutput</code>).</li>
+<li><code>participants</code>: Array of participant results containing <code>username</code>, <code>score</code>, <code>submissionTime</code>, and <code>timeTakenMs</code> (used as an exact millisecond tie-breaker).</li>
+</ul>
+<h3>3.4 Snippet Model ([<code>backend/models/Snippet.js</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/backend/models/Snippet.js))</h3>
+<p>Stores user-saved sandbox code snippets:</p>
+<ul>
+<li><code>userId</code>: Reference to <code>User</code>.</li>
+<li><code>title</code>: Snippet label.</li>
+<li><code>code</code>: Raw source code string.</li>
+<li><code>language</code>: <code>javascript</code>, <code>python</code>, <code>cpp</code>, or <code>java</code>.</li>
+<li><code>isPublic</code>: Visibility toggle.</li>
+</ul>
+<hr />
+<h2>4. Backend Services &amp; Controller Architecture</h2>
+<h3>4.1 Resilient Storage Fallback ([<code>backend/services/storage.js</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/backend/services/storage.js))</h3>
+<p>Algoverse features an active-standby database design. When [<code>backend/server.js</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/backend/server.js#L44-L56) attempts to connect to MongoDB Atlas, it enforces a 4-second timeout (<code>serverSelectionTimeoutMS: 4000</code>). If Atlas is unreachable or offline, the platform transparently switches to the resilient file-based storage engine in <code>.data/</code>:</p>
+<ul>
+<li><code>readJson(filePath, defaultValue)</code> &amp; <code>writeJson(filePath, data)</code>: Synchronous atomic reads and writes.</li>
+<li><code>storage.findUserByEmail(email)</code>: Case-insensitive email lookup.</li>
+<li><code>storage.findUserByUsername(username)</code>: Case-insensitive username lookup.</li>
+<li><code>storage.createUser({ username, email, passwordHash })</code>: Handles unique duplicate checking and initializes user state.</li>
+<li><code>storage.recordActivity(username)</code>: Checks today's date (<code>YYYY-MM-DD</code>). If the user logged activity yesterday, <code>currentStreak</code> increments; otherwise it resets to 1. Updates <code>longestStreak</code> if broken.</li>
+<li><code>storage.awardBadge(username, badgeId, badgeName)</code>: Awards badges without duplicate assignment.</li>
+</ul>
+<h3>4.2 Email Notification Service ([<code>backend/services/emailService.js</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/backend/services/emailService.js))</h3>
+<p>Handles outgoing transactional emails using a tiered delivery strategy:</p>
+<ol>
+<li><strong>Resend API</strong>: Invoked if <code>RESEND_API_KEY</code> is present.</li>
+<li><strong>Nodemailer SMTP Transporter</strong>: Invoked if <code>SMTP_HOST</code>, <code>SMTP_USER</code>, and <code>SMTP_PASS</code> are present.</li>
+<li><strong>Simulated Delivery</strong>: If neither provider is configured, it logs formatted notification logs to stdout for testing.</li>
+</ol>
+<p>The service provides three core email templates with a dark glassmorphic HTML aesthetic:</p>
+<ul>
+<li><code>sendVerificationEmail({ to, username, verificationLink })</code>: Dispatches an activation button with an expiring verification link.</li>
+<li><code>sendWelcomeEmail({ to, username })</code>: Welcome message introducing the 3D Library, Visualizers, and PvP Duels.</li>
+<li><code>sendBadgeEarnedEmail({ to, username, badgeName, badgeDescription })</code>: Gamification milestone notification congratulating the user on earning a new badge.</li>
+</ul>
+<h3>4.3 Sandbox Controller ([<code>backend/controllers/sandboxController.js</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/backend/controllers/sandboxController.js))</h3>
+<p>Responsible for code compilation and deep algorithmic complexity analysis:</p>
+<ol>
+<li>
+<p><strong><code>executeCode(req, res)</code></strong>:</p>
+<ul>
+<li>Validates code length (maximum 50 KB to mitigate DoS payloads).</li>
+<li>Maps standard language keys to JDoodle compiler identifiers:
+<ul>
+<li><code>javascript</code> $\rightarrow$ <code>nodejs</code> (v4)</li>
+<li><code>python</code> $\rightarrow$ <code>python3</code> (v4)</li>
+<li><code>cpp</code> $\rightarrow$ <code>cpp17</code> (v0)</li>
+<li><code>java</code> $\rightarrow$ <code>java</code> (v4)</li>
+</ul>
+</li>
+<li>Executes with a strict 15-second timeout against JDoodle's execution endpoint.</li>
+<li>Returns <code>{ run: { stdout, stderr, code } }</code>.</li>
+</ul>
+</li>
+<li>
+<p><strong><code>visualizeCode(req, res)</code></strong>:</p>
+<ul>
+<li>Executes a multi-tier analysis pipeline:
+<ol>
+<li><strong>OpenRouter API</strong>: Tries models such as <code>openrouter/free</code>, <code>google/gemma-4-31b-it:free</code>, and <code>qwen/qwen3.8-27b:free</code>.</li>
+<li><strong>Google Gemini Native API</strong>: If configured with <code>GEMINI_API_KEY</code>, calls <code>gemini-2.0-flash:generateContent</code>.</li>
+<li><strong>Deterministic Static Analyzer (<code>generateStaticAnalysis</code>)</strong>: If external APIs fail or are offline, an AST-like pattern analyzer performs static regex analysis on the code:
+<ul>
+<li>Detects data structures: Arrays, Hash Maps, Sets, Stacks, Queues, Linked Lists, Binary Trees, Two Pointers.</li>
+<li>Analyzes loop nesting depths ($O(1)$, $O(N)$, $O(N^2)$, $O(N^k)$).</li>
+<li>Detects logarithmic step division (<code>/= 2</code>, <code>mid = (low + high) / 2</code> $\rightarrow$ $O(\log N)$).</li>
+<li>Detects recursion and recursion + logarithmic divide-and-conquer ($O(N \log N)$).</li>
+<li>Computes Space Complexity based on dynamic allocations (<code>new Array</code>, <code>vector</code>, recursion stack frames).</li>
+</ul>
+</li>
+</ol>
+</li>
+</ul>
+</li>
+</ol>
+<h3>4.4 PvP Duel Manager ([<code>backend/socket/duelManager.js</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/backend/socket/duelManager.js))</h3>
+<p>Manages real-time WebSockets communication for multiplayer coding battles:</p>
+<ul>
+<li><strong><code>join_matchmaking</code></strong>: Queues incoming players. If a player is already waiting, matches them into a newly generated isolated room <code>duel_&lt;randomBytes&gt;</code>.</li>
+<li><strong>Question Selection</strong>: Randomly picks 5 algorithmic and system design questions from an internal 20-question bank across Data Structures, OOP, Cryptography, and OS/Networking.</li>
+<li><strong><code>update_progress</code></strong>: Broadcasts <code>opponent_progress</code> events whenever a player answers a question.</li>
+<li><strong><code>duel_complete</code></strong>: Receives completion score and <code>timeTakenMs</code>. Once both players finish, calculates the winner (higher score wins; exact millisecond duration acts as the tie-breaker).</li>
+<li><strong><code>disconnect</code></strong>: Automatically awards victory by default if an opponent disconnects during an active duel.</li>
+</ul>
+<hr />
+<h2>5. Frontend Architecture &amp; State Management</h2>
+<h3>5.1 Zustand App Store ([<code>frontend/src/store/useAppStore.js</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/store/useAppStore.js))</h3>
+<p>Provides centralized client-side state across visualizers, sandbox, and gameplay:</p>
+<ul>
+<li><code>user</code> / <code>token</code>: Cached in <code>localStorage</code> under keys <code>nova_user</code> and <code>nova_token</code>.</li>
+<li><code>theme</code>: Multi-theme engine supporting <code>'light'</code>, <code>'warm'</code> (sepia/editorial aesthetic), and <code>'dark'</code> (cyberpunk aesthetic). Automatically applies <code>.dark</code> and <code>.warm</code> classes to <code>document.documentElement</code>.</li>
+<li><code>currentCodeOutput</code>: Global execution output from the sandbox terminal.</li>
+<li><code>totalXP</code>: Current player XP points accumulated from quizzes, duels, and visualizer modules.</li>
+<li><code>unlockedLevels</code>: Map tracking unlocked stages per subject (<code>{ ds: 1, algo: 1, oop: 1 }</code>).</li>
+<li>Actions: <code>login()</code>, <code>logout()</code>, <code>setUser()</code>, <code>setTheme()</code>, <code>toggleTheme()</code>, <code>addXP()</code>, <code>unlockNextLevel()</code>.</li>
+</ul>
+<h3>5.2 Authentication Context &amp; Navigation Guard ([<code>frontend/src/context/AuthContext.jsx</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/context/AuthContext.jsx))</h3>
+<ul>
+<li><strong>Session Validation</strong>: On initial load, if a token exists in <code>localStorage</code>, the provider performs a silent handshake against <code>/api/auth/me</code>. If rejected (expired or revoked), the session is cleanly cleared.</li>
+<li><strong><code>requireAuth(actionCallback, options)</code></strong>: Centralized access guard. If the user is authenticated, it executes <code>actionCallback()</code>. If unauthenticated, it redirects the user to <code>/auth</code> with a friendly return URL and explanatory flash message.</li>
+<li><strong><code>ProtectedRoute</code></strong>: Component wrapper used in [<code>App.jsx</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/App.jsx#L176) to protect platform routes (<code>/visualizer</code>, <code>/oop</code>, <code>/sandbox</code>, <code>/game</code>, <code>/host</code>).</li>
+</ul>
+<h3>5.3 Global Axios Token Interceptor ([<code>frontend/src/lib/api.js</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/lib/api.js))</h3>
+<p>Automatically attaches the JWT Bearer token to all outgoing HTTP requests:</p>
+<pre><code class="language-javascript">axios.interceptors.request.use((config) =&gt; {
+  const token = getAuthToken();
+  if (token &amp;&amp; (!config.headers || !config.headers.Authorization)) {
+    config.headers = config.headers || {};
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+</code></pre>
+<hr />
+<h2>6. Interactive Visualizers &amp; Feature Deep-Dive</h2>
+<h3>6.1 3D Particle Morphing Intro ([<code>frontend/src/pages/Intro.jsx</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/pages/Intro.jsx))</h3>
+<ul>
+<li>Built with <code>@react-three/fiber</code> and custom GPU GLSL shaders.</li>
+<li>Renders <strong>18,000 particles</strong> that continuously morph between 4 physical geometry stages driven by scroll progress:
+<ol>
+<li><strong>Stage 1 (Hero)</strong>: Rotating, dispersed cosmic nebula.</li>
+<li><strong>Stage 2 (Stats)</strong>: Spherical planetary shell representing data complexity.</li>
+<li><strong>Stage 3 (Growth)</strong>: Dual DNA-like double helix structure representing knowledge acquisition.</li>
+<li><strong>Stage 4 (Galaxy)</strong>: Spiral disc vortex directing users into the 3D Library Room.</li>
+</ol>
+</li>
+<li>Uses <strong>Lenis</strong> inertial scrolling and a critically damped <code>SmoothScrollDriver</code> (~30ms response) to lock camera positioning to DOM text overlay cards without mousewheel jitter.</li>
+</ul>
+<h3>6.2 3D Visualizer Library Room ([<code>frontend/src/visualizers/oop/components/Visualizer3DLibrary.jsx</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/visualizers/oop/components/Visualizer3DLibrary.jsx))</h3>
+<ul>
+<li>A navigable virtual 3D library with ambient lighting, point lights, and dynamic shadows.</li>
+<li>Four themed bookshelves represent the four main sectors:
+<ol>
+<li><strong>Red Shelf</strong>: Data Structures &amp; Algorithms (Array, Graph, Tree, Stack, Queue, Heap, String, Map).</li>
+<li><strong>Sage Shelf</strong>: Object-Oriented Programming (Encapsulation, Abstraction, Inheritance, Polymorphism).</li>
+<li><strong>Brown Shelf</strong>: Cryptography &amp; Security (13 ciphers &amp; protocols).</li>
+<li><strong>Wheat Shelf</strong>: Code Studio (Monaco Sandbox &amp; 3D Quest World).</li>
+</ol>
+</li>
+<li>Features interactive books that animate upward on hover with custom titles, metadata tags, and direct jump routing.</li>
+</ul>
+<h3>6.3 Data Structures Suite ([<code>frontend/src/visualizers/ds/</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/visualizers/ds))</h3>
+<p>The data structures suite covers 8 primary categories with dedicated animation engines:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Category</th>
+<th style="text-align:left">Primary Visualizer Component</th>
+<th style="text-align:left">Supported Algorithms &amp; Features</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>Arrays &amp; Sorting</strong></td>
+<td style="text-align:left">[<code>ArrayHub.jsx</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/visualizers/ds/ArrayHub.jsx), [<code>Array3DVisualizer.jsx</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/visualizers/ds/Array3DVisualizer.jsx)</td>
+<td style="text-align:left">Static 1D, Dynamic Vector doubling ($O(1)^*$), 2D Matrix memory mapping ($[r \cdot \text{cols} + c]$), Binary Search ($L, M, R$ pointers), Quick Sort (pivot partitioning), Merge Sort (divide-and-conquer recursive trees), Bubble Sort, Insertion Sort, Two Sum (converging pointers), Sliding Window, Kadane's Algorithm, Dutch National Flag, Trapping Rain Water (3D column simulation), Prefix Sum arrays.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Graphs</strong></td>
+<td style="text-align:left">[<code>GraphHub.jsx</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/visualizers/ds/GraphHub.jsx), [<code>GraphVisualizer.jsx</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/visualizers/ds/GraphVisualizer.jsx)</td>
+<td style="text-align:left">Breadth-First Search (queue state), Depth-First Search (stack/backtracking), Dijkstra's Shortest Path (edge relaxation), A* Search (Manhattan/Euclidean heuristics), Prim's Minimum Spanning Tree, Kruskal's MST (Disjoint Set Union), Bellman-Ford (negative cycle detection), Topological Sort (DAG dependency resolution).</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Trees</strong></td>
+<td style="text-align:left">[<code>TreeHub.jsx</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/visualizers/ds/TreeHub.jsx), [<code>TreeGraphVisualizer.jsx</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/visualizers/ds/TreeGraphVisualizer.jsx)</td>
+<td style="text-align:left">Binary Search Tree (insertion/lookup), AVL Tree (LL, RR, LR, RL balancing rotations), In-Order, Pre-Order, and Level-Order traversals.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Linked Lists</strong></td>
+<td style="text-align:left">[<code>LinkedListHub.jsx</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/visualizers/ds/LinkedListHub.jsx), [<code>LinkedListVisualizer.jsx</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/visualizers/ds/LinkedListVisualizer.jsx)</td>
+<td style="text-align:left">Singly Linked List, Doubly Linked List, Circular Linked List, Floyd's Cycle Detection (Hare &amp; Tortoise), in-place pointer reversal.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Stacks</strong></td>
+<td style="text-align:left">[<code>StackHub.jsx</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/visualizers/ds/StackHub.jsx), [<code>StackVisualizer.jsx</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/visualizers/ds/StackVisualizer.jsx)</td>
+<td style="text-align:left">Array Stack (Push, Pop, Peek), Balanced Parentheses syntax checking, Monotonic Stack, Min Stack ($O(1)$ minimum retrieval).</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Queues</strong></td>
+<td style="text-align:left">[<code>QueueHub.jsx</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/visualizers/ds/QueueHub.jsx), [<code>QueueVisualizer.jsx</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/visualizers/ds/QueueVisualizer.jsx)</td>
+<td style="text-align:left">Linear FIFO Queue, Circular Memory-Recycled Queue ($(i+1) \pmod N$), Deque (Double-Ended), Priority Queue.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Heaps</strong></td>
+<td style="text-align:left">[<code>HeapVisualizer.jsx</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/visualizers/ds/HeapVisualizer.jsx)</td>
+<td style="text-align:left">Min-Heap, Max-Heap, Bottom-up Heapify ($O(N)$ construction), in-place Heap Sort.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Strings</strong></td>
+<td style="text-align:left">[<code>StringHub.jsx</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/visualizers/ds/StringHub.jsx), [<code>StringVisualizer.jsx</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/visualizers/ds/StringVisualizer.jsx)</td>
+<td style="text-align:left">KMP Pattern Matching ($\pi$ prefix table), Rabin-Karp (rolling polynomial hash), Z-Algorithm, Longest Palindromic Substring.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Hash Maps</strong></td>
+<td style="text-align:left">[<code>MapVisualizer.jsx</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/visualizers/ds/MapVisualizer.jsx)</td>
+<td style="text-align:left">Key hashing, Bucket indexing, Collision resolution via Separate Chaining and Open Addressing (Linear Probing).</td>
+</tr>
+</tbody>
+</table>
+<h3>6.4 Object-Oriented Programming (OOP) Studio ([<code>frontend/src/visualizers/oop/</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/visualizers/oop))</h3>
+<p>The OOP studio visualizes object-oriented principles through real-world software abstractions:</p>
+<ol>
+<li><strong>Encapsulation ([<code>EncapsulationVisualizer.jsx</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/visualizers/oop/EncapsulationVisualizer.jsx))</strong>:
+<ul>
+<li>Visualizes a <strong>Car Dashboard &amp; Engine Controller</strong>.</li>
+<li>Demonstrates <code>private double fuelLevel</code> and <code>private int rpm</code>.</li>
+<li>Direct field mutations from the outside world are visually blocked with an unauthorized access shield.</li>
+<li>Public methods <code>accelerate()</code> and <code>refuel()</code> mediate modifications with boundary validation.</li>
+</ul>
+</li>
+<li><strong>Abstraction ([<code>AbstractionVisualizer.jsx</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/visualizers/oop/AbstractionVisualizer.jsx))</strong>:
+<ul>
+<li>Visualizes an <strong>Automated Teller Machine (ATM)</strong>.</li>
+<li>Public interface exposes clean contract methods: <code>insertCard()</code>, <code>verifyPin()</code>, <code>withdrawCash()</code>.</li>
+<li>Conceals background complexity: ISO 8583 banking network protocols, cryptographic ledger validation, and cash dispenser actuators.</li>
+</ul>
+</li>
+<li><strong>Inheritance Studio</strong>:
+<ul>
+<li><strong>Single Inheritance ([<code>SingleInheritanceVisualizer.jsx</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/visualizers/oop/SingleInheritanceVisualizer.jsx))</strong>: <code>Animal</code> base class inherited by <code>Dog</code>, acquiring <code>eat()</code> and overriding <code>makeSound()</code>.</li>
+<li><strong>Multilevel Inheritance ([<code>MultilevelInheritanceVisualizer.jsx</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/visualizers/oop/MultilevelInheritanceVisualizer.jsx))</strong>: Three-tier chain: <code>Person</code> $\rightarrow$ <code>Employee</code> $\rightarrow$ <code>SoftwareEngineer</code>, accumulating attributes down the hierarchy.</li>
+<li><strong>Hierarchical Inheritance ([<code>InheritanceVisualizer.jsx</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/visualizers/oop/InheritanceVisualizer.jsx))</strong>: <code>Vehicle</code> superclass branching into <code>Car</code>, <code>Motorcycle</code>, and <code>ElectricTruck</code>.</li>
+</ul>
+</li>
+<li><strong>Polymorphism ([<code>PolymorphismVisualizer.jsx</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/visualizers/oop/PolymorphismVisualizer.jsx))</strong>:
+<ul>
+<li>Visualizes dynamic virtual method dispatch.</li>
+<li>An abstract reference <code>Person alex</code> is assigned different concrete subclass instances at runtime: <code>Developer</code>, <code>Parent</code>, <code>Athlete</code>, and <code>Musician</code>.</li>
+<li>Calling <code>alex.performRole()</code> dynamically refracts into entirely different code execution paths without requiring <code>if-else</code> type checking.</li>
+</ul>
+</li>
+</ol>
+<h3>6.5 Cryptography &amp; Security Studio ([<code>frontend/src/visualizers/crypto/CryptoHub.jsx</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/visualizers/crypto/CryptoHub.jsx))</h3>
+<p>Algoverse hosts an interactive lab of 13 cryptographic algorithms split across 5 domains:</p>
+<pre class="mermaid">graph LR
+    CryptoStudio[&quot;Cryptography Studio&quot;]
+
+    subgraph Modern Standards
+        AES[&quot;AES-256 (Rijndael)&quot;]
+        RSA[&quot;RSA Cryptosystem&quot;]
+    end
+
+    subgraph Key Exchange &amp; Auth
+        DH[&quot;Diffie-Hellman Key Exchange&quot;]
+        DS[&quot;Digital Signatures (SHA-256 + RSA)&quot;]
+    end
+
+    subgraph Hashing &amp; Steganography
+        SHA[&quot;SHA-256 Hash Function&quot;]
+        Steg[&quot;LSB Image Steganography&quot;]
+    end
+
+    subgraph Substitution Ciphers
+        Caesar[&quot;Caesar Shift Cipher&quot;]
+        Vigenere[&quot;Vigenère Tabula Recta&quot;]
+        Playfair[&quot;Playfair 5x5 Matrix&quot;]
+    end
+
+    subgraph Transposition &amp; Historical
+        Rail[&quot;Rail Fence (Zigzag)&quot;]
+        Col[&quot;Columnar Transposition&quot;]
+        Enigma[&quot;WWII Enigma Machine&quot;]
+        Hacker[&quot;Hacker Mode (Chi-Squared Attack)&quot;]
+    end
+
+    CryptoStudio --&gt; Modern Standards
+    CryptoStudio --&gt; Key Exchange &amp; Auth
+    CryptoStudio --&gt; Hashing &amp; Steganography
+    CryptoStudio --&gt; Substitution Ciphers
+    CryptoStudio --&gt; Transposition &amp; Historical
+</pre>
+<ul>
+<li><strong>AES-256</strong>: Visualizes the 14-round block cipher transformations on a $4 \times 4$ byte state matrix: <code>SubBytes</code> (S-Box substitution), <code>ShiftRows</code> (cyclical permutation), <code>MixColumns</code> (Galois field $GF(2^8)$ matrix multiplication), and <code>AddRoundKey</code> (bitwise XOR with the expanded key schedule).</li>
+<li><strong>RSA</strong>: Interactive prime generation ($p, q$), modulus calculation ($n = p \cdot q$), Euler's totient ($\phi(n) = (p-1)(q-1)$), public exponent selection ($e$), and private modular inverse derivation ($d = e^{-1} \pmod{\phi(n)}$). Shows modular exponentiation $c = m^e \pmod n$.</li>
+<li><strong>Diffie-Hellman</strong>: Visualizes public parameters ($g, p$), Alice and Bob private secret generation ($a, b$), mixed public key exchange ($A = g^a \pmod p$, $B = g^b \pmod p$), and shared secret computation ($K = B^a = A^b \pmod p$).</li>
+<li><strong>Digital Signatures</strong>: Demonstrates one-way message hashing, private key signing, and instant tamper-detection on the receiver end if any bit of the message payload is altered.</li>
+<li><strong>SHA-256</strong>: Visualizes 512-bit block padding, message schedule expansion into 64 32-bit words ($W_0 \dots W_{63}$), and the 64-round compression loop using bitwise operations (<code>Ch</code>, <code>Maj</code>, $\Sigma_0$, $\Sigma_1$). Demonstrates the <strong>avalanche effect</strong> where changing 1 bit alters ~50% of the digest.</li>
+<li><strong>Image Steganography</strong>: Encodes text bits into the Least Significant Bits (LSB) of RGB canvas pixel buffers. Users can inspect carrier pixels before and after encoding, verifying zero perceptible image degradation.</li>
+<li><strong>Enigma Machine</strong>: Electro-mechanical simulation of the WWII Enigma with 10-pair Steckerbrett plugboard swaps, 3 stepping rotors (Fast, Middle, Slow) with mechanical odometer turnover, and a self-reciprocal Umkehrwalze reflector.</li>
+<li><strong>Hacker Mode Cryptanalysis</strong>: Frequency analysis attack tool calculating letter distributions against standard English (ETAOIN SHRDLU) and evaluating the <strong>Chi-Squared ($\chi^2$) statistic</strong> across all 26 rotational candidates to break shift ciphers in milliseconds.</li>
+</ul>
+<h3>6.6 Code Sandbox &amp; AI Studio ([<code>frontend/src/pages/Sandbox.jsx</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/pages/Sandbox.jsx))</h3>
+<ul>
+<li>Integrates the full Monaco code editor with custom themes, line highlighting, and syntax validation.</li>
+<li><strong>Live Cloud Runner</strong>: Sends code to [<code>/api/sandbox/execute</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/backend/routes/sandbox.js#L7), routing through JDoodle to run in containerized environments. Displays execution stdout, stderr, and return codes inside an expandable terminal panel.</li>
+<li><strong>AI Complexity Visualizer</strong>: Sends code to [<code>/api/sandbox/visualize</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/backend/routes/sandbox.js#L10), generating:
+<ul>
+<li>Big-O Time Complexity (with formal explanation)</li>
+<li>Big-O Space Complexity (with memory allocation justification)</li>
+<li>Utilized Data Structures breakdown</li>
+<li>Algorithmic Strategy overview</li>
+</ul>
+</li>
+</ul>
+<h3>6.7 Gamification &amp; Assessment Center ([<code>frontend/src/game/</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/game))</h3>
+<ul>
+<li><strong>Subject Tracks</strong>: Data Structures, Algorithms, OOP, Cryptography, System Design, and CS Trivia.</li>
+<li><strong>Dynamic CS Trivia</strong>: The trivia track dynamically queries the <a href="https://opentdb.com/api.php?amount=15&amp;category=18&amp;type=multiple">Open Trivia Database API</a> in [<code>backend/routes/levels.js</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/backend/routes/levels.js#L114-L146) to provide fresh, randomized multiple-choice questions on each attempt.</li>
+<li><strong>AI Hints</strong>: Students stuck on difficult questions can request an AI tutor hint via [<code>/api/ai/hint</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/backend/routes/ai.js#L7). Each hint costs <strong>50 XP</strong>, discouraging overuse while nudging students in the right direction without revealing answers.</li>
+<li><strong>Activity Heatmap ([<code>ActivityHeatmap.jsx</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/game/ActivityHeatmap.jsx))</strong>: GitHub-style activity grid visualizing daily practice sessions over the last 90 days.</li>
+<li><strong>Host Dashboard ([<code>HostDashboard.jsx</code>](file:///d:/yusra/programming/Major_Projects/Algoverse/frontend/src/game/HostDashboard.jsx))</strong>: Enables instructors to configure and launch custom contests, automatically generating sample unit test cases from natural language problem descriptions.</li>
+</ul>
+<hr />
+<h2>7. End-to-End System Workflows</h2>
+<h3>7.1 Workflow 1: User Registration, Cryptographic Email Verification &amp; Token Lifecycle</h3>
+<pre class="mermaid">sequenceDiagram
+    autonumber
+    actor User as Student / Developer
+    participant FE as Frontend Client (/auth)
+    participant AuthRoute as backend/routes/auth.js
+    participant Storage as backend/services/storage.js
+    participant Email as backend/services/emailService.js
+    participant Resend as Resend / SMTP Server
+
+    User-&gt;&gt;FE: Submits username, email, password
+    FE-&gt;&gt;AuthRoute: POST /api/auth/register (authLimiter)
+    AuthRoute-&gt;&gt;AuthRoute: Validate RFC email format &amp; password length
+    AuthRoute-&gt;&gt;AuthRoute: bcrypt.hash(password, 10 salt rounds)
+    AuthRoute-&gt;&gt;Storage: createUser() / MongoDB new User()
+    Storage--&gt;&gt;AuthRoute: User record created (isVerified: false or true)
+    AuthRoute-&gt;&gt;AuthRoute: crypto.randomBytes(32) -&gt; rawToken
+    AuthRoute-&gt;&gt;AuthRoute: sha256(rawToken) -&gt; tokenHash
+    AuthRoute-&gt;&gt;Storage: Save tokenHash &amp; expiry (24h)
+    AuthRoute-&gt;&gt;Email: sendVerificationEmail(email, rawToken)
+    Email-&gt;&gt;Resend: Dispatch HTML email with verification button
+    AuthRoute-&gt;&gt;AuthRoute: jwt.sign(userId, JWT_SECRET, 7d)
+    AuthRoute--&gt;&gt;FE: Return session JWT + safe user profile
+    FE-&gt;&gt;FE: Store token in localStorage ('nova_token')
+
+    Note over User, FE: User opens verification email and clicks link:
+    User-&gt;&gt;FE: Navigates to /verify-email?token=&lt;rawToken&gt;
+    FE-&gt;&gt;AuthRoute: GET /api/auth/verify-email?token=&lt;rawToken&gt;
+    AuthRoute-&gt;&gt;AuthRoute: Compute sha256(rawToken)
+    AuthRoute-&gt;&gt;Storage: Find user by tokenHash
+    AuthRoute-&gt;&gt;Storage: Mark isVerified=true, clear tokens
+    AuthRoute-&gt;&gt;Email: sendWelcomeEmail(email, username)
+    Email-&gt;&gt;Resend: Send welcome onboarding email
+    AuthRoute--&gt;&gt;FE: 200 OK (Email verified successfully)
+</pre>
+<h3>7.2 Workflow 2: Code Execution &amp; Multi-Tier AI Complexity Analysis</h3>
+<pre class="mermaid">sequenceDiagram
+    autonumber
+    actor User as Developer
+    participant FE as Sandbox Page (Sandbox.jsx)
+    participant Backend as backend/controllers/sandboxController.js
+    participant JDoodle as JDoodle Cloud Compiler API
+    participant AI as Gemini 2.0 Flash / OpenRouter
+    participant StaticAST as Static AST Complexity Engine
+
+    User-&gt;&gt;FE: Enters code in Monaco Editor &amp; clicks &quot;Run Code&quot;
+    FE-&gt;&gt;Backend: POST /api/sandbox/execute { language, code } (JWT Auth)
+    Backend-&gt;&gt;Backend: Validate payload size (limit: 50 KB)
+    Backend-&gt;&gt;JDoodle: POST https://api.jdoodle.com/v1/execute (15s timeout)
+    JDoodle--&gt;&gt;Backend: Return { output, statusCode, cpuTime, memory }
+    Backend--&gt;&gt;FE: Return { run: { stdout, stderr, code } }
+    FE-&gt;&gt;FE: OutputTerminal renders console output
+
+    User-&gt;&gt;FE: Clicks &quot;Analyze Complexity&quot;
+    FE-&gt;&gt;Backend: POST /api/sandbox/visualize { language, code } (JWT Auth)
+    alt OpenRouter / Gemini API Key Configured
+        Backend-&gt;&gt;AI: POST Prompt with Code Schema
+        AI--&gt;&gt;Backend: Return structured JSON { timeComplexity, spaceComplexity, ... }
+    else AI Unreachable or Unconfigured
+        Backend-&gt;&gt;StaticAST: Run regex/AST parsing (nesting, recursion, allocation)
+        StaticAST--&gt;&gt;Backend: Return deterministic complexity analysis
+    end
+    Backend--&gt;&gt;FE: Return { analysis }
+    FE-&gt;&gt;FE: VisualCanvas renders Big-O badges, explanations, and data structure chips
+</pre>
+<h3>7.3 Workflow 3: Real-Time Multiplayer 1v1 Coding Duel</h3>
+<pre class="mermaid">sequenceDiagram
+    autonumber
+    actor P1 as Player 1 (Alex)
+    actor P2 as Player 2 (Nova)
+    participant SocketServer as backend/socket/duelManager.js
+
+    P1-&gt;&gt;SocketServer: emit('join_matchmaking', { username: 'Alex' })
+    SocketServer-&gt;&gt;P1: emit('waiting_for_opponent')
+
+    P2-&gt;&gt;SocketServer: emit('join_matchmaking', { username: 'Nova' })
+    Note over SocketServer: Match found! Creates room &quot;duel_a8f9&quot;
+    SocketServer-&gt;&gt;SocketServer: Selects 5 random questions from questionBank
+
+    SocketServer-&gt;&gt;P1: emit('duel_started', { roomId, questions, players })
+    SocketServer-&gt;&gt;P2: emit('duel_started', { roomId, questions, players })
+
+    P1-&gt;&gt;SocketServer: emit('update_progress', { roomId, progress: 20, score: 20 })
+    SocketServer-&gt;&gt;P2: emit('opponent_progress', { opponentId: P1.id, progress: 20, score: 20 })
+
+    P2-&gt;&gt;SocketServer: emit('update_progress', { roomId, progress: 40, score: 40 })
+    SocketServer-&gt;&gt;P1: emit('opponent_progress', { opponentId: P2.id, progress: 40, score: 40 })
+
+    P1-&gt;&gt;SocketServer: emit('duel_complete', { roomId, finalScore: 100, timeTakenMs: 42100 })
+    SocketServer-&gt;&gt;P2: emit('opponent_finished')
+
+    P2-&gt;&gt;SocketServer: emit('duel_complete', { roomId, finalScore: 100, timeTakenMs: 38900 })
+    Note over SocketServer: Scores tied (100 vs 100). Compares timeTakenMs (38900 &lt; 42100) -&gt; Winner: Player 2
+    SocketServer-&gt;&gt;P1: emit('duel_results', { winnerId: P2.id, results })
+    SocketServer-&gt;&gt;P2: emit('duel_results', { winnerId: P2.id, results })
+</pre>
+<h3>7.4 Workflow 4: Visualizer Step Generation &amp; Interactive Playback Engine</h3>
+<pre class="mermaid">sequenceDiagram
+    autonumber
+    actor User as Learner
+    participant UI as Array3DVisualizer.jsx
+    participant Gen as arrayStepGenerators.js
+    participant Bar as VisualizerPlaybackBar.jsx
+    participant Tracker as DryRunVariableTracker.jsx
+
+    User-&gt;&gt;UI: Selects algorithm (e.g., QuickSort or Binary Search)
+    UI-&gt;&gt;Gen: generateArraySteps(initialArray, target)
+    Gen-&gt;&gt;Gen: Simulates algorithm execution step-by-step
+    Note over Gen: Records snapshots: { arrayState, pointers, highlighted, activeCodeLine, logMsg }
+    Gen--&gt;&gt;UI: Returns complete animationSteps[] array
+
+    User-&gt;&gt;Bar: Clicks &quot;Play&quot;
+    Bar-&gt;&gt;UI: Starts interval based on playbackSpeed (0.5x, 1x, 2x)
+    loop Each Step Interval
+        UI-&gt;&gt;UI: currentStepIndex++
+        UI-&gt;&gt;Tracker: Update variable values (low, high, mid, pivot)
+        UI-&gt;&gt;UI: Update highlighted element bars &amp; pointer markers
+        UI-&gt;&gt;UI: Highlight corresponding line in CodeInspector
+    end
+    User-&gt;&gt;Bar: Clicks &quot;Pause&quot; / &quot;Step Forward&quot; / &quot;Step Backward&quot;
+    Bar-&gt;&gt;UI: Pauses timer and jumps directly to animationSteps[targetIndex]
+</pre>
+<hr />
+<h2>8. Directory &amp; File Reference Map</h2>
+<pre><code>Algoverse/
+├── backend/
+│   ├── controllers/
+│   │   ├── authController.js           # Supplementary auth handling
+│   │   ├── progressController.js       # Town &amp; quest progression
+│   │   └── sandboxController.js        # JDoodle compilation &amp; AI complexity engine
+│   ├── middleware/
+│   │   ├── authMiddleware.js           # JWT verification &amp; token revocation blacklist
+│   │   └── rateLimiter.js              # DDoS protection &amp; endpoint rate limiters
+│   ├── models/
+│   │   ├── Competition.js              # Competition contests &amp; participants schema
+│   │   ├── Progress.js                 # User quest level &amp; town unlocks schema
+│   │   ├── Snippet.js                  # User-saved code snippets schema
+│   │   └── User.js                     # User account, verification, XP &amp; badges schema
+│   ├── routes/
+│   │   ├── ai.js                       # AI hints endpoint (/api/ai/hint)
+│   │   ├── auth.js                     # Register, verify email, resend, login, me, logout
+│   │   ├── competitions.js             # Contest creation, test-case generation &amp; submissions
+│   │   ├── dashboard.js                # Top 10 leaderboard &amp; active competitions
+│   │   ├── levels.js                   # Level metadata &amp; OpenTDB dynamic trivia
+│   │   ├── progress.js                 # Score updates &amp; town unlocks
+│   │   ├── sandbox.js                  # Code execute &amp; visualize routes
+│   │   └── users.js                    # Activity recording, streaks &amp; badge awards
+│   ├── services/
+│   │   ├── emailService.js             # Resend API &amp; Nodemailer SMTP transactional engine
+│   │   └── storage.js                  # Local persistent JSON database fallback engine
+│   ├── socket/
+│   │   └── duelManager.js              # WebSockets real-time 1v1 PvP coding duels
+│   └── server.js                       # HTTP + Socket.io entry point, CORS &amp; database connection
+└── frontend/
+    └── src/
+        ├── App.jsx                     # Top-level routing, theme sync &amp; dynamic subtype dispatcher
+        ├── context/
+        │   └── AuthContext.jsx         # AuthProvider, useAuth, requireAuth guard &amp; ProtectedRoute
+        ├── store/
+        │   └── useAppStore.js          # Zustand store (theme, user, tokens, XP, levels)
+        ├── lib/
+        │   └── api.js                  # Axios instance with Bearer token interceptor
+        ├── pages/
+        │   ├── Intro.jsx               # 3D Lenis-scrubbed particle morphing landing page
+        │   ├── Auth.jsx                # Login / Registration glassmorphic tabbed forms
+        │   ├── VerifyEmail.jsx         # Token verification handler with visual feedback
+        │   ├── Sandbox.jsx             # Monaco editor, cloud execution &amp; complexity studio
+        │   └── VisualizerDashboard.jsx # 3D Library Room entry point
+        ├── visualizers/
+        │   ├── oop/
+        │   │   ├── OopOverview.jsx                 # Discovery universe for the 4 OOP pillars
+        │   │   ├── EncapsulationVisualizer.jsx     # Car engine private field access visualizer
+        │   │   ├── AbstractionVisualizer.jsx       # ATM hardware/banking interface visualizer
+        │   │   ├── SingleInheritanceVisualizer.jsx # Animal -&gt; Dog inheritance visualizer
+        │   │   ├── MultilevelInheritanceVisualizer.jsx # Person -&gt; Employee -&gt; Engineer visualizer
+        │   │   ├── InheritanceVisualizer.jsx       # Hierarchical vehicle inheritance visualizer
+        │   │   ├── PolymorphismVisualizer.jsx      # Dynamic method dispatch visualizer
+        │   │   └── components/
+        │   │       └── Visualizer3DLibrary.jsx     # Navigable Three.js 3D Library room
+        │   ├── crypto/
+        │   │   ├── CryptoHub.jsx                   # Central hub for all 13 cryptography modules
+        │   │   ├── AESVisualizer.jsx               # Rijndael 14-round block cipher visualizer
+        │   │   ├── RSAVIsualizer.jsx               # Prime generation &amp; asymmetric modular math
+        │   │   ├── DHVisualizer.jsx                # Diffie-Hellman public key exchange visualizer
+        │   │   ├── DigitalSignatureVisualizer.jsx  # Signature signing &amp; bit-tamper detection
+        │   │   ├── SHA256Visualizer.jsx            # 64-round compression loop &amp; avalanche effect
+        │   │   ├── SteganographyVisualizer.jsx     # LSB pixel RGB carrier encoding visualizer
+        │   │   ├── EnigmaVisualizer.jsx            # WWII plugboard, rotors &amp; reflector simulation
+        │   │   └── HackerModeVisualizer.jsx        # Chi-Squared automated cryptanalysis attack
+        │   └── ds/
+        │       ├── ArrayHub.jsx / Array3DVisualizer.jsx # 16 Array algorithms &amp; sorting suite
+        │       ├── GraphHub.jsx / GraphVisualizer.jsx   # Graph traversal &amp; pathfinding heuristics
+        │       ├── TreeHub.jsx / TreeGraphVisualizer.jsx # BST, AVL rotations &amp; traversals
+        │       ├── LinkedListHub.jsx / LinkedListVisualizer.jsx # Singly, doubly, circular lists
+        │       ├── StackHub.jsx / StackVisualizer.jsx   # LIFO stack &amp; balanced syntax
+        │       ├── QueueHub.jsx / QueueVisualizer.jsx   # FIFO, circular &amp; priority queues
+        │       ├── HeapVisualizer.jsx                  # Min/Max heaps &amp; heap sort
+        │       ├── StringHub.jsx / StringVisualizer.jsx # KMP, Rabin-Karp, Z-Algorithm
+        │       └── MapVisualizer.jsx                   # Hash tables &amp; collision chaining
+        └── game/
+            ├── GameWorld.jsx           # Assessment dashboard &amp; track switcher
+            ├── DuelMode.jsx            # Real-time WebSockets 1v1 PvP coding arena
+            ├── QuizRunner.jsx          # Interactive quiz question runner with AI hints
+            ├── HostDashboard.jsx       # Custom contest creator &amp; test case generator
+            ├── CompetitionModal.jsx    # Contest registration &amp; challenge runner
+            └── ActivityHeatmap.jsx     # 90-day GitHub-style practice streak heatmap
+</code></pre>
+
+  </div>
+
+</body>
+</html>

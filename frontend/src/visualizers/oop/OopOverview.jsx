@@ -15,7 +15,7 @@ import Visualizer3DLibrary, { CATEGORIES, InnerView } from './components/Visuali
  * OopOverview - The Unified OOP & Visualizer Discovery Universe (/oop)
  * Prioritizes the 4 Core Pillars of OOP front-and-center at the top of the viewport.
  * Introductory theory is housed inside a compact, accessible OOP Guide information widget.
- */
+ */  
 export default function OopOverview() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -334,6 +334,8 @@ export default function OopOverview() {
                   Compile and debug code in the interactive multi-language sandbox or embark on algorithm quests in the 3D terrain gameworld.
                 </p>
               </div>
+
+
               <div className="flex gap-2">
                 <Link
                   to="/sandbox"
